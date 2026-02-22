@@ -1,3 +1,5 @@
+package primegap;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +47,8 @@ public class SIMDGap extends NaiveGap {
 			do {
 				// SIMD primes
 				primes.clear();
-				int p = 2;ratio = 0.5;
+				int p = 2;
+				ratio = 0.5;
 				while (p + maxInc <= 255) {
 					primes.add(p);
 					p = BigInteger.valueOf(p).nextProbablePrime().intValue();
@@ -58,7 +61,7 @@ public class SIMDGap extends NaiveGap {
 					w = w.multiply(t);
 					if (w.bitLength() <= 16) { // avoid too big wheels
 						wheel = w.intValue();
-						ratio *= (1-1/primes.removeFirst().doubleValue());
+						ratio *= (1 - 1 / primes.removeFirst().doubleValue());
 					} else
 						break;
 				}
@@ -202,7 +205,8 @@ public class SIMDGap extends NaiveGap {
 
 		static String wdhm(long secs) {
 			long t = secs / 60;
-			long s = t % 60; t = t/60;
+			long s = t % 60;
+			t = t / 60;
 			String r = s + "m";
 			if (t > 0) {
 				s = t % 24;
@@ -291,7 +295,7 @@ public class SIMDGap extends NaiveGap {
 	}
 
 	@Override
-	BigInteger nextPrimeImpl(BigInteger N) {
+	protected BigInteger nextPrimeImpl(BigInteger N) {
 		if (N.compareTo(Wheel.WHEEL_THRESHOLD) <= 0)
 			return super.nextPrimeImpl(N);
 		return Stream.generate(candidates(N)).filter(this::isPrime).findFirst().orElseThrow();

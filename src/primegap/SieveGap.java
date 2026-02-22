@@ -1,7 +1,11 @@
+package primegap;
+
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Supplier;
+
+import primegap.util.IncreasingBigIntegers;
 
 public class SieveGap extends NaiveGap {
 
@@ -148,7 +152,7 @@ public class SieveGap extends NaiveGap {
 		void markMultiplesOf(BigInteger p) {
 			// Find offset to first multiple of p >= start
 			BigInteger n = start.remainder(p);
-			if (n.signum()>0)
+			if (n.signum() > 0)
 				n = p.subtract(n);
 			// n = 0..p-1
 
@@ -268,19 +272,19 @@ public class SieveGap extends NaiveGap {
 			}
 
 			++primeCallCount;
-			
+
 			return prime;
 		}
 	}
 
-	SlidingWindowSieve supplier = newSlidingWindowSieve(10_240_000*8);
+	SlidingWindowSieve supplier = newSlidingWindowSieve(10_240_000 * 8);
 
 	SlidingWindowSieve newSlidingWindowSieve(int size) {
 		return new SlidingWindowSieve(size);
 	}
 
 	@Override
-	BigInteger nextPrimeImpl(BigInteger N) {
+	protected BigInteger nextPrimeImpl(BigInteger N) {
 		BigInteger Q = supplier.getLastPrime();
 		while (Q == null || Q.compareTo(N) <= 0) {
 			Q = supplier.get();

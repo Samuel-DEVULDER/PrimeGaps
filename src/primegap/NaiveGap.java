@@ -1,3 +1,4 @@
+package primegap;
 import java.math.BigInteger;
 
 public class NaiveGap extends AbstractPrimeGap {

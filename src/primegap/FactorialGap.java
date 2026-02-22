@@ -1,3 +1,4 @@
+package primegap;
 import java.math.BigInteger;
 import java.util.stream.IntStream;
 
@@ -8,7 +9,7 @@ public class FactorialGap extends AbstractPrimeGap {
 	}
 
 	@Override
-	BigInteger find(int gap, BigInteger P) {
+	protected BigInteger find(int gap, BigInteger P) {
 		return prevPrime(factorial(gap).add(v(2)));
 	}
 
