@@ -60,6 +60,7 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 	int index;
 
 	BigInteger last, first;
+	final long LIMIT;
 	long size;
 
 	public BigInteger getFirst() {
@@ -70,7 +71,7 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 		return last;
 	}
 
-	public IncreasingBigIntegers(int size) {
+	public IncreasingBigIntegers(int size, long limit) {
 		try {
 			dbFile = File.createTempFile("gap", ".primes");
 			dbFile.deleteOnExit();
@@ -79,11 +80,16 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}
+		this.LIMIT = limit <= 0 ? Integer.MAX_VALUE : limit;
 		buffer = new byte[size];
 		size = index = 0;
 
 		var cl = new CleanupState(dbFile, raf);
 		CLEANER.register(this, cl);
+	}
+
+	public IncreasingBigIntegers(int size) {
+		this(size, Integer.MAX_VALUE);
 	}
 
 	public IncreasingBigIntegers(Collection<BigInteger> col) throws IOException {
@@ -100,13 +106,19 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 		return size;
 	}
 
+	public boolean isFull() {
+		return size == LIMIT;
+	}
+
 	static final BigInteger ONE_TWO_SEVEN = BigInteger.valueOf(127);
 
 	void pushByte(int b) throws IOException {
 		buffer[index++] = (byte) b;
 		if (index == buffer.length) {
-			raf.seek(raf.length());
-			raf.write(buffer, 0, index);
+			synchronized (raf) {
+				raf.seek(raf.length());
+				raf.write(buffer, 0, index);				
+			}
 			index = 0;
 		}
 	}
@@ -133,18 +145,20 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 
 	@Override
 	public boolean add(BigInteger e) {
+		if (isFull())
+			return false;
 		BigInteger delta = last == null ? e : e.subtract(last);
 		if (delta.signum() <= 0)
 			return false;
+		++size;
 		if (first == null)
 			first = e;
 		last = e;
-		if (++size <= Integer.MAX_VALUE)
-			try {
-				push(delta);
-			} catch (IOException ex) {
-				throw new RuntimeException(ex);
-			}
+		try {
+			push(delta);
+		} catch (IOException ex) {
+			throw new RuntimeException(ex);
+		}
 		return true;
 	}
 
@@ -177,13 +191,15 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 					if (pos < 0) {
 						return false;
 					}
-					raf.seek(pos);
-					buf_len = raf.read(buf);
-					if (buf_len < 0) {
-						pos = -1;
-						System.arraycopy(buffer, 0, buf, 0, buf_len = index);
-					} else {
-						pos = raf.getFilePointer();
+					synchronized (raf) {
+						raf.seek(pos);
+						buf_len = raf.read(buf);
+						if (buf_len < 0) {
+							pos = -1;
+							System.arraycopy(buffer, 0, buf, 0, buf_len = index);
+						} else {
+							pos = raf.getFilePointer();
+						}
 					}
 					buf_idx = 0;
 					return buf_len > 0;
