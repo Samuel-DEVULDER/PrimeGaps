@@ -233,4 +233,8 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 		return super.toString();
 	}
 
+	public long limit() {
+		return LIMIT;
+	}
+
 }
