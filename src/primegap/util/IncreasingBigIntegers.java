@@ -112,11 +112,23 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 	}
 
 	void push(BigInteger n) throws IOException {
-		while (n.compareTo(ONE_TWO_SEVEN) > 0) {
-			pushByte(n.and(ONE_TWO_SEVEN).byteValue());
-			n = n.shiftRight(7);
+		int len = n.bitLength();
+		if (len <= 7) {
+			pushByte(n.byteValue() + 128);
+		} else if (len <= 64) {
+			long v = n.longValue();
+			while ((v & ~127L) != 0L) {
+				pushByte((int) (v & 127));
+				v >>>= 7;
+			}
+			pushByte(128 + (int) v);
+		} else {
+			while (n.compareTo(ONE_TWO_SEVEN) > 0) {
+				pushByte(n.byteValue() & 127);
+				n = n.shiftRight(7);
+			}
+			pushByte(n.byteValue() + 128);
 		}
-		pushByte(n.and(ONE_TWO_SEVEN).byteValue() | 128);
 	}
 
 	@Override
