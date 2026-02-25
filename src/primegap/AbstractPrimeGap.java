@@ -19,6 +19,11 @@ public abstract class AbstractPrimeGap {
 	void printf(String fmt, Object... args) {
 		System.out.printf(Locale.ENGLISH, fmt, args);
 	}
+	
+	void dbg(Object... objs) {
+		//for(Object o : objs) System.err.print(o);
+		//System.err.println();
+	}
 
 	/**
 	 * Returns true iff this BigInteger passes the specified number of Miller-Rabin
@@ -96,7 +101,7 @@ public abstract class AbstractPrimeGap {
 
 	// --- Prime discovery rate tracking ---
 	long primeCallCount = 0;
-	private LongSupplier timer = initTimer();
+	protected LongSupplier timer = initTimer();
 
 	private static LongSupplier initTimer() {
 		ThreadMXBean tmx = ManagementFactory.getThreadMXBean();
@@ -123,7 +128,7 @@ public abstract class AbstractPrimeGap {
 			P = find(gap, P);
 			time = timer.getAsLong() - time;
 			total += time;
-			printf("found.\n");
+			printf("found.                                                                    \n");
 
 			BigInteger Q = nextPrime(P);
 			gap = Q.subtract(P).intValueExact();
