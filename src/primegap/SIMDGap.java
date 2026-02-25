@@ -1,7 +1,10 @@
 package primegap;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -160,9 +163,28 @@ public class SIMDGap extends NaiveGap {
 		protected abstract void advance();
 
 		// ================= COMMON METHODS =================
+		private static final VectorOperators.Comparison UNSIGNED_GE;
+		static {
+			VectorOperators.Comparison op = null;
+			try {
+				// JDK 25+
+				op = (VectorOperators.Comparison) VectorOperators.class.getField("UGE").get(null);
+			} catch (NoSuchFieldException e) {
+				try {
+					// JDK 17-24 : nom long
+					op = (VectorOperators.Comparison) VectorOperators.class.getField("UNSIGNED_GE").get(null);
+				} catch (Exception ex) {
+					throw new Error(ex);
+				}
+			} catch (Exception e) {
+				throw new Error(e);
+			}
+			UNSIGNED_GE = op;
+		}
+
 		protected void updateVectors(int increment) {
 			bVec = bVec.add((byte) increment);
-			bVec = bVec.sub(B_PRIMES, bVec.compare(VectorOperators.UNSIGNED_GE, B_PRIMES));
+			bVec = bVec.sub(B_PRIMES, bVec.compare(UNSIGNED_GE, B_PRIMES));
 		}
 
 		protected boolean isComposite() {
@@ -298,10 +320,67 @@ public class SIMDGap extends NaiveGap {
 	protected BigInteger nextPrimeImpl(BigInteger N) {
 		if (N.compareTo(Wheel.WHEEL_THRESHOLD) <= 0)
 			return super.nextPrimeImpl(N);
-		return Stream.generate(candidates(N)).filter(this::isPrime).findFirst().orElseThrow();
+		return Stream.generate(candidates(N))//
+				.filter(this::isPrime)//
+				.filter(p -> p.compareTo(N) > 0)//
+				.findFirst()//
+				.orElseThrow();
+	}
+	
+	public static void main(String[] args) throws Exception {
+	    // Check if the Vector API incubator module is already loaded
+	    if (!isVectorModuleLoaded()) {
+	        relaunchWithVector(args);
+	        // Current process exits cleanly, child process takes over
+	        return;
+	    }
+	    new SIMDGap().run();
 	}
 
-	public static void main(String[] args) {
-		new SIMDGap().run();
+	/** Returns true if jdk.incubator.vector is available in the boot layer. */
+	static boolean isVectorModuleLoaded() {
+	    return ModuleLayer.boot()
+	        .findModule("jdk.incubator.vector")
+	        .isPresent();
+	}
+
+	/**
+	 * Relaunches the current JVM process with --add-modules=jdk.incubator.vector
+	 * appended, forwarding all existing JVM arguments and the main class args.
+	 * Inherits stdin/stdout/stderr so output appears normally.
+	 */
+	static void relaunchWithVector(String[] args) throws Exception {
+	    // Resolve the current java executable path
+	    String javaExe = ProcessHandle.current()
+	        .info().command()
+	        .orElse("java");
+
+	    RuntimeMXBean jvmMeta = ManagementFactory.getRuntimeMXBean();
+
+	    List<String> cmd = new ArrayList<>();
+	    cmd.add(javaExe);
+
+	    // Inject the missing module flag first
+	    cmd.add("--add-modules=jdk.incubator.vector");
+
+	    // Forward all existing JVM flags (-Xmx, -Xms, -D... etc.)
+	    cmd.addAll(jvmMeta.getInputArguments());
+
+	    // Forward classpath
+	    cmd.add("-cp");
+	    cmd.add(jvmMeta.getClassPath());
+
+	    // Main class and its arguments
+	    cmd.add(SieveGap.class.getName());
+	    cmd.addAll(Arrays.asList(args));
+
+	    // Launch child process, sharing all I/O with current process
+	    int exitCode = new ProcessBuilder(cmd)
+	        .inheritIO()
+	        .start()
+	        .waitFor();
+
+	    // Mirror the child exit code
+	    System.exit(exitCode);
 	}
 }

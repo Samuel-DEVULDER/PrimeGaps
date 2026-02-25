@@ -13,7 +13,7 @@ public class NaiveGap extends AbstractPrimeGap {
 		return P;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		new NaiveGap().run();
 	}
 
