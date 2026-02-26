@@ -34,8 +34,8 @@ public class SieveGap extends NaiveGap {
 		final IncreasingBigIntegers primes;
 
 		/** Bit-packed array representing odd prime candidates in the current window */
-		final long[] tab;
 		final int tabLen;
+		long[] tab;
 
 		/** Number of odd candidates represented (= tab.length * 64) */
 		final int windowSize;
@@ -99,16 +99,16 @@ public class SieveGap extends NaiveGap {
 			return new long[size];
 		}
 
-		protected void fillTab(long val) {
+		protected void fillTab(long[] tab, long val) {
 			Arrays.fill(tab, val);
 		}
 
-		protected void updateTab(int i, long mask) {
+		protected void updateTab(long[] tab, int i, long mask) {
 			tab[i] |= mask;
 //			String s = Long.toBinaryString(tab[i]);
 		}
 
-		protected long getTab(int i) {
+		protected long getTab(long[] tab, int i) {
 			return tab[i];
 		}
 
@@ -146,13 +146,17 @@ public class SieveGap extends NaiveGap {
 							"Primes size limit is too short (" + primes.sizeLong() + "). Please increase!");
 			markAllMultiples();
 
-			last_tab = (mask = -1) ^ getTab(last = 0);
+			last_tab = (mask = -1) ^ getTab(tab, last = 0);
 
 			doMarking = true;
 		}
+		
+		protected void markMultiplesOf(BigInteger P)  {
+			markMultiplesOf(start, tab, P);
+		}
 
 		protected void markAllMultiples() {
-			fillTab(0);
+			fillTab(tab, 0);
 			long now = timer.getAsLong();
 			primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).forEach(this::markMultiplesOf);
 			dbg("all=", (timer.getAsLong() - now) / 1e6, "ms              ");
@@ -169,7 +173,7 @@ public class SieveGap extends NaiveGap {
 		 * 
 		 * @param p an odd prime number
 		 */
-		protected void markMultiplesOf(BigInteger p) {
+		protected void markMultiplesOf(BigInteger start, long tab[], BigInteger p) {
 			// Find offset to first multiple of p >= start
 			BigInteger n = start.remainder(p);
 			if (n.signum() > 0)
@@ -208,7 +212,7 @@ public class SieveGap extends NaiveGap {
 
 					// Flush mask when moving to different long
 					if (nextI != i) {
-						updateTab(i, mask);
+						updateTab(tab, i, mask);
 						i = nextI;
 						mask = 0;
 					}
@@ -219,7 +223,7 @@ public class SieveGap extends NaiveGap {
 			}
 
 			// Apply final mask
-			updateTab(i, mask);
+			updateTab(tab, i, mask);
 		}
 		
 		/**
@@ -235,7 +239,7 @@ public class SieveGap extends NaiveGap {
 				while (v == 0) {
 					if (++last == tabLen)
 						return -1;
-					last_tab = v = ~getTab(last);
+					last_tab = v = ~getTab(tab, last);
 				}
 				int i = Long.numberOfTrailingZeros(v);
 				mask = -2L << i;
@@ -247,7 +251,7 @@ public class SieveGap extends NaiveGap {
 					int i = (last += 64) >>> last_shift;
 					if (i == tabLen)
 						return -1;
-					last_tab = v = ~getTab(i);
+					last_tab = v = ~getTab(tab, i);
 				}
 				int i = Long.numberOfTrailingZeros(v);
 				mask = -2L << i;
@@ -326,8 +330,8 @@ public class SieveGap extends NaiveGap {
 			if (doMarking) {
 				if (prime.compareTo(limit) <= 0) {
 					long now = timer.getAsLong();
-					markMultiplesOf(prime);
-					last_tab = ~getTab(last >>> last_shift);
+					markMultiplesOf(start, tab, prime);
+					last_tab = ~getTab(tab, last >>> last_shift);
 					dbg("Marking multiples of ", prime, " in ", (timer.getAsLong() - now) / 1e6, "ms.");
 				} else {
 					doMarking = false;

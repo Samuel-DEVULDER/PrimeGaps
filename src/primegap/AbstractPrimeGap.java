@@ -21,8 +21,9 @@ public abstract class AbstractPrimeGap {
 	}
 
 	void dbg(Object... objs) {
-		// for(Object o : objs) System.err.print(o);
-		// System.err.println();
+//		for (Object o : objs)
+//			System.err.print(o);
+//		System.err.println();
 	}
 
 	/**
@@ -136,12 +137,12 @@ public abstract class AbstractPrimeGap {
 
 				long time = timer.getAsLong();
 				BigInteger P_ = find(gap, P);
-				if (P_ == null)
-					break;
-				P = P_;
 				time = timer.getAsLong() - time;
 				total += time;
+				if (P_ == null)
+					break;
 				printf("found.                                                                    \n");
+				P = P_;
 
 				BigInteger Q = nextPrime(P);
 				gap = Q.subtract(P).intValueExact();

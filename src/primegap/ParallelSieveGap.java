@@ -15,11 +15,11 @@ public class ParallelSieveGap extends SieveGap {
 		}
 
 		@Override
-		protected void updateTab(int i, long mask) {
+		protected void updateTab(long[] tab, int i, long mask) {
 			if (concurrent) {
 				VH.getAndBitwiseOr(tab, i, mask);
 			} else {
-				super.updateTab(i, mask);
+				super.updateTab(tab, i, mask);
 			}
 		}
 
@@ -29,7 +29,7 @@ public class ParallelSieveGap extends SieveGap {
 
 		protected void markAllMultiples() {
 			concurrent = false;
-			fillTab(0);
+			fillTab(tab, 0);
 
 			long now = timer.getAsLong();
 			primes.stream().takeWhile(p -> p.intValue() <= small_thr).forEach(this::markMultiplesOf);
