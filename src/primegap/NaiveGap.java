@@ -4,8 +4,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 public class NaiveGap extends AbstractPrimeGap {
-	long[] gapCounts = new long[1024]; // couvre gaps jusqu'Ã  1024 au lieu de 512
-	Info info = null;
 	volatile Boolean stopping;
 	{
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -23,6 +21,11 @@ public class NaiveGap extends AbstractPrimeGap {
 		this.info = info;
 		this.stopping = Boolean.FALSE;
 	}
+
+	// -------
+
+	long[] gapCounts = new long[1024]; // couvre gaps jusqu'a  1024 au lieu de 512
+	Info info = null;
 
 	void printGapStats() {
 		long maxCount = 0;
