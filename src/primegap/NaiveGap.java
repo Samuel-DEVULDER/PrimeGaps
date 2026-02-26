@@ -24,7 +24,7 @@ public class NaiveGap extends AbstractPrimeGap {
 
 	// -------
 
-	long[] gapCounts = new long[1024]; // couvre gaps jusqu'a  1024 au lieu de 512
+	long[] gapCounts = new long[1024];
 	Info info = null;
 
 	void printGapStats() {
@@ -35,7 +35,7 @@ public class NaiveGap extends AbstractPrimeGap {
 			total += c;
 		}
 
-		int countWidth = Math.max(5, Long.toString(maxCount).length()); // largeur du plus grand
+		int countWidth = Math.max(5, Long.toString(maxCount).length());
 		int BAR_WIDTH = 60;
 
 		String align = "%-20s : ";
