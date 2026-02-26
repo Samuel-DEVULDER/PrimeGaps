@@ -19,10 +19,10 @@ public abstract class AbstractPrimeGap {
 	void printf(String fmt, Object... args) {
 		System.out.printf(Locale.ENGLISH, fmt, args);
 	}
-	
+
 	void dbg(Object... objs) {
-		//for(Object o : objs) System.err.print(o);
-		//System.err.println();
+		// for(Object o : objs) System.err.print(o);
+		// System.err.println();
 	}
 
 	/**
@@ -63,7 +63,7 @@ public abstract class AbstractPrimeGap {
 		if (N.testBit(0) == false)
 			return N.equals(TWO);
 
-		return passesMillerRabin(N, 100) && N.isProbablePrime(1);
+		return passesMillerRabin(N, 5) && N.isProbablePrime(1);
 	}
 
 	/**
@@ -114,40 +114,59 @@ public abstract class AbstractPrimeGap {
 		return System::nanoTime;
 	}
 
-	protected void searchGaps() {
+	protected boolean running(int gap) {
+		return gap < 1 << 20;
+	}
 
-		BigInteger P = v(2);
+	record Info(long time, BigInteger lastP, double best_merit, BigInteger best_P) {
+	};
+
+	protected void stopping(Info info) {
+	}
+
+	protected void searchGaps() {
+		BigInteger P = v(2), best_P = P;
 		long total = 0;
 		double prev = 1;
 		double best_merit = 0;
 
-		for (int gap = 2; gap < 1 << 20; gap += 2) {
-			printf("Searching gap >= %s...", gap);
+		try {
+			for (int gap = 2; running(gap); gap += 2) {
+				printf("Searching gap >= %s...", gap);
 
-			long time = timer.getAsLong();
-			P = find(gap, P);
-			time = timer.getAsLong() - time;
-			total += time;
-			printf("found.                                                                    \n");
+				long time = timer.getAsLong();
+				BigInteger P_ = find(gap, P);
+				if (P_ == null)
+					break;
+				P = P_;
+				time = timer.getAsLong() - time;
+				total += time;
+				printf("found.                                                                    \n");
 
-			BigInteger Q = nextPrime(P);
-			gap = Q.subtract(P).intValueExact();
-			double p = P.doubleValue();
-			double merit = gap / Math.log(p);
-			String merit_pfx = "";
-			if (merit > best_merit) {
-				best_merit = merit;
-				merit_pfx = "+";
+				BigInteger Q = nextPrime(P);
+				gap = Q.subtract(P).intValueExact();
+				double p = P.doubleValue();
+				double merit = gap / Math.log(p);
+				String merit_pfx = "";
+				if (merit > best_merit) {
+					best_merit = merit;
+					best_P = P;
+					merit_pfx = "+";
+				}
+
+				// Compute average prime discovery rate
+				String rateStr = String.format(Locale.ENGLISH, "%,.0f", (primeCallCount * 1e9) / total).replace(',',
+						' ');
+
+				printf(">> %d\n + %s\n = %s\n", gap, P, Q);
+				printf("%.3fs (tot=%.3fs), %d bits, %d digits, " + "x%.2g prev, %s%.2f merit, ~%g, %s p/s.\n",
+						time / 1e9, total / 1e9, P.bitLength(), P.toString().length(), p / prev, merit_pfx, merit, p,
+						rateStr);
+				prev = p;
+				P = Q;
 			}
-
-			// Compute average prime discovery rate
-			String rateStr = String.format(Locale.ENGLISH, "%,.0f", (primeCallCount * 1e9) / total).replace(',', ' ');
-
-			printf(">> %d\n + %s\n = %s\n", gap, P, Q);
-			printf("%.3fs (tot=%.3fs), %d bits, %d digits, " + "x%.2g prev, %s%.2f merit, ~%g, %s p/s.\n", time / 1e9,
-					total / 1e9, P.bitLength(), P.toString().length(), p / prev, merit_pfx, merit, p, rateStr);
-			prev = p;
-			P = Q;
+		} finally {
+			stopping(new Info(total, P, best_merit, best_P));
 		}
 	}
 
