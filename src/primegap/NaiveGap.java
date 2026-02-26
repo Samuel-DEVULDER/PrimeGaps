@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 public class NaiveGap extends AbstractPrimeGap {
-	volatile Boolean stopping;
+	private volatile Boolean stopping;
 	{
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			if (stopping == null)
