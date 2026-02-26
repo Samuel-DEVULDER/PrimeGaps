@@ -52,8 +52,6 @@ public class NaiveGap extends AbstractPrimeGap {
 		String line = "-".repeat(8 + 2 + countWidth + 2 + BAR_WIDTH);
 		printf("%s%n", line);
 		String colors = " .:-=+*#%@";
-		// colors = "
-		// .'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
 		for (int i = 1; i < gapCounts.length; i++) {
 			if (gapCounts[i] == 0)
 				continue;
@@ -67,10 +65,10 @@ public class NaiveGap extends AbstractPrimeGap {
 		printf("%s%n", line);
 	}
 
-	final int timeout = 100_000;
+	private final int timeout = 100_000;
 	private int cnt = timeout;
 
-	boolean countGap(int gap) {
+	private boolean countGap(int gap) {
 		int idx = gap >> 1;
 		if (idx >= gapCounts.length)
 			gapCounts = Arrays.copyOf(gapCounts, idx * 2);
