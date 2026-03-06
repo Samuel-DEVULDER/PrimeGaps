@@ -1,5 +1,6 @@
 package primegap.util;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -9,7 +10,7 @@ import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 
-public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implements Collection<BigInteger> {
+public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implements Collection<BigInteger>, Closeable {
 	private static final Cleaner CLEANER = Cleaner.create();
 
 	private static class CleanupState implements Runnable {
@@ -95,6 +96,22 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 	public IncreasingBigIntegers(Collection<BigInteger> col) throws IOException {
 		this(4096);
 		col.stream().sorted().distinct().forEach(this::add);
+	}
+	
+	@Override
+	public void close() {
+		RandomAccessFile loc = raf;
+		if (loc != null) {
+			try {
+				loc.close();
+			} catch (IOException e) {
+			}
+		}
+		File loc2 = dbFile;
+		if (loc2 != null && loc2.delete()) {
+			loc2.delete();
+			System.out.println("Temp file cleaned up: " + loc2);
+		}
 	}
 
 	@Override

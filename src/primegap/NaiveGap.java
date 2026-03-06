@@ -39,7 +39,7 @@ public class NaiveGap extends AbstractPrimeGap {
 		int BAR_WIDTH = 60;
 
 		String align = "%-20s : ";
-		printf("\n=== Statistics ===%n");
+		printf("\n=== Statistics (%s) ===%n", name());
 		printf(align + "%,.0f%n", "#Primes", total);
 		if (info != null) {
 			printf(align + "%,.1f secs%n", "Time", info.time() / 1e9);

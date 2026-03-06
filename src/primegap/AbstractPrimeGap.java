@@ -10,6 +10,10 @@ import java.util.function.LongSupplier;
 import java.util.stream.IntStream;
 
 public abstract class AbstractPrimeGap {
+	protected boolean running(int gap) {
+		return gap <= 464; // 464;
+	}	
+	
 	static protected BigInteger v(long l) {
 		return BigInteger.valueOf(l);
 	}
@@ -115,14 +119,14 @@ public abstract class AbstractPrimeGap {
 		return System::nanoTime;
 	}
 
-	protected boolean running(int gap) {
-		return gap < 1 << 20;
-	}
-
 	record Info(long time, BigInteger lastP, double best_merit, BigInteger best_P) {
 	};
 
 	protected void stopping(Info info) {
+	}
+	
+	protected String name() {
+		return this.getClass().getSimpleName();
 	}
 
 	protected void searchGaps() {
@@ -133,7 +137,7 @@ public abstract class AbstractPrimeGap {
 
 		try {
 			for (int gap = 2; running(gap); gap += 2) {
-				printf("Searching gap >= %s...", gap);
+				printf("%s: Searching gap >= %s...", name(), gap);
 
 				long time = timer.getAsLong();
 				BigInteger P_ = find(gap, P);
@@ -141,7 +145,8 @@ public abstract class AbstractPrimeGap {
 				total += time;
 				if (P_ == null)
 					break;
-				printf("found.                                                                    \n");
+				String blank="                                       ";
+				printf("found.%s%s\n", blank, "\b".repeat(blank.length()));
 				P = P_;
 
 				BigInteger Q = nextPrime(P);

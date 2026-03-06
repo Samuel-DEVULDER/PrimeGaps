@@ -2,8 +2,6 @@ package primegap;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
-import java.util.Arrays;
-import java.util.stream.IntStream;
 
 public class ParallelSieveGap extends SieveGap {
 	class ParallelWindowedSieve extends SlidingWindowSieve {
@@ -42,15 +40,6 @@ public class ParallelSieveGap extends SieveGap {
 			concurrent = false;
 			dbg("large=", (timer.getAsLong() - now) / 1e6, "ms");
 			// super.markAllMultiples();
-		}
-
-		@Override
-		protected IntStream bulk(int from) {
-			concurrent = true;
-			int[] array = super.bulk(from).parallel().toArray();
-			concurrent = false;
-			Arrays.parallelSort(array);
-			return Arrays.stream(array);
 		}
 	}
 

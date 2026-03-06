@@ -27,9 +27,6 @@ public class SieveGap extends NaiveGap {
 	 * </p>
 	 */
 	class SlidingWindowSieve implements Supplier<BigInteger> {
-		boolean useBulk = false; // true  --> gap=464 in 447sec  false --> 434
-		// parallel true --> 413  / false -> 397
-		
 		/** Collection of all discovered primes, maintained in sorted order */
 		final IncreasingBigIntegers primes;
 
@@ -42,23 +39,13 @@ public class SieveGap extends NaiveGap {
 		final BigInteger windowSize_;
 
 		/** Real range covered by the window (= tab.length * 128) */
-		final int windowRange;
+		final long windowRange;
 		final BigInteger windowRange_;
 
-		static final BigInteger ZERO = i(0);
-		static final BigInteger ONE = i(1);
-		static final BigInteger TWO = i(2);
-		static final BigInteger THREE = i(3);
-
-		/**
-		 * Convenience method to create BigInteger from int.
-		 * 
-		 * @param v the integer value
-		 * @return BigInteger representation of v
-		 */
-		static BigInteger i(int v) {
-			return BigInteger.valueOf(v & 0xFFFFFFFFL);
-		}
+		static final BigInteger ZERO = v(0);
+		static final BigInteger ONE = v(1);
+		static final BigInteger TWO = v(2);
+		static final BigInteger THREE = v(3);
 
 		/** First odd number in the current window */
 		protected BigInteger start;
@@ -82,18 +69,60 @@ public class SieveGap extends NaiveGap {
 		 * @param primes the shared TreeSet to store discovered primes
 		 */
 		public SlidingWindowSieve(int size) {
-			size = Math.min(size, Integer.MAX_VALUE / 128); // safety
+			size = adaptSize(size);
 
 			this.primes = new IncreasingBigIntegers(1 << 24, 896779142); // 16Mb
 
 			this.windowSize = size * 64; // Number of bits/odd numbers
-			this.windowRange = size * 128; // Actual consecutive numbers covered
+			this.windowRange = adaptRange(this.windowSize); // Actual consecutive numbers covered
 			this.windowSize_ = v(this.windowSize);
 			this.windowRange_ = v(this.windowRange);
 			this.tab = newTab(this.tabLen = size);
-			setStart(THREE);
-			pending = IntStream.of(0).iterator();
+
+			bootstrap();
 		}
+
+		// -------------------------------------------------------------------
+		// Wheel hooks - override these in subclasses
+		// -------------------------------------------------------------------
+
+		/**
+		 * Adjusts the requested tabLen for safety and wheel alignment. Default
+		 * (wheel2): clamp so that windowRange = tabLen*128 fits in a long.
+		 */
+		protected int adaptSize(int size) {
+			return Math.min(size, Integer.MAX_VALUE / 64); // windowSize=size*64 must fit int
+		}
+
+		/**
+		 * Computes the real numeric range from the number of candidate bits. Default
+		 * (wheel2): 1 bit = 2 integers.
+		 */
+		protected long adaptRange(int totalBits) {
+			return totalBits * 2L;
+		}
+
+		/**
+		 * Converts bit index k to numeric offset from start. Default (wheel2): bit k ->
+		 * 2k.
+		 */
+		protected long bitposToNum(int bitpos) {
+			long l = bitpos & 0xFFFFFFFFL;
+			return l << 1;
+		}
+
+		/**
+		 * Seeds the sieve: sets window start and initialises the pending iterator.
+		 * Default (wheel2): start at 3, bootstrap via IntStream.of(0).
+		 */
+		protected void bootstrap() {
+			setStart(THREE);
+			pending = IntStream.of(-3).iterator();
+		}
+
+		// -------------------------------------------------------------------
+		// Core internals
+		// -------------------------------------------------------------------
 
 		protected long[] newTab(int size) {
 			return new long[size];
@@ -128,11 +157,11 @@ public class SieveGap extends NaiveGap {
 		 */
 		public void setStart(BigInteger start) {
 			// Ensure start is odd
-			if (start.testBit(0)) {
-				this.start = start;
-			} else {
-				this.start = start.add(ONE);
-			}
+			// if (start.testBit(0)) {
+			this.start = start;
+			// } else {
+			// this.start = start.add(ONE);
+			// }
 
 			String s = String.format(Locale.ENGLISH, "start=%s %.1f%% ~%.1f", this.start,
 					(numPrimes() * 100.0) / primes.limit(), getLastPrime().doubleValue() / primeCallCount);
@@ -150,8 +179,8 @@ public class SieveGap extends NaiveGap {
 
 			doMarking = true;
 		}
-		
-		protected void markMultiplesOf(BigInteger P)  {
+
+		protected void markMultiplesOf(BigInteger P) {
 			markMultiplesOf(start, tab, P);
 		}
 
@@ -189,7 +218,6 @@ public class SieveGap extends NaiveGap {
 			if (n.compareTo(windowRange_) >= 0)
 				return;
 
-			
 			// Convert to bit position
 			int bitPos = (n.intValue() >>> 1);
 			int i = bitPos >>> 6; // Index in tab array
@@ -225,7 +253,7 @@ public class SieveGap extends NaiveGap {
 			// Apply final mask
 			updateTab(tab, i, mask);
 		}
-		
+
 		/**
 		 * Finds the next set bit in the window, representing the next prime candidate.
 		 * 
@@ -275,26 +303,6 @@ public class SieveGap extends NaiveGap {
 		};
 		PrimitiveIterator.OfInt pending = EMPTY;
 
-		protected IntStream bulkExpand(int i) {
-			long v = ~tab[i];
-			if (v == (v & -v)) // 0 or 1 bit
-				return v == 0 ? IntStream.empty() : IntStream.of((i << 6) + Long.numberOfTrailingZeros(v));
-			int[] tmp = new int[Long.bitCount(v)];
-			int n = 0;
-			while (v != 0L) {
-				tmp[n++] = (i << 6) + Long.numberOfTrailingZeros(v);
-				v &= v - 1L;
-			}
-			return Arrays.stream(tmp);
-		}
-
-		protected IntStream bulk(int from) {
-//			System.err.println("Bulk " + from + "->" + tabLen + " (" + start + ")");
-			return IntStream.range(from, tabLen).flatMap(this::bulkExpand);
-		}
-
-		long bulk_start;
-
 		/**
 		 * Returns the next prime number. Implements Supplier&lt;BigInteger&gt;.
 		 * <p>
@@ -308,14 +316,18 @@ public class SieveGap extends NaiveGap {
 		@Override
 		public BigInteger get() {
 			int k;
+
+			++primeCallCount;
+
 			if (pending.hasNext()) {
 				k = pending.nextInt();
+				if (k < 0)
+					return lastPrime = v(-k);
 			} else {
 				while ((k = next()) < 0) {
 					long now = timer.getAsLong();
 					if (pending != EMPTY) {
 						pending = EMPTY;
-						dbg("Bulk done (", (now - bulk_start) / 1e9, "s)                                    ");
 					}
 					slideWindow();
 					dbg("Slide done (", (timer.getAsLong() - now) / 1e9,
@@ -324,7 +336,9 @@ public class SieveGap extends NaiveGap {
 			}
 
 			// Convert bit position to actual odd number: start + 2*k
-			BigInteger prime = start.add(i(k << 1));
+			BigInteger prime = start.add(v(bitposToNum(k)));
+			//System.err.println("Candidate bit=" + k + ", num=" + bitposToNum(k) + ", prime=" + prime + " (rem="
+			//		+ prime.mod(v(30)) + ")");
 			primes.add(prime);
 
 			if (doMarking) {
@@ -335,15 +349,9 @@ public class SieveGap extends NaiveGap {
 					dbg("Marking multiples of ", prime, " in ", (timer.getAsLong() - now) / 1e6, "ms.");
 				} else {
 					doMarking = false;
-				}
-				if (useBulk && pending == EMPTY && (last_tab & mask) == 0L) {
-					bulk_start = timer.getAsLong();
-					pending = bulk((last >>> last_shift) + 1).iterator();
-					dbg("Bulk started (", (timer.getAsLong() - bulk_start) / 1e9, "s)");
+					dbg("disabled marking for " , start);
 				}
 			}
-
-			++primeCallCount;
 
 			return lastPrime = prime;
 		}
@@ -353,8 +361,32 @@ public class SieveGap extends NaiveGap {
 			setStart(start.add(windowRange_));
 		}
 	}
+	
+	@Override
+	protected void stopping(Info info) {
+		super.stopping(info);
+		supplier.primes.close();
+	}
 
-	SlidingWindowSieve supplier = newSlidingWindowSieve(10_240_000);
+	
+	// 128 -> 5,232,179.3
+	// 64 ->  5,861,262.1
+	// 48 ->  5,913,321.2
+	// 40 ->  5,904,032.0	
+	// 36 ->  5,386,508.0
+	// 32 ->  5,973,348.8
+	// 24 ->  5,519,193.2
+	// 16 ->  4,522,208.0 
+	
+	// 1<<19 -> 5,087,780.2
+	// 1<<18 -> 6,028,986.7
+	// 1<<17 -> 5,560,017.5
+	SlidingWindowSieve supplier = newSlidingWindowSieve(1<<18);
+
+	@Override
+	protected String name() {
+		return super.name() + "/" + supplier.getClass().getSimpleName();
+	}
 
 	SlidingWindowSieve newSlidingWindowSieve(int size) {
 		return new SlidingWindowSieve(size);
