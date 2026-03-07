@@ -71,7 +71,7 @@ public class SieveGap extends NaiveGap {
 		public SlidingWindowSieve(int size) {
 			size = adaptSize(size);
 
-			this.primes = new IncreasingBigIntegers(1 << 24, 896779142); // 16Mb
+			this.primes = new IncreasingBigIntegers(1 << 24, 896779142/2/2/2); // 16Mb
 
 			this.windowSize = size * 64; // Number of bits/odd numbers
 			this.windowRange = adaptRange(this.windowSize); // Actual consecutive numbers covered

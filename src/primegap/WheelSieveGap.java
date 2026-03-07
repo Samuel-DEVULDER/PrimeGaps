@@ -320,20 +320,15 @@ public class WheelSieveGap extends SieveGap {
 
 		@Override
 		protected void bootstrap() {
-			primes.add(TWO);
-			primes.add(THREE);
-			setStart(THREE);
-			pending = IntStream.of(-3).iterator();
+			setStart(TWO);
+			pending = IntStream.of(-2).iterator();
 		}
 
-		/** bit k -> (k/48) * 210 + RESIDUES[k%48] (no power-of-2 shortcut for 48) */
 		@Override
 		protected long bitposToNum(int bitpos) {
-			long l = bitpos & 0xFFFFFFFFL;
-			return l << 1;
+			return bitpos * 2L + 1;
 		}
 
-		/** n -> (n/210)*48 + RESIDUE_INDEX[n%210] */
 		@Override
 		protected int numToBitpos(int group, int index) {
 			return group + index;
@@ -356,16 +351,8 @@ public class WheelSieveGap extends SieveGap {
 	}
 
 	final class Wheel6Sieve extends AbstracWheelSieve {
-
-		private static final Wheel WHEEL = Wheel.of(2, 3);
-
-		private static final int[] RESIDUES = WHEEL.residues(); // 48 values
-		private static final int[] RESIDUE_INDEX = WHEEL.residueIndex(); // size 210
-		private static final int[][] JUMPS = WHEEL.jumpFromAny(); // size 210
-
-		// bpa=48 is NOT a power of 2: plain / and % required
-		private static final int MOD = WHEEL.modulus(); // 210
-		private static final int BPA = WHEEL.bitsPerAlignment(); // 48
+		private static final int[] JUMPS = { -1, 1, -1, -1, -1, 1, -1, 4, 2, 2, 1, 2, -1, 3, -1, 1, -1, 1, -1, 2, 1, -1,
+				1, 2, -1, 1, -1, 1, -1, 3, -1, 2, 1, 2, 2, 4 };
 
 		public Wheel6Sieve(int size) {
 			super(size);
@@ -373,44 +360,49 @@ public class WheelSieveGap extends SieveGap {
 
 		@Override
 		protected int adaptSize(int size) {
-			return WHEEL.adaptSize(size);
+			return Math.min(size, Integer.MAX_VALUE / 64);
 		}
 
 		@Override
 		protected long adaptRange(int totalBits) {
-			return WHEEL.adaptRange(totalBits);
+			return 3L * totalBits;
 		}
 
 		@Override
 		protected void bootstrap() {
-			WHEEL.bootstrap(this);
+			primes.add(v(5));
+			setStart(v(6)); // first window starts just after small primes
+			pending = IntStream.of(-2, -3, -5).iterator();
 		}
 
-		/** bit k -> (k/48) * 210 + RESIDUES[k%48] (no power-of-2 shortcut for 48) */
 		@Override
 		protected long bitposToNum(int bitpos) {
-			return (bitpos / BPA) * MOD + RESIDUES[bitpos % BPA];
+			return (bitpos >>> 1) * 6L + ((bitpos & 1) == 0 ? 1 : 5);
 		}
 
-		/** n -> (n/210)*48 + RESIDUE_INDEX[n%210] */
 		@Override
 		protected int numToBitpos(int group, int index) {
-			return group * BPA + index;
+			return group * 2 + index;
 		}
 
 		@Override
 		protected int residue_index(int rem) {
-			return RESIDUE_INDEX[rem];
+			return switch (rem) {
+//			 [-1, 0, -1, -1, -1, 1]
+			case 1 -> 0;
+			case 5 -> 1;
+			default -> -1;
+			};
 		}
 
 		@Override
 		protected int jumps(int rem, int pMod) {
-			return JUMPS[rem][pMod];
+			return JUMPS[rem * 6 + pMod];
 		}
 
 		@Override
 		protected int MOD() {
-			return MOD;
+			return 6;
 		}
 	}
 
@@ -458,11 +450,13 @@ public class WheelSieveGap extends SieveGap {
 		/** bit k -> (k >> 3) * 30 + RESIDUES[k & 7] (shift/mask since bpa=8=2^3) */
 		@Override
 		protected long bitposToNum(int bitpos) {
-			return (bitpos >> BPA_SHIFT) * MOD + RESIDUES[bitpos & BPA_MASK];
+			//return (bitpos >>> BPA_SHIFT) * MOD + RESIDUES[bitpos & BPA_MASK];
+			return (bitpos >>> 3) * 30L + RESIDUES[bitpos & 7];
 		}
 
 		protected int numToBitpos(int group, int index) {
-			return (group << BPA_SHIFT) + index;
+			//return (group << BPA_SHIFT) + index;
+			return (group << 3) + index;
 		}
 
 		@Override
@@ -548,9 +542,68 @@ public class WheelSieveGap extends SieveGap {
 		}
 	}
 
+	final class Wheel2310Sieve extends AbstracWheelSieve {
+
+		private static final Wheel WHEEL = Wheel.of(2, 3, 5, 7, 11);
+
+		private static final int[] RESIDUES = WHEEL.residues(); // 48 values
+		private static final int[] RESIDUE_INDEX = WHEEL.residueIndex(); // size 210
+		private static final int[][] JUMPS = WHEEL.jumpFromAny(); // size 210
+
+		// bpa=48 is NOT a power of 2: plain / and % required
+		private static final int MOD = WHEEL.modulus(); // 210
+		private static final int BPA = WHEEL.bitsPerAlignment(); // 48
+
+		public Wheel2310Sieve(int size) {
+			super(size); // (size+MOD/6-1)/(MOD/6));
+		}
+
+		@Override
+		protected int adaptSize(int size) {
+			return WHEEL.adaptSize(size);
+		}
+
+		@Override
+		protected long adaptRange(int totalBits) {
+			return WHEEL.adaptRange(totalBits);
+		}
+
+		@Override
+		protected void bootstrap() {
+			WHEEL.bootstrap(this);
+		}
+
+		/** bit k -> (k/48) * 210 + RESIDUES[k%48] (no power-of-2 shortcut for 48) */
+		@Override
+		protected long bitposToNum(int bitpos) {
+			return (bitpos / BPA) * MOD + RESIDUES[bitpos % BPA];
+		}
+
+		/** n -> (n/210)*48 + RESIDUE_INDEX[n%210] */
+		@Override
+		protected int numToBitpos(int group, int index) {
+			return group * BPA + index;
+		}
+
+		@Override
+		protected int residue_index(int rem) {
+			return RESIDUE_INDEX[rem];
+		}
+
+		@Override
+		protected int jumps(int rem, int pMod) {
+			return JUMPS[rem][pMod];
+		}
+
+		@Override
+		protected int MOD() {
+			return MOD;
+		}
+	}
+
 	@Override
 	SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new Wheel210Sieve(size);
+		return new Wheel30Sieve(size);
 	}
 
 	public static void main(String[] args) {
