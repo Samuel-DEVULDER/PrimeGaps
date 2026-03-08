@@ -171,7 +171,7 @@ public class WheelSieveGap extends SieveGap {
 		 * the bit array, so no marking is needed.
 		 */
 		int[] pendingPrimes() {
-			// Tous les premiers < modulus : smallPrimes + résidus premiers < modulus
+			// Tous les premiers < modulus : smallPrimes + re	sidus premiers < modulus
 			IntStream all = Arrays.stream(smallPrimes); // 2, 3, 5
 			IntStream wheelPrimes = Arrays.stream(residues).filter(r -> r < modulus() && isPrime(r)); // 7, 11, 13, 17,
 																										// 19, 23, 29
@@ -407,7 +407,7 @@ public class WheelSieveGap extends SieveGap {
 	}
 
 	// =========================================================================
-	// Wheel30Sieve — 8 candidates per 30 integers (~73% fewer than odd-only)
+	// Wheel30Sieve - 8 candidates per 30 integers (~73% fewer than odd-only)
 	// =========================================================================
 
 	/**
@@ -476,7 +476,7 @@ public class WheelSieveGap extends SieveGap {
 	}
 
 	// =========================================================================
-	// Wheel210Sieve — 48 candidates per 210 integers (~77% fewer than odd-only)
+	// Wheel210Sieve - 48 candidates per 210 integers (~77% fewer than odd-only)
 	// =========================================================================
 
 	/**
