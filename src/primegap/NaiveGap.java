@@ -7,12 +7,20 @@ public class NaiveGap extends AbstractPrimeGap {
 	private volatile Boolean stopping;
 	{
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			if (stopping == null)
-				stopping = Boolean.TRUE;
+			stop();
 			while (stopping != Boolean.FALSE)
 				Thread.onSpinWait(); // attend l'ack ✅
 			printGapStats();
 		}));
+	}
+
+	public void stop() {
+		if (stopping == null)
+			stopping = Boolean.TRUE;
+	}
+	
+	public boolean isStopping() {
+		return stopping == Boolean.TRUE; 
 	}
 
 	@Override

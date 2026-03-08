@@ -11,7 +11,7 @@ import java.util.stream.IntStream;
 
 public abstract class AbstractPrimeGap {
 	protected boolean running(int gap) {
-		return gap <= 464; // 464;
+		return gap <= 464*2; // 464;
 	}	
 	
 	static protected BigInteger v(long l) {
@@ -106,7 +106,7 @@ public abstract class AbstractPrimeGap {
 
 	// --- Prime discovery rate tracking ---
 	long primeCallCount = 0;
-	protected LongSupplier timer = initTimer();
+	static protected LongSupplier timer = initTimer();
 
 	private static LongSupplier initTimer() {
 		ThreadMXBean tmx = ManagementFactory.getThreadMXBean();

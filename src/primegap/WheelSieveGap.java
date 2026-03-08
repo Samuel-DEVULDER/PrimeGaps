@@ -425,8 +425,8 @@ public class WheelSieveGap extends SieveGap {
 
 		// bpa=8=2^3: replace /8 and %8 by >>3 and &7
 		private static final int MOD = WHEEL.modulus(); // 30
-		private static final int BPA_SHIFT = WHEEL.bpaShift(); // 3
-		private static final int BPA_MASK = WHEEL.bpaMask(); // 7
+//		private static final int BPA_SHIFT = WHEEL.bpaShift(); // 3
+//		private static final int BPA_MASK = WHEEL.bpaMask(); // 7
 
 		public Wheel30Sieve(int size) {
 			super(size);
@@ -603,7 +603,7 @@ public class WheelSieveGap extends SieveGap {
 
 	@Override
 	SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new Wheel30Sieve(size);
+		return new Wheel210Sieve(size);
 	}
 
 	public static void main(String[] args) {
