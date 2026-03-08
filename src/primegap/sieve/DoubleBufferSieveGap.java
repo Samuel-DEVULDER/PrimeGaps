@@ -1,4 +1,4 @@
-package primegap;
+package primegap.sieve;
 
 import java.math.BigInteger;
 import java.util.concurrent.CompletableFuture;
@@ -75,7 +75,7 @@ public class DoubleBufferSieveGap extends SieveGap {
 	}
 
 	@Override
-	SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
+	protected SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
 		return new DoubleBufferWindowedSieve(size);
 	}
 

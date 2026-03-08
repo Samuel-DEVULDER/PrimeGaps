@@ -1,7 +1,10 @@
-package primegap;
+package primegap.naive;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+
+import primegap.AbstractPrimeGap;
+import primegap.Benchmark;
 
 public class NaiveGap extends AbstractPrimeGap {
 	private volatile Boolean stopping;
@@ -18,9 +21,9 @@ public class NaiveGap extends AbstractPrimeGap {
 		if (stopping == null)
 			stopping = Boolean.TRUE;
 	}
-	
+
 	public boolean isStopping() {
-		return stopping == Boolean.TRUE; 
+		return stopping == Boolean.TRUE;
 	}
 
 	@Override
@@ -32,7 +35,7 @@ public class NaiveGap extends AbstractPrimeGap {
 
 	// -------
 
-	long[] gapCounts = new long[1024];
+	public long[] gapCounts = new long[1024];
 	Info info = null;
 
 	void printGapStats() {
@@ -45,6 +48,8 @@ public class NaiveGap extends AbstractPrimeGap {
 
 		int countWidth = Math.max(5, Long.toString(maxCount).length());
 		int BAR_WIDTH = 60;
+		
+		Benchmark.printMachineInfo();
 
 		String align = "%-20s : ";
 		printf("\n=== Statistics (%s) ===%n", name());
@@ -90,7 +95,7 @@ public class NaiveGap extends AbstractPrimeGap {
 	}
 
 	@Override
-	BigInteger find(int gap, BigInteger P) {
+	protected BigInteger find(int gap, BigInteger P) {
 		BigInteger Q = nextPrimeImpl(P);
 		int delta = 0;
 		while ((delta = Q.subtract(P).intValueExact()) < gap) {

@@ -18,6 +18,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.jar.JarFile;
 
+import primegap.naive.NaiveGap;
+
 public class Benchmark {
 	final Duration RUNTIME = Duration.ofSeconds(300);
 	final Duration PAUSE = Duration.ofSeconds(10);
@@ -51,35 +53,36 @@ public class Benchmark {
 	@SafeVarargs
 	final void run(Class<? extends NaiveGap>... classes) throws Exception {
 		Collection<Algo> col = new TreeSet<>();
+		int i = 0;
 		for (var cls : classes) {
 			final var cst = cls.getConstructor();
 			NaiveGap impl = mute(null, () -> {
 				try {
 					return cst.newInstance();
-				} catch (Exception ignored) {
-					return null;
+				} catch (Exception ex) {
+					throw new RuntimeException(ex);
 				}
 			});
-			System.out.printf("Testing %s...", cls.getSimpleName());
+			System.out.printf("%d/%d Testing %s...", ++i, classes.length, impl.name());
 			AtomicLong time = new AtomicLong();
 			CountDownLatch started = new CountDownLatch(1);
-			Thread thr = new Thread() {
+			Thread bench = new Thread() {
 				public void run() {
 					started.countDown();
 					long start = System.nanoTime();
 					time.set(start);
 					impl.run();
-					time.set(start - System.nanoTime()); // négatif = fini
+					time.set(start - System.nanoTime());
 				};
 			};
 
 			mute(impl, () -> {
 				try {
-					thr.start();
+					bench.start();
 					started.await();
 					Thread.sleep(RUNTIME);
 					impl.stop();
-					thr.join(Duration.ofSeconds(60)); // wait 60 sec max
+					bench.join(Duration.ofSeconds(60)); // wait 60 sec max
 				} catch (InterruptedException e) {
 				}
 				return null;
@@ -95,10 +98,12 @@ public class Benchmark {
 			for (long c : impl.gapCounts)
 				numPrimes += c;
 			System.out.printf(Locale.ENGLISH, "%,d primes in %.1f secs%n", numPrimes, duration);
-			col.add(new Algo(impl.getClass().getSimpleName(), numPrimes / duration));
+			col.add(new Algo(impl.name(), numPrimes / duration));
 			System.gc();
 			Thread.sleep(PAUSE);
 		}
+		
+		printMachineInfo();
 		for (Algo alg : col) {
 			System.out.printf(Locale.ENGLISH, "%-60s %,.1f p/s%n", alg.name, alg.speed);
 		}
@@ -112,18 +117,6 @@ public class Benchmark {
 		System.setOut(ps);
 	}
 
-	public static void main(String[] args) {
-		try {
-			var impls = findSubclasses(NaiveGap.class);
-			@SuppressWarnings({ "unchecked", "rawtypes" })
-			Class<? extends NaiveGap>[] classes = impls.stream().map(c -> ((Class) c).asSubclass(NaiveGap.class))
-					.toArray(Class[]::new);
-			new Benchmark().run(classes);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 	public static <E> List<Class<? extends E>> findSubclasses(Class<E> parent) throws Exception {
 		String cp = System.getProperty("java.class.path");
 		List<Class<? extends E>> result = new ArrayList<>();
@@ -132,7 +125,7 @@ public class Benchmark {
 			Path path = Path.of(entry);
 			if (Files.isDirectory(path)) {
 				try (var stream = Files.walk(path)) {
-					stream.filter(p -> p.toString().endsWith(".class") && !p.toString().contains("$")).forEach(p -> {
+					stream.filter(p -> p.toString().endsWith(".class")).forEach(p -> {
 						String className = path.relativize(p).toString().replace(File.separatorChar, '.')
 								.replace(".class", "");
 						tryLoad(className, parent, result);
@@ -152,47 +145,62 @@ public class Benchmark {
 		return result;
 	}
 
-	static <E> void tryLoad(String className, Class<E> parent, List<Class<? extends  E>> result) {
-		try {
-			Class<?> cls = Class.forName(className);
-			if (parent.isAssignableFrom(cls) && cls != parent && !Modifier.isAbstract(cls.getModifiers())) {
-				result.add(cls.asSubclass(parent));
+	static <E> void tryLoad(String className, Class<E> parent, List<Class<? extends E>> result) {
+		if (!className.startsWith("attic.")) {
+			try {
+				Class<?> cls = Class.forName(className);
+				if (parent.isAssignableFrom(cls) && !Modifier.isAbstract(cls.getModifiers())) {
+					result.add(cls.asSubclass(parent));
+				}
+			} catch (Throwable ignored) {
 			}
-		} catch (Throwable ignored) {
 		}
 	}
 
-}
-
-class Wheel2Sieve extends WheelSieveGap {
-	@Override
-	SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new Wheel2Sieve(size);
+	public static void main(String[] args) {
+		try {
+			var impls = findSubclasses(NaiveGap.class);
+			// System.err.println("Found " + impls.size() + " implementations of " +
+			// NaiveGap.class);
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			Class<? extends NaiveGap>[] classes = impls.stream().map(c -> ((Class) c).asSubclass(NaiveGap.class))
+					.toArray(Class[]::new);
+			new Benchmark().run(classes);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
-	public Wheel2Sieve() {
-		super();
-}
-}
+	public static void printMachineInfo() {
+	    Runtime rt = Runtime.getRuntime();
+	    System.out.println("=== Machine Info ===");
+	    System.out.println("OS      : " + System.getProperty("os.name") 
+	                     + " " + System.getProperty("os.version")
+	                     + " (" + System.getProperty("os.arch") + ")");
+	    System.out.println("JVM     : " + System.getProperty("java.vm.name")
+	                     + " " + System.getProperty("java.version"));
+	    System.out.println("CPUs    : " + rt.availableProcessors());
+	    System.out.printf ("RAM     : %.1f GB total%n", 
+	                     rt.maxMemory() / 1e9);
+	    printCpuModel();
+	    System.out.println("====================");
+	}
 
-class Wheel6Sieve extends WheelSieveGap {
-	@Override
-	SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new Wheel6Sieve(size);
-	}
-	
-	public Wheel6Sieve() {
-		super();
-	}
-}
+	public static void printCpuModel() {
+		String os = System.getProperty("os.name").toLowerCase();
+		String[] cmd;
+		if (os.contains("linux"))
+			cmd = new String[] { "sh", "-c", "lscpu | grep -E 'Model name|L1|L2|L3'" };
+		else if (os.contains("mac"))
+			cmd = new String[] { "sh", "-c", "sysctl -n machdep.cpu.brand_string" };
+		else // Windows
+			cmd = new String[] { "cmd", "/c", "wmic cpu get name,L2CacheSize,L3CacheSize" };
 
-class Wheel30Sieve extends WheelSieveGap {
-	@Override
-	SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new Wheel30Sieve(size);
+		try {
+			Process proc = new ProcessBuilder(cmd).redirectErrorStream(true).start();
+			new String(proc.getInputStream().readAllBytes()).lines().filter(l -> !l.isBlank())
+					.forEach(System.out::println);
+		} catch (IOException ignore) {
+		}
 	}
-	
-	public Wheel30Sieve() {
-		super();
-	}	
 }

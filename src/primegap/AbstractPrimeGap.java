@@ -11,20 +11,20 @@ import java.util.stream.IntStream;
 
 public abstract class AbstractPrimeGap {
 	protected boolean running(int gap) {
-		return gap <= 464*2; // 464;
-	}	
-	
+		return gap <= 464 * 2; // 464;
+	}
+
 	static protected BigInteger v(long l) {
 		return BigInteger.valueOf(l);
 	}
 
-	static BigInteger TWO = v(2), ONE = v(1), ZERO = v(0);
+	static protected BigInteger TWO = v(2), ONE = v(1), ZERO = v(0);
 
-	void printf(String fmt, Object... args) {
+	static protected void printf(String fmt, Object... args) {
 		System.out.printf(Locale.ENGLISH, fmt, args);
 	}
 
-	void dbg(Object... objs) {
+	static protected void dbg(Object... objs) {
 //		for (Object o : objs)
 //			System.err.print(o);
 //		System.err.println();
@@ -37,7 +37,7 @@ public abstract class AbstractPrimeGap {
 	 * The following assumptions are made: This BigInteger is a positive, odd number
 	 * greater than 2. iterations<=50.
 	 */
-	boolean passesMillerRabin(BigInteger N, int iterations) {
+	static protected boolean passesMillerRabin(BigInteger N, int iterations) {
 		// Find a and m such that m is odd and this == 1 + 2**a * m
 		BigInteger thisMinusOne = N.subtract(ONE);
 		BigInteger m_ = thisMinusOne;
@@ -102,10 +102,10 @@ public abstract class AbstractPrimeGap {
 		return P;
 	}
 
-	abstract BigInteger find(int gap, BigInteger after);
+	protected abstract BigInteger find(int gap, BigInteger after);
 
 	// --- Prime discovery rate tracking ---
-	long primeCallCount = 0;
+	protected long primeCallCount = 0;
 	static protected LongSupplier timer = initTimer();
 
 	private static LongSupplier initTimer() {
@@ -119,12 +119,12 @@ public abstract class AbstractPrimeGap {
 		return System::nanoTime;
 	}
 
-	record Info(long time, BigInteger lastP, double best_merit, BigInteger best_P) {
+	protected record Info(long time, BigInteger lastP, double best_merit, BigInteger best_P) {
 	};
 
 	protected void stopping(Info info) {
 	}
-	
+
 	protected String name() {
 		return this.getClass().getSimpleName();
 	}
@@ -145,7 +145,7 @@ public abstract class AbstractPrimeGap {
 				total += time;
 				if (P_ == null)
 					break;
-				String blank="                                       ";
+				String blank = "                                       ";
 				printf("found.%s%s\n", blank, "\b".repeat(blank.length()));
 				P = P_;
 

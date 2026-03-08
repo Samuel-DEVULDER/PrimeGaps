@@ -1,4 +1,4 @@
-package primegap;
+package primegap.naive;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;

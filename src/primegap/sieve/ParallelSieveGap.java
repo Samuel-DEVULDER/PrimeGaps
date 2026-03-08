@@ -1,4 +1,4 @@
-package primegap;
+package primegap.sieve;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
@@ -44,7 +44,7 @@ public class ParallelSieveGap extends SieveGap {
 	}
 
 	@Override
-	SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
+	protected SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
 		return new ParallelWindowedSieve(size);
 	}
 

@@ -1,10 +1,13 @@
-package primegap;
+package primegap.sieve.wheel;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-public class WheelSieveGap extends SieveGap {
+import primegap.sieve.SieveGap;
+
+abstract class WheelSieveGap extends SieveGap {
+	
 	// =========================================================================
 	// Wheel record
 	// =========================================================================
@@ -39,7 +42,7 @@ public class WheelSieveGap extends SieveGap {
 	 * @param residueIndex reverse lookup: residueIndex[r] = index of r in
 	 *                     residues[], or -1 if r is not a wheel candidate
 	 */
-	record Wheel(int[] smallPrimes, int[] residues, int[] residueIndex, int[][] jumpFromAny) {
+	protected record Wheel(int[] smallPrimes, int[] residues, int[] residueIndex, int[][] jumpFromAny) {
 
 		/**
 		 * Builds a wheel from the given small primes. The modulus is computed as their
@@ -171,7 +174,7 @@ public class WheelSieveGap extends SieveGap {
 		 * the bit array, so no marking is needed.
 		 */
 		int[] pendingPrimes() {
-			// Tous les premiers < modulus : smallPrimes + re	sidus premiers < modulus
+			// Tous les premiers < modulus : smallPrimes + re sidus premiers < modulus
 			IntStream all = Arrays.stream(smallPrimes); // 2, 3, 5
 			IntStream wheelPrimes = Arrays.stream(residues).filter(r -> r < modulus() && isPrime(r)); // 7, 11, 13, 17,
 																										// 19, 23, 29
@@ -207,14 +210,10 @@ public class WheelSieveGap extends SieveGap {
 		}
 	}
 
-	abstract class AbstracWheelSieve extends SlidingWindowSieve {
-		public AbstracWheelSieve(int size) {
-			super(size);
+	protected abstract class AbstracWheelSieve extends SlidingWindowSieve {
+		protected AbstracWheelSieve(int size, long range) {
+			super(size, range);
 		}
-
-		abstract protected int adaptSize(int size);
-
-		abstract protected long adaptRange(int totalBits);
 
 		abstract protected void bootstrap();
 
@@ -227,7 +226,7 @@ public class WheelSieveGap extends SieveGap {
 		abstract protected int jumps(int rem, int pMod);
 
 		abstract protected int MOD();
-
+		
 		protected void markMultiplesOf(BigInteger start, long tab[], BigInteger p) {
 			// Find offset to first multiple of p >= start
 			BigInteger n = start.remainder(p);
@@ -303,216 +302,38 @@ public class WheelSieveGap extends SieveGap {
 		}
 	}
 
-	final class Wheel2Sieve extends AbstracWheelSieve {
-		public Wheel2Sieve(int size) {
-			super(size);
+	protected class WheelSieve extends AbstracWheelSieve {
+		final Wheel WHEEL;
+
+		final int[] RESIDUES;
+		final int[] RESIDUE_INDEX;
+		final int[][] JUMPS;
+
+		final int MOD;
+		final int BPA;
+		
+		protected WheelSieve(int size, int... primes) {
+			this(size, Wheel.of(primes));
 		}
 
-		@Override
-		protected int adaptSize(int size) {
-			return Math.min(size, Integer.MAX_VALUE / 64);
+		protected WheelSieve(int size, Wheel w) {
+			super(w.adaptSize(size),w.adaptRange(w.adaptSize(size)*64));
+			
+			WHEEL = w;
+
+			RESIDUES = WHEEL.residues();
+			RESIDUE_INDEX = WHEEL.residueIndex();
+			JUMPS = WHEEL.jumpFromAny();
+
+			MOD = WHEEL.modulus();
+			BPA = WHEEL.bitsPerAlignment();
+			
+			bootstrap();
 		}
-
-		@Override
-		protected long adaptRange(int totalBits) {
-			return totalBits * 2L;
-		}
-
-		@Override
-		protected void bootstrap() {
-			setStart(TWO);
-			pending = IntStream.of(-2).iterator();
-		}
-
-		@Override
-		protected long bitposToNum(int bitpos) {
-			return bitpos * 2L + 1;
-		}
-
-		@Override
-		protected int numToBitpos(int group, int index) {
-			return group + index;
-		}
-
-		@Override
-		protected int residue_index(int rem) {
-			return (rem & 1) - 1;
-		}
-
-		@Override
-		protected int jumps(int rem, int pMod) {
-			return pMod == 0 ? -1 : rem + 1;
-		}
-
-		@Override
-		protected int MOD() {
-			return 2;
-		}
-	}
-
-	final class Wheel6Sieve extends AbstracWheelSieve {
-		private static final int[] JUMPS = { -1, 1, -1, -1, -1, 1, -1, 4, 2, 2, 1, 2, -1, 3, -1, 1, -1, 1, -1, 2, 1, -1,
-				1, 2, -1, 1, -1, 1, -1, 3, -1, 2, 1, 2, 2, 4 };
-
-		public Wheel6Sieve(int size) {
-			super(size);
-		}
-
-		@Override
-		protected int adaptSize(int size) {
-			return Math.min(size, Integer.MAX_VALUE / 64);
-		}
-
-		@Override
-		protected long adaptRange(int totalBits) {
-			return 3L * totalBits;
-		}
-
-		@Override
-		protected void bootstrap() {
-			primes.add(v(5));
-			setStart(v(6)); // first window starts just after small primes
-			pending = IntStream.of(-2, -3, -5).iterator();
-		}
-
-		@Override
-		protected long bitposToNum(int bitpos) {
-			return (bitpos >>> 1) * 6L + ((bitpos & 1) == 0 ? 1 : 5);
-		}
-
-		@Override
-		protected int numToBitpos(int group, int index) {
-			return group * 2 + index;
-		}
-
-		@Override
-		protected int residue_index(int rem) {
-			return switch (rem) {
-//			 [-1, 0, -1, -1, -1, 1]
-			case 1 -> 0;
-			case 5 -> 1;
-			default -> -1;
-			};
-		}
-
-		@Override
-		protected int jumps(int rem, int pMod) {
-			return JUMPS[rem * 6 + pMod];
-		}
-
-		@Override
-		protected int MOD() {
-			return 6;
-		}
-	}
-
-	// =========================================================================
-	// Wheel30Sieve - 8 candidates per 30 integers (~73% fewer than odd-only)
-	// =========================================================================
-
-	/**
-	 * Wheel-30 sieve. Skips all multiples of 2, 3, 5. Only the wheel-specific
-	 * methods are overridden; everything else is inherited.
-	 */
-	final class Wheel30Sieve extends AbstracWheelSieve {
-
-		private static final Wheel WHEEL = Wheel.of(2, 3, 5);
-
-		// Copy into static finals for zero-indirection access at runtime
-		private static final int[] RESIDUES = WHEEL.residues(); // {1,7,11,13,17,19,23,29}
-		private static final int[] RESIDUE_INDEX = WHEEL.residueIndex(); // size 30
-		private static final int[][] JUMPS = WHEEL.jumpFromAny();
-
-		// bpa=8=2^3: replace /8 and %8 by >>3 and &7
-		private static final int MOD = WHEEL.modulus(); // 30
-//		private static final int BPA_SHIFT = WHEEL.bpaShift(); // 3
-//		private static final int BPA_MASK = WHEEL.bpaMask(); // 7
-
-		public Wheel30Sieve(int size) {
-			super(size);
-		}
-
-		@Override
-		protected int adaptSize(int size) {
-			return WHEEL.adaptSize(size);
-		}
-
-		@Override
-		protected long adaptRange(int totalBits) {
-			return WHEEL.adaptRange(totalBits);
-		}
-
-		@Override
+		
 		protected void bootstrap() {
 			WHEEL.bootstrap(this);
-		}
-
-		/** bit k -> (k >> 3) * 30 + RESIDUES[k & 7] (shift/mask since bpa=8=2^3) */
-		@Override
-		protected long bitposToNum(int bitpos) {
-			//return (bitpos >>> BPA_SHIFT) * MOD + RESIDUES[bitpos & BPA_MASK];
-			return (bitpos >>> 3) * 30L + RESIDUES[bitpos & 7];
-		}
-
-		protected int numToBitpos(int group, int index) {
-			//return (group << BPA_SHIFT) + index;
-			return (group << 3) + index;
-		}
-
-		@Override
-		protected int residue_index(int rem) {
-			return RESIDUE_INDEX[rem];
-		}
-
-		@Override
-		protected int jumps(int rem, int pMod) {
-			return JUMPS[rem][pMod];
-		}
-
-		@Override
-		protected int MOD() {
-			return MOD;
-		}
-	}
-
-	// =========================================================================
-	// Wheel210Sieve - 48 candidates per 210 integers (~77% fewer than odd-only)
-	// =========================================================================
-
-	/**
-	 * Wheel-210 sieve. Skips all multiples of 2, 3, 5, 7. Only the wheel-specific
-	 * methods are overridden; everything else is inherited.
-	 */
-	final class Wheel210Sieve extends AbstracWheelSieve {
-
-		private static final Wheel WHEEL = Wheel.of(2, 3, 5, 7);
-
-		private static final int[] RESIDUES = WHEEL.residues(); // 48 values
-		private static final int[] RESIDUE_INDEX = WHEEL.residueIndex(); // size 210
-		private static final int[][] JUMPS = WHEEL.jumpFromAny(); // size 210
-
-		// bpa=48 is NOT a power of 2: plain / and % required
-		private static final int MOD = WHEEL.modulus(); // 210
-		private static final int BPA = WHEEL.bitsPerAlignment(); // 48
-
-		public Wheel210Sieve(int size) {
-			super(size); // (size+MOD/6-1)/(MOD/6));
-		}
-
-		@Override
-		protected int adaptSize(int size) {
-			return WHEEL.adaptSize(size);
-		}
-
-		@Override
-		protected long adaptRange(int totalBits) {
-			return WHEEL.adaptRange(totalBits);
-		}
-
-		@Override
-		protected void bootstrap() {
-			WHEEL.bootstrap(this);
-		}
+		}	
 
 		/** bit k -> (k/48) * 210 + RESIDUES[k%48] (no power-of-2 shortcut for 48) */
 		@Override
@@ -541,73 +362,4 @@ public class WheelSieveGap extends SieveGap {
 			return MOD;
 		}
 	}
-
-	final class Wheel2310Sieve extends AbstracWheelSieve {
-
-		private static final Wheel WHEEL = Wheel.of(2, 3, 5, 7, 11);
-
-		private static final int[] RESIDUES = WHEEL.residues(); // 48 values
-		private static final int[] RESIDUE_INDEX = WHEEL.residueIndex(); // size 210
-		private static final int[][] JUMPS = WHEEL.jumpFromAny(); // size 210
-
-		// bpa=48 is NOT a power of 2: plain / and % required
-		private static final int MOD = WHEEL.modulus(); // 210
-		private static final int BPA = WHEEL.bitsPerAlignment(); // 48
-
-		public Wheel2310Sieve(int size) {
-			super(size); // (size+MOD/6-1)/(MOD/6));
-		}
-
-		@Override
-		protected int adaptSize(int size) {
-			return WHEEL.adaptSize(size);
-		}
-
-		@Override
-		protected long adaptRange(int totalBits) {
-			return WHEEL.adaptRange(totalBits);
-		}
-
-		@Override
-		protected void bootstrap() {
-			WHEEL.bootstrap(this);
-		}
-
-		/** bit k -> (k/48) * 210 + RESIDUES[k%48] (no power-of-2 shortcut for 48) */
-		@Override
-		protected long bitposToNum(int bitpos) {
-			return (bitpos / BPA) * MOD + RESIDUES[bitpos % BPA];
-		}
-
-		/** n -> (n/210)*48 + RESIDUE_INDEX[n%210] */
-		@Override
-		protected int numToBitpos(int group, int index) {
-			return group * BPA + index;
-		}
-
-		@Override
-		protected int residue_index(int rem) {
-			return RESIDUE_INDEX[rem];
-		}
-
-		@Override
-		protected int jumps(int rem, int pMod) {
-			return JUMPS[rem][pMod];
-		}
-
-		@Override
-		protected int MOD() {
-			return MOD;
-		}
-	}
-
-	@Override
-	SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new Wheel210Sieve(size);
-	}
-
-	public static void main(String[] args) {
-		new WheelSieveGap().run();
-	}
-
 }
