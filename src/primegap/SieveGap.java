@@ -264,7 +264,7 @@ public class SieveGap extends NaiveGap {
 			if (last_shift == 0) {
 				long v = last_tab & mask;
 
-				while (v == 0) {
+				while (v == 0L) {
 					if (++last == tabLen)
 						return -1;
 					last_tab = v = ~getTab(tab, last);
@@ -275,7 +275,7 @@ public class SieveGap extends NaiveGap {
 			} else {
 				long v = last_tab & mask;
 
-				while (v == 0) {
+				while (v == 0L) {
 					int i = (last += 64) >>> last_shift;
 					if (i == tabLen)
 						return -1;
@@ -287,7 +287,7 @@ public class SieveGap extends NaiveGap {
 			}
 		}
 
-		final int last_shift = 6;
+		final int last_shift = 6*0;
 		protected int last;
 		protected long mask;
 		protected long last_tab;

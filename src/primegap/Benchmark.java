@@ -88,7 +88,7 @@ public class Benchmark {
 			if (duration < 0) {
 				duration = -duration;
 			} else {
-				duration = AbstractPrimeGap.timer.getAsLong() - duration;
+				duration = System.nanoTime() - duration;
 			}
 			duration /= 1e9; // sec
 			long numPrimes = 0;
