@@ -76,7 +76,7 @@ public class DoubleBufferSieveGap extends SieveGap {
 
 	@Override
 	protected SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new DoubleBufferWindowedSieve(size);
+		return new DoubleBufferWindowedSieve(size/2);
 	}
 
 	public static void main(String[] args) {

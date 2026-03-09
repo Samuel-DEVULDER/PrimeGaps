@@ -289,7 +289,7 @@ public class SieveGap extends NaiveGap {
 			}
 		}
 
-		final int last_shift = 6 * 0;
+		final int last_shift = 6;
 		protected int last;
 		protected long mask;
 		protected long last_tab;

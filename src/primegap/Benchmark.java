@@ -21,7 +21,7 @@ import java.util.jar.JarFile;
 import primegap.naive.NaiveGap;
 
 public class Benchmark {
-	final Duration RUNTIME = Duration.ofSeconds(300);
+	final Duration RUNTIME = Duration.ofSeconds(600);
 	final Duration PAUSE = Duration.ofSeconds(10);
 
 	record Algo(String name, double speed) implements Comparable<Algo> {
