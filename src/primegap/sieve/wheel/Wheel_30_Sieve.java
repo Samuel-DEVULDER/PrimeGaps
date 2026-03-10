@@ -38,7 +38,7 @@ public class Wheel_30_Sieve extends WheelSieveGap {
 	protected SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
 		return new OptWheelSieve(size);
 	}
-
+	
 	public Wheel_30_Sieve() {
 		super();
 	}

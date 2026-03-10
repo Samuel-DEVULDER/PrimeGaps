@@ -24,7 +24,7 @@ public abstract class AbstractPrimeGap {
 		System.out.printf(Locale.ENGLISH, fmt, args);
 	}
 
-	static protected void dbg(Object... objs) {
+	public static void dbg(Object... objs) {
 //		for (Object o : objs)
 //			System.err.print(o);
 //		System.err.println();
@@ -106,7 +106,7 @@ public abstract class AbstractPrimeGap {
 
 	// --- Prime discovery rate tracking ---
 	protected long primeCallCount = 0;
-	static protected LongSupplier timer = initTimer();
+	public static LongSupplier timer = initTimer();
 
 	private static LongSupplier initTimer() {
 		ThreadMXBean tmx = ManagementFactory.getThreadMXBean();

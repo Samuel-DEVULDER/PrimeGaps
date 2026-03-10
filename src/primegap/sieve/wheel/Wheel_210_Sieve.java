@@ -9,9 +9,9 @@ public class Wheel_210_Sieve extends WheelSieveGap {
 
 	@Override
 	protected SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new WheelSieve(size, 2, 3, 5, 7);
+		return newWheelSieve(size, 2, 3, 5, 7);
 	}
-
+	
 	public Wheel_210_Sieve() {
 		super();
 	}

@@ -1,13 +1,14 @@
 package primegap.sieve.wheel;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.IntStream;
+import java.util.List;
 
 import primegap.sieve.SieveGap;
 
 abstract class WheelSieveGap extends SieveGap {
-	
+
 	// =========================================================================
 	// Wheel record
 	// =========================================================================
@@ -50,10 +51,16 @@ abstract class WheelSieveGap extends SieveGap {
 		 *
 		 * @param smallPrimes e.g. {@code 2,3,5} for wheel30
 		 */
-		static Wheel of(int... smallPrimes) {
+		static Wheel of(int... smallPrimes_) {
+			int[] smallPrimes = new int[smallPrimes_.length];
 			int mod = 1;
-			for (int p : smallPrimes)
+			for (int i = 0; i < smallPrimes_.length; i++) {
+				int p = smallPrimes_[i];
+				if (p < 2 || p > 127 || !isPrime(p))
+					throw new IllegalArgumentException("Invalid prime: " + p);
+				smallPrimes[i] = p;
 				mod *= p;
+			}
 
 			// Residues: integers in [1, mod) coprime to all small primes
 			int count = 0;
@@ -174,11 +181,17 @@ abstract class WheelSieveGap extends SieveGap {
 		 * the bit array, so no marking is needed.
 		 */
 		int[] pendingPrimes() {
+			List<Integer> list = new ArrayList<>();
+			for (int b : smallPrimes)
+				list.add(-b);
 			// Tous les premiers < modulus : smallPrimes + re sidus premiers < modulus
-			IntStream all = Arrays.stream(smallPrimes); // 2, 3, 5
-			IntStream wheelPrimes = Arrays.stream(residues).filter(r -> r < modulus() && isPrime(r)); // 7, 11, 13, 17,
-																										// 19, 23, 29
-			return IntStream.concat(all, wheelPrimes).map(p -> -p).toArray();
+			for (int r : residues)
+				if (r < modulus() && isPrime(r))
+					list.add(-r);
+			int[] arr = new int[list.size()];
+			for (int i = 0; i < arr.length; i++)
+				arr[i] = list.get(i);
+			return arr;
 		}
 
 		private static boolean isPrime(int n) {
@@ -212,7 +225,7 @@ abstract class WheelSieveGap extends SieveGap {
 
 	protected abstract class AbstracWheelSieve extends SlidingWindowSieve {
 		protected AbstracWheelSieve(int size, long range) {
-			super(size, range);
+			super(WheelSieveGap.this, size, range);
 		}
 
 		abstract protected void bootstrap();
@@ -227,6 +240,11 @@ abstract class WheelSieveGap extends SieveGap {
 
 		abstract protected int MOD();
 		
+		@Override
+		protected String name() {
+			return "WHEEL_" + MOD();
+		}
+
 		protected void markMultiplesOf(BigInteger start, long tab[], BigInteger p) {
 			// Find offset to first multiple of p >= start
 			BigInteger n = start.remainder(p);
@@ -311,14 +329,14 @@ abstract class WheelSieveGap extends SieveGap {
 
 		final int MOD;
 		final int BPA;
-		
+
 		protected WheelSieve(int size, int... primes) {
 			this(size, Wheel.of(primes));
 		}
 
 		protected WheelSieve(int size, Wheel w) {
-			super(w.adaptSize(size),w.adaptRange(w.adaptSize(size)*64));
-			
+			super(w.adaptSize(size), w.adaptRange(w.adaptSize(size) * 64));
+
 			WHEEL = w;
 
 			RESIDUES = WHEEL.residues();
@@ -327,13 +345,13 @@ abstract class WheelSieveGap extends SieveGap {
 
 			MOD = WHEEL.modulus();
 			BPA = WHEEL.bitsPerAlignment();
-			
+
 			bootstrap();
 		}
-		
+
 		protected void bootstrap() {
 			WHEEL.bootstrap(this);
-		}	
+		}
 
 		/** bit k -> (k/48) * 210 + RESIDUES[k%48] (no power-of-2 shortcut for 48) */
 		@Override
@@ -361,5 +379,9 @@ abstract class WheelSieveGap extends SieveGap {
 		protected int MOD() {
 			return MOD;
 		}
+	}
+
+	protected WheelSieve newWheelSieve(int size, int... primes) {
+		return new WheelSieve(size, primes);
 	}
 }
