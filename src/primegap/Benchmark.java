@@ -194,30 +194,30 @@ public class Benchmark {
 	static int probeCache() {
 	    System.out.println("=== Cache probing (pointer chasing) ===");
 
-	    // Warm-up JIT sur tableau moyen
+	    // Warm-up JIT
 	    int[] w = buildChain(256 * 1024 / 4);
 	    long wEnd = System.nanoTime() + 3_000_000_000L;
 	    int idx = 0;
 	    while (System.nanoTime() < wEnd) idx = w[idx];
 	    if (idx < 0) System.out.print("");
 
-	    // Génération des tailles : puissances de 2 × quarts d'octave (×2^(1/4))
-	    double STEP = Math.pow(2, 0.25); // 2^(1/4) ~ 1.189
+	    // Tailles en quarts d'octave (x 2^(1/4))
+	    double STEP = Math.pow(2, 0.25);
 	    List<Integer> sizeList = new ArrayList<>();
 	    for (double sz = 8 * 1024; sz <= 64 * 1024 * 1024 + 1; sz *= STEP) {
-	        int s = (int)(sz / 16) * 16; // aligner sur 16 bytes
+	        int s = (int)(sz / 16) * 16;
 	        if (sizeList.isEmpty() || s != sizeList.get(sizeList.size() - 1))
 	            sizeList.add(s);
 	    }
-	    int steps     = sizeList.size();
-	    int[] sizes   = sizeList.stream().mapToInt(Integer::intValue).toArray();
+	    int steps          = sizeList.size();
+	    int[] sizes        = sizeList.stream().mapToInt(Integer::intValue).toArray();
 	    double[] latencies = new double[steps];
 
 	    int REPEATS = 7;
 	    int HOPS    = 1 << 23;
 
 	    for (int s = 0; s < steps; s++) {
-	        int len   = sizes[s] / 4;
+	        int len     = sizes[s] / 4;
 	        int[] chain = buildChain(len);
 
 	        double[] samples = new double[REPEATS];
@@ -234,7 +234,7 @@ public class Benchmark {
 	        System.out.printf("size=%7d KB  latency=%6.1f ns%n", sizes[s] / 1024, latencies[s]);
 	    }
 
-	    // Stabilisation JIT : 3 points consécutifs dans ±30% de leur moyenne
+	    // Stabilisation JIT : 3 points consecutifs dans +/-30% de leur moyenne
 	    int startDetect = steps / 4;
 	    for (int s = 2; s < steps - 4; s++) {
 	        double a = latencies[s], b = latencies[s+1], c = latencies[s+2];
@@ -247,9 +247,9 @@ public class Benchmark {
 	            break;
 	        }
 	    }
-	    System.out.printf("  (stabilisation JIT à partir de %d KB)%n", sizes[startDetect] / 1024);
+	    System.out.printf("  (stabilisation JIT a partir de %d KB)%n", sizes[startDetect] / 1024);
 
-	    // Détection des seuils par fenêtre glissante 3+3
+	    // Detection des seuils par fenetre glissante 3+3
 	    List<int[]> thresholds = new ArrayList<>();
 	    for (int s = startDetect + 3; s < steps - 3; s++) {
 	        double before = (latencies[s-3] + latencies[s-2] + latencies[s-1]) / 3.0;
@@ -259,24 +259,27 @@ public class Benchmark {
 	            sizes[s] > thresholds.get(thresholds.size()-1)[0] * 4;
 	        if (bigJump && farEnough) {
 	            thresholds.add(new int[]{sizes[s-1], s-1});
-	            System.out.printf("  ^^^ seuil #%d détecté à ~%d KB  (%.1f -> %.1f ns)%n",
+	            System.out.printf("  >>> seuil #%d detecte a ~%d KB  (%.1f -> %.1f ns)%n",
 	                thresholds.size(), sizes[s-1] / 1024, before, after);
 	        }
 	    }
 
-	    // Interprétation
+	    // Interpretation
 	    String[] cacheNames = {"L2", "L3", "RAM"};
-	    System.out.println("\n=== Interprétation ===");
+	    System.out.println("\n=== Interpretation ===");
 	    for (int i = 0; i < thresholds.size() && i < 3; i++)
 	        System.out.printf("  Fin %s : ~%d KB%n", cacheNames[i], thresholds.get(i)[0] / 1024);
 
-	    // Taille optimale = 75% du 1er seuil (fin L2), arrondi à la puissance de 2 inférieure
+	    // Taille optimale : puissance de 2 juste sous le 1er seuil,
+	    // prise superieure si le seuil depasse 1.5x cette puissance
 	    int optimal;
 	    if (!thresholds.isEmpty()) {
-	        optimal = Integer.highestOneBit(thresholds.get(0)[0] * 3 / 4);
+	        int l2end = thresholds.get(0)[0];
+	        optimal = Integer.highestOneBit(l2end);
+	        if (l2end > optimal + optimal / 2) optimal <<= 1;
 	    } else {
 	        optimal = 256 * 1024;
-	        System.out.println("  (aucun seuil détecté, fallback 256 KB)");
+	        System.out.println("  (aucun seuil detecte, fallback 256 KB)");
 	    }
 
 	    System.out.printf("%n=> Taille optimale pour le sieve : %d KB%n%n", optimal / 1024);
