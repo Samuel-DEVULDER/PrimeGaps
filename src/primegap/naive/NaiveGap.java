@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import primegap.AbstractPrimeGap;
-import primegap.Benchmark;
+import primegap.util.Machine;
 
 public class NaiveGap extends AbstractPrimeGap {
 	private volatile Boolean stopping;
@@ -12,7 +12,7 @@ public class NaiveGap extends AbstractPrimeGap {
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			stop();
 			while (stopping != Boolean.FALSE)
-				Thread.onSpinWait(); // attend l'ack ✅
+				Thread.onSpinWait(); // attend l'ack âœ…
 			printGapStats();
 		}));
 	}
@@ -49,7 +49,7 @@ public class NaiveGap extends AbstractPrimeGap {
 		int countWidth = Math.max(5, Long.toString(maxCount).length());
 		int BAR_WIDTH = 60;
 		
-		Benchmark.printMachineInfo();
+		Machine.printMachineInfo(System.out);
 
 		String align = "%-20s : ";
 		printf("\n=== Statistics (%s) ===%n", name());
