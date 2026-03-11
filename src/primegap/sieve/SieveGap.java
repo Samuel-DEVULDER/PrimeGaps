@@ -456,7 +456,6 @@ public class SieveGap extends NaiveGap {
 
 	public static int defaultWindowSize = 262144;
 	// Machine.probeCache(System.out);
-
 	SlidingWindowSieve supplier = newSlidingWindowSieve(defaultWindowSize);
 
 	@Override
