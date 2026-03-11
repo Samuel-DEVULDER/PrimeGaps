@@ -68,6 +68,7 @@ public class SieveGap extends NaiveGap {
 	 * This naturally captures both T_cache and T_overhead in one measurement.
 	 */
 	// Remplace : public static int defaultWindowSize = probeCache();
+	@SuppressWarnings("resource")
 	static int probeOptimalTabLen(PrintStream out) {
 		out = (out != null) ? out : System.err;
 		out.println("=== Probing optimal tabLen ===");
