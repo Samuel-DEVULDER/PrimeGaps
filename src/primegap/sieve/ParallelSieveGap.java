@@ -44,7 +44,7 @@ public class ParallelSieveGap extends SieveGap {
 	}
 
 	@Override
-	protected SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
+	protected SlidingWindowSieve newSlidingWindowSieve(int size) {
 		return new ParallelWindowedSieve(size);
 	}
 

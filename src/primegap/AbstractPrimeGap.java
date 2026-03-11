@@ -105,7 +105,7 @@ public abstract class AbstractPrimeGap {
 	protected abstract BigInteger find(int gap, BigInteger after);
 
 	// --- Prime discovery rate tracking ---
-	protected long primeCallCount = 0;
+	public long primeCallCount = 0;
 	public static LongSupplier timer = initTimer();
 
 	private static LongSupplier initTimer() {

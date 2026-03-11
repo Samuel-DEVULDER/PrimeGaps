@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import primegap.sieve.SieveGap;
+import primegap.sieve.SlidingWindowSieve;
 
 abstract class WheelSieveGap extends SieveGap {
 

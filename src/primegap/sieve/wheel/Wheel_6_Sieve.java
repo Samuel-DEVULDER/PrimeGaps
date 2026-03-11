@@ -2,7 +2,7 @@ package primegap.sieve.wheel;
 
 import java.util.stream.IntStream;
 
-import primegap.sieve.SieveGap;
+import primegap.sieve.SlidingWindowSieve;
 
 public class Wheel_6_Sieve extends WheelSieveGap {
 	class WheelSieve extends AbstracWheelSieve {
@@ -60,7 +60,7 @@ public class Wheel_6_Sieve extends WheelSieveGap {
 	}
 
 	@Override
-	protected SieveGap.SlidingWindowSieve newSlidingWindowSieve(int size) {
+	protected SlidingWindowSieve newSlidingWindowSieve(int size) {
 		return new WheelSieve(size);
 	}
 

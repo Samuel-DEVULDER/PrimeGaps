@@ -5,8 +5,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import primegap.AbstractPrimeGap;
-import primegap.sieve.SieveGap.DelegatingSlidingWindowSieve;
-import primegap.sieve.SieveGap.SlidingWindowSieve;
+import primegap.sieve.DelegatingSlidingWindowSieve;
+import primegap.sieve.SlidingWindowSieve;
 
 public class DoubleBufferedSieve extends DelegatingSlidingWindowSieve {
 	final NextWindowRunnable prefetch;

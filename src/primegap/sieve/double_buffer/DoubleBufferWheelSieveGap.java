@@ -1,5 +1,6 @@
 package primegap.sieve.double_buffer;
 
+import primegap.sieve.SlidingWindowSieve;
 import primegap.sieve.wheel.Wheel_210_Sieve;
 
 public class DoubleBufferWheelSieveGap extends Wheel_210_Sieve {

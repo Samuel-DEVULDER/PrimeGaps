@@ -1,6 +1,7 @@
 package primegap.sieve.double_buffer;
 
 import primegap.sieve.SieveGap;
+import primegap.sieve.SlidingWindowSieve;
 
 public class DoubleBufferSieveGap extends SieveGap {
 	@Override
