@@ -53,7 +53,7 @@ public class SieveGap extends NaiveGap {
 	}
 
 	public static void main(String[] args) {
-		probeOptimalTabLen(System.out);
+		//probeOptimalTabLen(System.out);
 		new SieveGap().run();
 	}
 

@@ -1,4 +1,7 @@
-package primegap.sieve;
+package primegap.sieve.simd;
+
+import primegap.sieve.SieveGap;
+import primegap.sieve.SlidingWindowSieve;
 
 public class SIMDSieveGap extends SieveGap {
 	@Override

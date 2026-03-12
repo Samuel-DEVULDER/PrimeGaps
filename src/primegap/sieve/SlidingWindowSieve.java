@@ -217,7 +217,7 @@ import primegap.util.IncreasingBigIntegers;
 
 		/**
 		 * Clears the bit for each odd multiple of p within the current window. Uses bit
-		 * accumulation to minimize memory accesses (one write per long).
+S		 * accumulation to minimize memory accesses (one write per long).
 		 * <p>
 		 * Since only odd numbers are represented, bit k corresponds to number start +
 		 * 2*k. For an odd prime p, consecutive odd multiples are spaced by 2*p in

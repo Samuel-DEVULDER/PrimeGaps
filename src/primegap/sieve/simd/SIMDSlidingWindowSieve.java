@@ -1,11 +1,12 @@
-package primegap.sieve;
+package primegap.sieve.simd;
 
 import java.math.BigInteger;
-import java.util.stream.LongStream;
 
 import jdk.incubator.vector.LongVector;
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
+import primegap.sieve.SieveGap;
+import primegap.sieve.SlidingWindowSieve;
 import primegap.util.Machine;
 
 public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
@@ -24,12 +25,6 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 	static boolean isSIMDEnabled = Machine.enableSIMD();
 
 	static final VectorSpecies<Long> SPECIES = LongVector.SPECIES_PREFERRED;
-	static final int LANE_COUNT = SPECIES.length();
-	static final LongVector LANE_IDS = LongVector.fromArray(SPECIES, LongStream.range(0, SPECIES.length()).toArray(),
-			0);
-
-	private LongVector vect = LongVector.zero(SPECIES);
-	private int vectBlock = -LANE_COUNT;
 
 	private static LongVector buildMask256(long[] buf, long p0, long p1, long p2, long p3) {
 		buf[0] = 1L << (int) (p0 & 63);
@@ -208,97 +203,4 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 			markMultiplesOfSimdGeneric(bitPos, tab, pLong);
 		}
 	}
-
-	protected void markMultiplesOfxxxx(BigInteger start, long[] tab, BigInteger p) {
-		// Calcul du premier multiple (identique à la version de base)
-		BigInteger n = start.remainder(p);
-		if (n.signum() > 0)
-			n = p.subtract(n);
-		if (n.testBit(0))
-			n = n.add(p);
-		if (n.compareTo(windowRange_) >= 0)
-			return;
-
-		int bitPos = (n.intValue() >>> 1);
-		int i = bitPos >>> 6;
-		int b = bitPos & 63;
-
-		if (p.compareTo(windowSize_) >= 0) {
-			// Grand premier : un seul multiple -> scalaire direct, pas de SIMD utile
-			tab[i] |= (1L << b);
-			return;
-		}
-
-		// Petit premier : boucle avec stride constant -> SIMD utile
-		long pLong = p.longValue();
-		int vLen = SPECIES.length(); // ex: 4 pour AVX2 (4 longs = 256 bits)
-		long vLen1 = vLen - 1;
-
-		// vect LOCAL -> le JIT peut le garder en registre
-		LongVector vect = null;
-		int vectIndex = -1;
-
-		long pos = bitPos;
-		while (pos < windowSize) {
-			int ni = (int) (pos >>> 6);
-			int nb = (int) (pos & 63);
-			int vi = ni & ~(int) vLen1; // début du bloc SIMD
-
-			if (vi != vectIndex) {
-				// Flush le vecteur précédent
-				if (vect != null)
-					vect.intoArray(tab, vectIndex);
-				// Charge le nouveau bloc
-				vect = LongVector.fromArray(SPECIES, tab, vi);
-				vectIndex = vi;
-			}
-
-			if (false) {
-				LongVector laneSelect = (LongVector) LANE_IDS.compare(VectorOperators.EQ, ni & vLen1).toVector();
-				vect = vect.lanewise(VectorOperators.OR,
-						laneSelect.lanewise(VectorOperators.AND, LongVector.broadcast(SPECIES, 1L << nb)));
-			} else {
-				vect = vect.lanewise(VectorOperators.OR, LongVector.broadcast(SPECIES, 1L << nb),
-						LANE_IDS.compare(VectorOperators.EQ, ni & vLen1));
-			}
-
-			pos += pLong;
-		}
-
-		// Flush final
-		if (vect != null)
-			vect.intoArray(tab, vectIndex);
-	}
-
-	@Override
-	protected void updateTab(long[] tab, int i, long mask) {
-		int laneIdx = i & (LANE_COUNT - 1);
-		int blockIdx = i & ~(LANE_COUNT - 1);
-
-		if (blockIdx != vectBlock) {
-			if (vectBlock >= 0)
-				vect.intoArray(tab, vectBlock);
-			vect = LongVector.fromArray(SPECIES, tab, blockIdx);
-			vectBlock = blockIdx;
-		}
-
-		if (true) {
-			LongVector laneSelect = (LongVector) LANE_IDS.compare(VectorOperators.EQ, (long) laneIdx).toVector();
-			vect = vect.lanewise(VectorOperators.OR,
-					laneSelect.lanewise(VectorOperators.AND, LongVector.broadcast(SPECIES, mask)));
-		} else {
-			vect = vect.lanewise(VectorOperators.OR, LongVector.broadcast(SPECIES, mask),
-					LANE_IDS.compare(VectorOperators.EQ, (long) laneIdx));
-		}
-	}
-
-	// @Override
-	protected void xmarkMultiplesOf(BigInteger start, long[] tab, BigInteger p) {
-		super.markMultiplesOf(start, tab, p);
-		if (vectBlock >= 0) {
-			vect.intoArray(tab, vectBlock);
-			vectBlock = -LANE_COUNT;
-		}
-	}
-
 };

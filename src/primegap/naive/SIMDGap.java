@@ -160,29 +160,9 @@ public class SIMDGap extends NaiveGap {
 		// ================= ABSTRACT ADVANCE =================
 		protected abstract void advance();
 
-		// ================= COMMON METHODS =================
-		private static final VectorOperators.Comparison UNSIGNED_GE;
-		static {
-			VectorOperators.Comparison op = null;
-			try {
-				// JDK 25+
-				op = (VectorOperators.Comparison) VectorOperators.class.getField("UGE").get(null);
-			} catch (NoSuchFieldException e) {
-				try {
-					// JDK 17-24 : nom long
-					op = (VectorOperators.Comparison) VectorOperators.class.getField("UNSIGNED_GE").get(null);
-				} catch (Exception ex) {
-					throw new Error(ex);
-				}
-			} catch (Exception e) {
-				throw new Error(e);
-			}
-			UNSIGNED_GE = op;
-		}
-
 		protected void updateVectors(int increment) {
 			bVec = bVec.add((byte) increment);
-			bVec = bVec.sub(B_PRIMES, bVec.compare(UNSIGNED_GE, B_PRIMES));
+			bVec = bVec.sub(B_PRIMES, bVec.compare(Machine.UNSIGNED_GE, B_PRIMES));
 		}
 
 		protected boolean isComposite() {
@@ -210,7 +190,7 @@ public class SIMDGap extends NaiveGap {
 				long t = System.currentTimeMillis();
 				if (t > timeout) {
 					timeout = t + 5 * 60_000;
-					System.err.println("tim=" + wdhm((t - start) / 1_000) + " cnt=" + cnt + " avg=" + avg + " avg2="
+					System.err.println("tim=" +	wdhm((t - start) / 1_000) + " cnt=" + cnt + " avg=" + avg + " avg2="
 							+ avg2 + " P=" + P + " " + P.isProbablePrime(100));
 				}
 			}
@@ -221,27 +201,6 @@ public class SIMDGap extends NaiveGap {
 			delta = 0;
 			advance(); // prepare next candidate
 			return P;
-		}
-
-		static String wdhm(long secs) {
-			long t = secs / 60;
-			long s = t % 60;
-			t = t / 60;
-			String r = s + "m";
-			if (t > 0) {
-				s = t % 24;
-				t /= 24;
-				r = s + "h " + r;
-				if (t > 0) {
-					s = t % 7;
-					t /= 7;
-					r = s + "d " + r;
-					if (t > 0) {
-						r = t + "w " + r;
-					}
-				}
-			}
-			return r;
 		}
 	}
 

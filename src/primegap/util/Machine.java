@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import jdk.incubator.vector.VectorOperators;
+
 public class Machine {
 
 	public static void printMachineInfo(PrintStream out) {
@@ -84,6 +86,26 @@ public class Machine {
 			// Mirror the child exit code
 		}
 		return enabled;
+	}
+
+	// ================= COMMON METHODS =================
+	public static final VectorOperators.Comparison UNSIGNED_GE;
+	static {
+		VectorOperators.Comparison op = null;
+		try {
+			// JDK 25+
+			op = (VectorOperators.Comparison) VectorOperators.class.getField("UGE").get(null);
+		} catch (NoSuchFieldException e) {
+			try {
+				// JDK 17-24 : nom long
+				op = (VectorOperators.Comparison) VectorOperators.class.getField("UNSIGNED_GE").get(null);
+			} catch (Exception ex) {
+				throw new Error(ex);
+			}
+		} catch (Exception e) {
+			throw new Error(e);
+		}
+		UNSIGNED_GE = op;
 	}
 
 	@SuppressWarnings("resource")
