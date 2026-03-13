@@ -1,13 +1,12 @@
 package primegap;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
 import java.math.BigInteger;
 import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.LongSupplier;
 import java.util.stream.IntStream;
+
+import primegap.util.Machine;
 
 public abstract class AbstractPrimeGap {
 	protected boolean running(int gap) {
@@ -127,21 +126,9 @@ public abstract class AbstractPrimeGap {
 
 	// --- Prime discovery rate tracking ---
 	private long primeCallCount = 0;
-	public static LongSupplier timer = initTimer();
 	
 	public long getPrimeCallCount() {
 		return primeCallCount;
-	}
-
-	private static LongSupplier initTimer() {
-		ThreadMXBean tmx = ManagementFactory.getThreadMXBean();
-		if (tmx.isThreadCpuTimeSupported()) {
-			tmx.setThreadCpuTimeEnabled(true);
-			System.err.println("[timer] using thread CPU time");
-			return tmx::getCurrentThreadCpuTime;
-		}
-		System.err.println("[timer] fallback to nanoTime");
-		return System::nanoTime;
 	}
 
 	protected record Info(long time, BigInteger lastP, double best_merit, BigInteger best_P) {
@@ -164,9 +151,9 @@ public abstract class AbstractPrimeGap {
 			for (int gap = 2; running(gap); gap += 2) {
 				printf("%s: Searching gap >= %s...", name(), gap);
 
-				long time = timer.getAsLong();
+				long time = Machine.getCpuTimeNano();
 				BigInteger P_ = find(gap, P);
-				time = timer.getAsLong() - time;
+				time = Machine.getCpuTimeNano() - time;
 				total += time;
 				if (P_ == null)
 					break;

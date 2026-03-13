@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import primegap.naive.NaiveGap;
-import primegap.sieve.simd.SIMDSieveGap;
 import primegap.util.Java;
 import primegap.util.Machine;
 import primegap.util.NullStream;
@@ -112,7 +111,7 @@ public class Benchmark {
 	public static void main(String[] args) {
 		try {
 			var classes = mute(null, () -> Java.findSubclasses(NaiveGap.class));
-			new Benchmark().run(SIMDSieveGap.class);
+			new Benchmark().run(classes);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

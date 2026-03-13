@@ -2,8 +2,11 @@ package primegap.util;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.LongSupplier;
 
 public class Machine {
 	public static void printMachineInfo(PrintStream out) {
@@ -149,4 +152,22 @@ public class Machine {
 		out.printf("%n=> Optimal sieve size : %d KB%n%n", optimal / 1024);
 		return optimal;
 	}
+	
+	public static long getCpuTimeNano() {
+		return timer.getAsLong();
+	}
+	
+	private static final LongSupplier timer = initTimer();
+
+	private static LongSupplier initTimer() {
+		ThreadMXBean tmx = ManagementFactory.getThreadMXBean();
+		if (tmx.isThreadCpuTimeSupported()) {
+			tmx.setThreadCpuTimeEnabled(true);
+			System.err.println("[timer] using thread CPU time");
+			return tmx::getCurrentThreadCpuTime;
+		}
+		System.err.println("[timer] fallback to nanoTime");
+		return System::nanoTime;
+	}
+
 }

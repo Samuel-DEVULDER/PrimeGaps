@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import primegap.util.IncreasingBigIntegers;
+import primegap.util.Machine;
 
 /**
 	 * Windowed Sieve of Eratosthenes optimized for finding large primes starting
@@ -210,9 +211,9 @@ import primegap.util.IncreasingBigIntegers;
 
 		protected void markAllMultiples() {
 			fillTab(getTab(), 0);
-			long now = SieveGap.timer.getAsLong();
+			long now = Machine.getCpuTimeNano();
 			primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).forEach(this::markMultiplesOf);
-			SieveGap.dbg("all=", (SieveGap.timer.getAsLong() - now) / 1e6, "ms              ");
+			SieveGap.dbg("all=", (Machine.getCpuTimeNano() - now) / 1e6, "ms              ");
 		}
 
 		/**
@@ -347,12 +348,12 @@ S		 * accumulation to minimize memory accesses (one write per long).
 					return lastPrime = v(-k);
 			} else {
 				while ((k = next()) < 0) {
-					long now = SieveGap.timer.getAsLong();
+					long now = Machine.getCpuTimeNano();
 					if (pending != EMPTY) {
 						pending = EMPTY;
 					}
 					slideWindow();
-					SieveGap.dbg("Slide done (", (SieveGap.timer.getAsLong() - now) / 1e9,
+					SieveGap.dbg("Slide done (", (Machine.getCpuTimeNano() - now) / 1e9,
 							"s)                                                ");
 				}
 			}
@@ -366,10 +367,10 @@ S		 * accumulation to minimize memory accesses (one write per long).
 
 			if (doMarking) {
 				if (prime.compareTo(limit) <= 0) {
-					long now = SieveGap.timer.getAsLong();
+					long now = Machine.getCpuTimeNano();
 					markMultiplesOf(getStart(), getTab(), prime);
 					last_tab = ~getTab(getTab(), last >>> last_shift);
-					SieveGap.dbg("Marking multiples of ", prime, " in ", (SieveGap.timer.getAsLong() - now) / 1e6, "ms.");
+					SieveGap.dbg("Marking multiples of ", prime, " in ", (Machine.getCpuTimeNano() - now) / 1e6, "ms.");
 				} else {
 					doMarking = false;
 					SieveGap.dbg("disabled marking for ", getStart());

@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutionException;
 import primegap.AbstractPrimeGap;
 import primegap.sieve.DelegatingSlidingWindowSieve;
 import primegap.sieve.SlidingWindowSieve;
+import primegap.util.Machine;
 
 public class DoubleBufferedSieve extends DelegatingSlidingWindowSieve {
 	final NextWindowRunnable prefetch;
@@ -75,9 +76,9 @@ public class DoubleBufferedSieve extends DelegatingSlidingWindowSieve {
 		@Override
 		public void run() {
 			fillTab(nextTab, 0);
-			long now = AbstractPrimeGap.timer.getAsLong();
+			long now = Machine.getCpuTimeNano();
 			primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).forEach(this::markMultiplesOf);
-			AbstractPrimeGap.dbg("all(prefetch)=", (AbstractPrimeGap.timer.getAsLong() - now) / 1e6,
+			AbstractPrimeGap.dbg("all(prefetch)=", (Machine.getCpuTimeNano() - now) / 1e6,
 					"ms              ");
 		}
 	}
