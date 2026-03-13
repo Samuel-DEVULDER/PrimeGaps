@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.jar.JarFile;
@@ -82,7 +84,7 @@ public class Java {
 
 				RuntimeMXBean jvmMeta = ManagementFactory.getRuntimeMXBean();
 
-				List<String> cmd = new ArrayList<>();
+				Collection<String> cmd = new LinkedHashSet<>();
 				cmd.add(javaExe);
 
 				// Inject the missing module flag first
@@ -102,14 +104,16 @@ public class Java {
 				cmd.addAll(Arrays.asList(parts));
 
 				// Launch child process, sharing all I/O with current process
+				int exitCode = 1;
 				try {
-					int exitCode = new ProcessBuilder(cmd).inheritIO().start().waitFor();
-					System.exit(exitCode);
+					exitCode = new ProcessBuilder(new ArrayList<>(cmd)).inheritIO().start().waitFor();
+					//Thread.sleep(100); // small delay to ensure child process has time to print output before parent exits
 				} catch (InterruptedException | IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				// Mirror the child exit code
+				System.exit(exitCode);
 			}
 			return enabled;
 		}
@@ -134,5 +138,10 @@ public class Java {
 			}
 			UNSIGNED_GE = op;
 		}
+	}
+
+	public static void atexit(Runnable action) {
+		Thread hook = new Thread(action);
+		Runtime.getRuntime().addShutdownHook(hook);
 	}
 }

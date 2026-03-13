@@ -47,7 +47,6 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 			}
 			File loc2 = f;
 			if (loc2 != null && loc2.delete()) {
-				loc2.delete();
 				System.out.println("Temp file cleaned up: " + loc2);
 				f = null;
 			}

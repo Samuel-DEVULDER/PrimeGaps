@@ -188,7 +188,7 @@ import primegap.util.IncreasingBigIntegers;
 			// }
 
 			String s = String.format(Locale.ENGLISH, "start=%s %.1f%% ~%.1f", this.getStart(),
-					(numPrimes() * 100.0) / primes.limit(), getLastPrime().doubleValue() / sieve.primeCallCount);
+					(numPrimes() * 100.0) / primes.limit(), getLastPrime().doubleValue() / sieve.getPrimeCallCount());
 			System.err.print(s + "\b".repeat(s.length()));
 
 			// Sieve limit: sqrt(start + windowRange)
@@ -340,8 +340,6 @@ S		 * accumulation to minimize memory accesses (one write per long).
 		@Override
 		public BigInteger get() {
 			int k;
-
-			++sieve.primeCallCount;
 
 			if (pending.hasNext()) {
 				k = pending.nextInt();

@@ -6,17 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Machine {
-
 	public static void printMachineInfo(PrintStream out) {
 		Runtime rt = Runtime.getRuntime();
-		out.println("=== Machine Info ===");
-		out.println("OS      : " + System.getProperty("os.name") + " " + System.getProperty("os.version") + " ("
-				+ System.getProperty("os.arch") + ")");
-		out.println("JVM     : " + System.getProperty("java.vm.name") + " " + System.getProperty("java.version"));
-		out.println("CPUs    : " + rt.availableProcessors());
+		out.printf("\r%-80s%n", "=== Machine Info ===");
+		out.printf("OS      : %s %s (%s)%n", System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"));
+		out.printf("JVM     : %s %s (%s)%n",  System.getProperty("java.vm.name"), System.getProperty("java.version"), System.getProperty("java.vm.vendor"));
+		out.printf("CPUs    : %d%n", rt.availableProcessors());
 		out.printf("RAM     : %.1f GB total%n", rt.maxMemory() / 1e9);
 		printCpuModel(out);
-		out.println("====================");
+		out.printf("====================%n");
 	}
 
 	public static void printCpuModel(PrintStream out) {

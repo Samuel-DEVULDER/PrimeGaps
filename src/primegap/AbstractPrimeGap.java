@@ -126,8 +126,12 @@ public abstract class AbstractPrimeGap {
 	protected abstract BigInteger find(int gap, BigInteger after);
 
 	// --- Prime discovery rate tracking ---
-	public long primeCallCount = 0;
+	private long primeCallCount = 0;
 	public static LongSupplier timer = initTimer();
+	
+	public long getPrimeCallCount() {
+		return primeCallCount;
+	}
 
 	private static LongSupplier initTimer() {
 		ThreadMXBean tmx = ManagementFactory.getThreadMXBean();
@@ -182,7 +186,7 @@ public abstract class AbstractPrimeGap {
 				}
 
 				// Compute average prime discovery rate
-				String rateStr = String.format(Locale.ENGLISH, "%,.0f", (primeCallCount * 1e9) / total).replace(',',
+				String rateStr = String.format(Locale.ENGLISH, "%,.0f", (getPrimeCallCount() * 1e9) / total).replace(',',
 						' ');
 
 				printf(">> %d\n + %s\n = %s\n", gap, P, Q);

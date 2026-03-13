@@ -24,7 +24,64 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 
 	static boolean isSIMDEnabled = Java.SIMD.enable();
 
-	static final VectorSpecies<Long> SPECIES = LongVector.SPECIES_PREFERRED;
+	static final VectorSpecies<Long> SPECIES = LongVector.SPECIES_MAX;
+
+	private static LongVector buildMask128(long[] buf, long p0, long p1) {
+		buf[0] = 1L << (int) (p0 & 63);
+		buf[1] = 1L << (int) (p1 & 63);
+		return LongVector.fromArray(LongVector.SPECIES_128, buf, 0);
+	}
+
+	private void markMultiplesOfSimd128(long bitPos, long[] tab, long pLong) {
+		// Hard-coded for SPECIES_256 (4 lanes): pos0..pos3 live in registers.
+		// vMasks encodes one bit per lane; shifted left by pLong each inner step.
+		// pos0 (smallest anchor) drives the outer loop — no window overflow.
+		// Inner loop exits when vMasks == 0: all bits shifted out, tail included.
+
+		int shift = (int) (pLong & 63);
+		long windowSize = tab.length * 64L;
+		long[] buf = new long[2];
+
+		long viEnd = (bitPos + 128L) & -128L;
+		long lane1Start = viEnd - 64L;
+
+		long pos0 = bitPos;
+		long pos1 = pos0;
+		while (pos1 < lane1Start)
+			pos1 += pLong;
+
+		LongVector vMasks = buildMask128(buf, pos0, pos1);
+		LongVector zero = LongVector.zero(LongVector.SPECIES_128);
+
+		do {
+			int vi = (int) (viEnd >>> 6) - 2;
+
+			while (!vMasks.eq(zero).allTrue()) {
+				LongVector.fromArray(LongVector.SPECIES_128, tab, vi).or(vMasks).intoArray(tab, vi);
+				vMasks = vMasks.lanewise(VectorOperators.LSHL, shift);
+				pos0 += pLong;
+			}
+
+			if (pos0 >= windowSize)
+				break;
+
+			// Advance block boundaries
+			viEnd += 128L;
+			lane1Start += 128L;
+
+			// pos0 exited its lane but may still be behind the new block —
+			// advance it to the first multiple of p in lane 0 of the new block
+			while (pos0 < viEnd - 128L)
+				pos0 += pLong;
+
+			// Recompute pos1/pos2/pos3 from updated pos0
+			pos1 = pos0;
+			while (pos1 < lane1Start)
+				pos1 += pLong;
+
+			vMasks = buildMask128(buf, pos0, pos1);
+		} while (pos0 < windowSize);
+	}
 
 	private static LongVector buildMask256(long[] buf, long p0, long p1, long p2, long p3) {
 		buf[0] = 1L << (int) (p0 & 63);
@@ -199,6 +256,8 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 		// SIMD dispatch: fast hard-coded 256-bit path, generic fallback otherwise
 		if (SPECIES == LongVector.SPECIES_256) {
 			markMultiplesOfSimd256(bitPos, tab, pLong);
+		} else if (SPECIES == LongVector.SPECIES_128) {
+			markMultiplesOfSimd128(bitPos, tab, pLong);
 		} else {
 			markMultiplesOfSimdGeneric(bitPos, tab, pLong);
 		}

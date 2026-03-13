@@ -47,7 +47,6 @@ public class SieveGap extends NaiveGap {
 		BigInteger Q = supplier.getLastPrime();
 		while (Q == null || Q.compareTo(N) <= 0) {
 			Q = supplier.get();
-			++primeCallCount;
 		}
 		return Q;
 	}
