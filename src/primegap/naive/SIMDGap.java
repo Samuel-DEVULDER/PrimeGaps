@@ -13,6 +13,7 @@ import jdk.incubator.vector.VectorSpecies;
 import primegap.util.Java;
 
 public class SIMDGap extends NaiveGap {
+	
 	/**
 	 * WheelBig 210 generates BigInteger candidates using wheel factorization with
 	 * SIMD filtering on small primes.
