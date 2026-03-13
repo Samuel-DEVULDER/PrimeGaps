@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.jar.JarFile;
 
 import jdk.incubator.vector.VectorOperators;
+import jdk.incubator.vector.VectorOperators.Comparison;
 
 public class Java {
 	public static <E> Class<? extends E>[] findSubclasses(Class<E> parent) {
@@ -61,55 +62,77 @@ public class Java {
 			} catch (Throwable ignored) {
 				// ignore any error loading the class (NoClassDefFoundError, etc.)
 				// as we only want to find classes that can be loaded successfully
-				//ignored.printStackTrace();
+				// ignored.printStackTrace();
 			}
 		}
 	}
 
-	/**
-	 * Relaunches the current JVM process with --add-modules=jdk.incubator.vector
-	 * appended, forwarding all existing JVM arguments and the main class args.
-	 * Inherits stdin/stdout/stderr so output appears normally.
-	 */
-	public static boolean enableSIMD() {
-		boolean enabled = ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent();
-		// Check if the Vector API incubator module is already loaded
-		if (!enabled) {
-			// Resolve the current java executable path
-			String javaExe = ProcessHandle.current().info().command().orElse("java");
+	public static class SIMD {
+		/**
+		 * Relaunches the current JVM process with --add-modules=jdk.incubator.vector
+		 * appended, forwarding all existing JVM arguments and the main class args.
+		 * Inherits stdin/stdout/stderr so output appears normally.
+		 */
+		public static boolean enable() {
+			boolean enabled = ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent();
+			// Check if the Vector API incubator module is already loaded
+			if (!enabled) {
+				// Resolve the current java executable path
+				String javaExe = ProcessHandle.current().info().command().orElse("java");
 
-			RuntimeMXBean jvmMeta = ManagementFactory.getRuntimeMXBean();
+				RuntimeMXBean jvmMeta = ManagementFactory.getRuntimeMXBean();
 
-			List<String> cmd = new ArrayList<>();
-			cmd.add(javaExe);
+				List<String> cmd = new ArrayList<>();
+				cmd.add(javaExe);
 
-			// Inject the missing module flag first
-			cmd.add("--add-modules=jdk.incubator.vector");
+				// Inject the missing module flag first
+				cmd.add("--add-modules=jdk.incubator.vector");
 
-			// Forward all existing JVM flags (-Xmx, -Xms, -D... etc.)
-			cmd.addAll(jvmMeta.getInputArguments());
+				// Forward all existing JVM flags (-Xmx, -Xms, -D... etc.)
+				cmd.addAll(jvmMeta.getInputArguments());
 
-			// Forward classpath
-			cmd.add("-cp");
-			cmd.add(jvmMeta.getClassPath());
+				// Forward classpath
+				cmd.add("-cp");
+				cmd.add(jvmMeta.getClassPath());
 
-			// Main class and its arguments
-			String[] parts = Optional.ofNullable(System.getProperty("sun.java.command"))
-					.orElseGet(() -> Arrays.asList(new Exception().getStackTrace()).getLast().getClassName())
-					.split(" ");
-			cmd.addAll(Arrays.asList(parts));
+				// Main class and its arguments
+				String[] parts = Optional.ofNullable(System.getProperty("sun.java.command"))
+						.orElseGet(() -> Arrays.asList(new Exception().getStackTrace()).getLast().getClassName())
+						.split(" ");
+				cmd.addAll(Arrays.asList(parts));
 
-			// Launch child process, sharing all I/O with current process
+				// Launch child process, sharing all I/O with current process
+				try {
+					int exitCode = new ProcessBuilder(cmd).inheritIO().start().waitFor();
+					System.exit(exitCode);
+				} catch (InterruptedException | IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				// Mirror the child exit code
+			}
+			return enabled;
+		}
+
+		public static final Comparison UNSIGNED_GE;
+
+		static {
+			Comparison op = null;
+			enable();
 			try {
-				int exitCode = new ProcessBuilder(cmd).inheritIO().start().waitFor();
-				System.exit(exitCode);
-			} catch (InterruptedException | IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				// JDK 25+
+				op = (VectorOperators.Comparison) VectorOperators.class.getField("UGE").get(null);
+			} catch (NoSuchFieldException e) {
+				try {
+					// JDK 17-24 : nom long
+					op = (VectorOperators.Comparison) VectorOperators.class.getField("UNSIGNED_GE").get(null);
+				} catch (Exception ex) {
+					throw new Error(ex);
+				}
+			} catch (Exception e) {
+				throw new Error(e);
 			}
-			// Mirror the child exit code
+			UNSIGNED_GE = op;
 		}
-		return enabled;
 	}
-
 }

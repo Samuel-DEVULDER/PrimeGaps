@@ -22,7 +22,7 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 		super(sieve, size, range);
 	}
 
-	static boolean isSIMDEnabled = Java.enableSIMD();
+	static boolean isSIMDEnabled = Java.SIMD.enable();
 
 	static final VectorSpecies<Long> SPECIES = LongVector.SPECIES_PREFERRED;
 
