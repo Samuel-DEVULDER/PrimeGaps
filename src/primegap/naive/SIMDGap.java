@@ -8,10 +8,13 @@ import java.util.stream.Stream;
 
 import jdk.incubator.vector.ByteVector;
 import jdk.incubator.vector.VectorOperators;
+import jdk.incubator.vector.VectorOperators.Comparison;
 import jdk.incubator.vector.VectorSpecies;
-import primegap.util.Machine;
+import primegap.util.Java;
 
 public class SIMDGap extends NaiveGap {
+	static boolean isSIMDEnabled = Java.enableSIMD();
+	
 	/**
 	 * WheelBig 210 generates BigInteger candidates using wheel factorization with
 	 * SIMD filtering on small primes.
@@ -22,6 +25,25 @@ public class SIMDGap extends NaiveGap {
 	 * avg tracks the average delta observed (can be used for statistics).
 	 */
 	static public abstract class Wheel implements Supplier<BigInteger> {
+		private static final Comparison UNSIGNED_GE;
+		static {
+			Java.enableSIMD();
+			Comparison op = null;
+			try {
+				// JDK 25+
+				op = (VectorOperators.Comparison) VectorOperators.class.getField("UGE").get(null);
+			} catch (NoSuchFieldException e) {
+				try {
+					// JDK 17-24 : nom long
+					op = (VectorOperators.Comparison) VectorOperators.class.getField("UNSIGNED_GE").get(null);
+				} catch (Exception ex) {
+					throw new Error(ex);
+				}
+			} catch (Exception e) {
+				throw new Error(e);
+			}
+			UNSIGNED_GE = op;
+		}
 
 		// ================= STATIC WHEEL =================
 		protected static final int WHEEL_SIZE;
@@ -162,7 +184,7 @@ public class SIMDGap extends NaiveGap {
 
 		protected void updateVectors(int increment) {
 			bVec = bVec.add((byte) increment);
-			bVec = bVec.sub(B_PRIMES, bVec.compare(Machine.UNSIGNED_GE, B_PRIMES));
+			bVec = bVec.sub(B_PRIMES, bVec.compare(UNSIGNED_GE, B_PRIMES));
 		}
 
 		protected boolean isComposite() {
@@ -190,7 +212,7 @@ public class SIMDGap extends NaiveGap {
 				long t = System.currentTimeMillis();
 				if (t > timeout) {
 					timeout = t + 5 * 60_000;
-					System.err.println("tim=" +	wdhm((t - start) / 1_000) + " cnt=" + cnt + " avg=" + avg + " avg2="
+					System.err.println("tim=" + wdhm((t - start) / 1_000) + " cnt=" + cnt + " avg=" + avg + " avg2="
 							+ avg2 + " P=" + P + " " + P.isProbablePrime(100));
 				}
 			}
@@ -204,7 +226,7 @@ public class SIMDGap extends NaiveGap {
 		}
 	}
 
-	// ================= SUBCLASSES =================
+// ================= SUBCLASSES =================
 	static public class ForwardBranch extends Wheel {
 		public ForwardBranch(BigInteger start) {
 			super(start);
@@ -283,8 +305,6 @@ public class SIMDGap extends NaiveGap {
 				.findFirst()//
 				.orElseThrow();
 	}
-	
-	static boolean simdEnabled = Machine.enableSIMD();
 
 	public static void main(String[] args) throws Exception {
 		new SIMDGap().run();

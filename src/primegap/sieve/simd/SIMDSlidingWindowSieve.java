@@ -7,7 +7,7 @@ import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
 import primegap.sieve.SieveGap;
 import primegap.sieve.SlidingWindowSieve;
-import primegap.util.Machine;
+import primegap.util.Java;
 
 public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 	public SIMDSlidingWindowSieve(SieveGap sieve, int size) {
@@ -22,7 +22,7 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 		super(sieve, size, range);
 	}
 
-	static boolean isSIMDEnabled = Machine.enableSIMD();
+	static boolean isSIMDEnabled = Java.enableSIMD();
 
 	static final VectorSpecies<Long> SPECIES = LongVector.SPECIES_PREFERRED;
 
