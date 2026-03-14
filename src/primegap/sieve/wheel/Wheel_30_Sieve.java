@@ -1,6 +1,6 @@
 package primegap.sieve.wheel;
 
-import primegap.sieve.SlidingWindowSieve;
+import primegap.sieve.AbstractSlidingWindowSieve;
 
 public class Wheel_30_Sieve extends WheelSieveGap {
 
@@ -35,7 +35,7 @@ public class Wheel_30_Sieve extends WheelSieveGap {
 	}
 
 	@Override
-	protected SlidingWindowSieve newSlidingWindowSieve(int size) {
+	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 		return new OptWheelSieve(size);
 	}
 	

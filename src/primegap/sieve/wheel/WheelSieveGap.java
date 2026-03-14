@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import primegap.sieve.SlidingWindowSieveGap;
-import primegap.sieve.SlidingWindowSieve;
+import primegap.sieve.AbstractSlidingWindowSieve;
+import primegap.sieve.SieveGap;
 
-abstract class WheelSieveGap extends SlidingWindowSieveGap {
+abstract class WheelSieveGap extends SieveGap {
 
 	// =========================================================================
 	// Wheel record
@@ -215,7 +215,7 @@ abstract class WheelSieveGap extends SlidingWindowSieveGap {
 			return b == 0 ? a : gcd(b, a % b);
 		}
 
-		public void bootstrap(SlidingWindowSieve wheelSieve) {
+		public void bootstrap(AbstractSlidingWindowSieve wheelSieve) {
 			int[] pending = pendingPrimes();
 			for (int i = smallPrimes.length; i < pending.length; ++i)
 				wheelSieve.primes.add(v(-pending[i]));
@@ -224,14 +224,12 @@ abstract class WheelSieveGap extends SlidingWindowSieveGap {
 		}
 	}
 
-	protected abstract class AbstracWheelSieve extends SlidingWindowSieve {
+	protected abstract class AbstracWheelSieve extends AbstractSlidingWindowSieve {
 		protected AbstracWheelSieve(int size, long range) {
 			super(WheelSieveGap.this, size, range);
 		}
 
 		abstract protected void bootstrap();
-
-		abstract protected long bitposToNum(int bitpos);
 
 		abstract protected int numToBitpos(int group, int index);
 
@@ -253,7 +251,7 @@ abstract class WheelSieveGap extends SlidingWindowSieveGap {
 				n = p.subtract(n);
 			// n = 0..p-1
 
-			if (n.compareTo(windowRange_) >= 0)
+			if (n.compareTo(windowRange_bigint) >= 0)
 				return;
 
 			// Convert to bit position
@@ -333,6 +331,7 @@ abstract class WheelSieveGap extends SlidingWindowSieveGap {
 
 		protected WheelSieve(int size, int... primes) {
 			this(size, Wheel.of(primes));
+			bootstrap();
 		}
 
 		protected WheelSieve(int size, Wheel w) {
@@ -355,7 +354,6 @@ abstract class WheelSieveGap extends SlidingWindowSieveGap {
 		}
 
 		/** bit k -> (k/48) * 210 + RESIDUES[k%48] (no power-of-2 shortcut for 48) */
-		@Override
 		protected long bitposToNum(int bitpos) {
 			return (bitpos / BPA) * MOD + RESIDUES[bitpos % BPA];
 		}

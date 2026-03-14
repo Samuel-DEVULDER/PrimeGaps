@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import primegap.naive.NaiveGap;
-import primegap.sieve.SlidingWindowSieveGap;
+import primegap.sieve.SieveGap;
 import primegap.sieve.simd.SIMDSieveGap;
 import primegap.util.Java;
 import primegap.util.Machine;
@@ -90,7 +90,7 @@ public class Benchmark {
 			long numPrimes = 0;
 			for (long c : impl.gapCounts)
 				numPrimes += c;
-			
+
 			Thread.sleep(PAUSE);
 			System.out.printf(Locale.ENGLISH, "%,d primes in %.1f secs%n", numPrimes, duration);
 			col.add(new Algo(impl.name(), numPrimes / duration));
@@ -110,7 +110,7 @@ public class Benchmark {
 	public static void main(String[] args) {
 		try {
 			var classes = mute(null, () -> Java.findSubclasses(NaiveGap.class));
-			new Benchmark().run(SIMDSieveGap.class, SlidingWindowSieveGap.class);
+//			new Benchmark().run(SIMDSieveGap.class, SieveGap.class);
 			new Benchmark().run(classes);
 		} catch (Exception e) {
 			e.printStackTrace();

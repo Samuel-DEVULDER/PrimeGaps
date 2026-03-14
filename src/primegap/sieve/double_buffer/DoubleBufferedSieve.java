@@ -5,15 +5,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import primegap.AbstractPrimeGap;
-import primegap.sieve.DelegatingSlidingWindowSieve;
-import primegap.sieve.SlidingWindowSieve;
+import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.util.Machine;
 
-class DoubleBufferedSieve extends DelegatingSlidingWindowSieve {
+class DoubleBufferedSieve extends AbstractSlidingWindowSieve.Delegating {
 	final NextWindowRunnable prefetch;
 	long[] nextTab = null;
 
-	public DoubleBufferedSieve(SlidingWindowSieve delegate) {
+	public DoubleBufferedSieve(AbstractSlidingWindowSieve delegate) {
 		super(delegate.sieve, delegate);
 		prefetch = new NextWindowRunnable(tabLen);
 	}
@@ -62,8 +61,8 @@ class DoubleBufferedSieve extends DelegatingSlidingWindowSieve {
 		boolean ready(BigInteger start) {
 			if (!start.equals(this.start)) {
 				this.start = start;
-				this.nextStart = start.add(windowRange_);
-				this.limit = start.add(windowRange_.shiftLeft(1)).sqrt();
+				this.nextStart = start.add(windowRange_bigint);
+				this.limit = start.add(windowRange_bigint.shiftLeft(1)).sqrt();
 			}
 			BigInteger last = primes.getLast();
 			return last != null && last.compareTo(limit) >= 0;

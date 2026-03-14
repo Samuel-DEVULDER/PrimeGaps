@@ -9,13 +9,13 @@ import java.util.List;
 import primegap.naive.NaiveGap;
 import primegap.util.NullStream;
 
-public class SlidingWindowSieveGap extends NaiveGap {
+public class SieveGap extends NaiveGap {
 	@Override
 	protected void stopping(Info info) {
 		super.stopping(info);
 		supplier.primes.close();
 	}
-
+	
 	// 128 -> 5,232,179.3
 	// 64 -> 5,861,262.1
 	// 48 -> 5,913,321.2
@@ -31,14 +31,14 @@ public class SlidingWindowSieveGap extends NaiveGap {
 
 	public static int defaultWindowSize = 262144;
 	// Machine.probeCache(System.out);
-	SlidingWindowSieve supplier = newSlidingWindowSieve(defaultWindowSize);
+	AbstractSlidingWindowSieve supplier = newSlidingWindowSieve(defaultWindowSize);
 
 	@Override
 	protected String name() {
-		return SlidingWindowSieveGap.class.getSimpleName() + "/" + supplier.name();
+		return SieveGap.class.getSimpleName() + "/" + supplier.name();
 	}
 
-	protected SlidingWindowSieve newSlidingWindowSieve(int size) {
+	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 		return new SlidingWindowSieve(this, size);
 	}
 
@@ -53,7 +53,7 @@ public class SlidingWindowSieveGap extends NaiveGap {
 
 	public static void main(String[] args) {
 		//probeOptimalTabLen(System.out);
-		new SlidingWindowSieveGap().run();
+		new SieveGap().run();
 	}
 
 	/**
@@ -96,9 +96,9 @@ public class SlidingWindowSieveGap extends NaiveGap {
 			for (int r = 0; r < REPEATS; r++) {
 
 				// Crée un sieve frais — bootstrap via get() jusqu'à doMarking==false
-				SlidingWindowSieveGap sieve = new SlidingWindowSieveGap();
+				SieveGap sieve = new SieveGap();
 				name = sieve.name();
-				SlidingWindowSieve sw = sieve.newSlidingWindowSieve(tabLen);
+				AbstractSlidingWindowSieve sw = sieve.newSlidingWindowSieve(tabLen);
 				// Consomme la 1ère fenêtre entièrement : remplit sw.primes
 				// jusqu'à sqrt(windowRange), et désactive doMarking
 				while (sw.doMarking) {

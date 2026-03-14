@@ -1,30 +1,20 @@
 package primegap.sieve.simd;
 
-import java.math.BigInteger;
-
 import jdk.incubator.vector.LongVector;
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
 import primegap.sieve.SlidingWindowSieve;
-import primegap.sieve.SlidingWindowSieveGap;
+import primegap.sieve.SieveGap;
 import primegap.util.Java;
 
 class SIMDSlidingWindowSieve extends SlidingWindowSieve {
-	public SIMDSlidingWindowSieve(SlidingWindowSieveGap sieve, int size) {
+	static boolean isSIMDEnabled = Java.SIMD.enable();
+	
+	protected static final VectorSpecies<Long> SPECIES = LongVector.SPECIES_PREFERRED;
+
+	public SIMDSlidingWindowSieve(SieveGap sieve, int size) {
 		super(sieve, size);
 	}
-
-	protected SIMDSlidingWindowSieve(SlidingWindowSieveGap sieve, SlidingWindowSieve delegate) {
-		super(sieve, delegate);
-	}
-
-	protected SIMDSlidingWindowSieve(SlidingWindowSieveGap sieve, int size, long range) {
-		super(sieve, size, range);
-	}
-
-	static boolean isSIMDEnabled = Java.SIMD.enable();
-
-	protected static final VectorSpecies<Long> SPECIES = LongVector.SPECIES_PREFERRED;
 
 	private static final String name = "SIMD" + SPECIES.length() * Long.SIZE;
 

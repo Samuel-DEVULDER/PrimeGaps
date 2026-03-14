@@ -1,11 +1,11 @@
 package primegap.sieve.double_buffer;
 
-import primegap.sieve.SlidingWindowSieveGap;
-import primegap.sieve.SlidingWindowSieve;
+import primegap.sieve.AbstractSlidingWindowSieve;
+import primegap.sieve.SieveGap;
 
-public class DoubleBufferSieveGap extends SlidingWindowSieveGap {
+public class DoubleBufferSieveGap extends SieveGap {
 	@Override
-	protected SlidingWindowSieve newSlidingWindowSieve(int size) {
+	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 		return new DoubleBufferedSieve(super.newSlidingWindowSieve(size));
 	}
 

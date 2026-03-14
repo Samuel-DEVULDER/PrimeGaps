@@ -5,7 +5,7 @@ import java.lang.invoke.VarHandle;
 
 import primegap.util.Machine;
 
-public class ParallelSieveGap extends SlidingWindowSieveGap {
+public class ParallelSieveGap extends SieveGap {
 	class ParallelWindowedSieve extends SlidingWindowSieve {
 		static final VarHandle VH = MethodHandles.arrayElementVarHandle(long[].class);
 		volatile boolean concurrent;
