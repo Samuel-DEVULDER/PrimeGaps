@@ -5,7 +5,7 @@ import java.math.BigInteger;
 public class DelegatingSlidingWindowSieve extends SlidingWindowSieve {
 	protected final SlidingWindowSieve delegate;
 
-	public DelegatingSlidingWindowSieve(SieveGap sieve, SlidingWindowSieve delegate) {
+	public DelegatingSlidingWindowSieve(SlidingWindowSieveGap sieve, SlidingWindowSieve delegate) {
 		super(sieve, delegate);
 		this.delegate = delegate;
 	}

@@ -1,10 +1,10 @@
 package primegap.sieve.simd;
 
-import primegap.sieve.SieveGap;
+import primegap.sieve.SlidingWindowSieveGap;
 import primegap.sieve.SlidingWindowSieve;
 import primegap.util.Java;
 
-public class SIMDSieveGap extends SieveGap {
+public class SIMDSieveGap extends SlidingWindowSieveGap {
 	static boolean enabled = Java.SIMD.enable();
 	
 	@Override

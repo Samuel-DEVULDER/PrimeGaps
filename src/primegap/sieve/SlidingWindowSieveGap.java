@@ -9,7 +9,7 @@ import java.util.List;
 import primegap.naive.NaiveGap;
 import primegap.util.NullStream;
 
-public class SieveGap extends NaiveGap {
+public class SlidingWindowSieveGap extends NaiveGap {
 	@Override
 	protected void stopping(Info info) {
 		super.stopping(info);
@@ -35,7 +35,7 @@ public class SieveGap extends NaiveGap {
 
 	@Override
 	protected String name() {
-		return SieveGap.class.getSimpleName() + "/" + supplier.name();
+		return SlidingWindowSieveGap.class.getSimpleName() + "/" + supplier.name();
 	}
 
 	protected SlidingWindowSieve newSlidingWindowSieve(int size) {
@@ -53,7 +53,7 @@ public class SieveGap extends NaiveGap {
 
 	public static void main(String[] args) {
 		//probeOptimalTabLen(System.out);
-		new SieveGap().run();
+		new SlidingWindowSieveGap().run();
 	}
 
 	/**
@@ -96,7 +96,7 @@ public class SieveGap extends NaiveGap {
 			for (int r = 0; r < REPEATS; r++) {
 
 				// Crée un sieve frais — bootstrap via get() jusqu'à doMarking==false
-				SieveGap sieve = new SieveGap();
+				SlidingWindowSieveGap sieve = new SlidingWindowSieveGap();
 				name = sieve.name();
 				SlidingWindowSieve sw = sieve.newSlidingWindowSieve(tabLen);
 				// Consomme la 1ère fenêtre entièrement : remplit sw.primes

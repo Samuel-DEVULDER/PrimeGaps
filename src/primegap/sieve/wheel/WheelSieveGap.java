@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import primegap.sieve.SieveGap;
+import primegap.sieve.SlidingWindowSieveGap;
 import primegap.sieve.SlidingWindowSieve;
 
-abstract class WheelSieveGap extends SieveGap {
+abstract class WheelSieveGap extends SlidingWindowSieveGap {
 
 	// =========================================================================
 	// Wheel record

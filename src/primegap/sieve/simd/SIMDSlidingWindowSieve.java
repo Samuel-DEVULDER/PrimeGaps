@@ -5,62 +5,94 @@ import java.math.BigInteger;
 import jdk.incubator.vector.LongVector;
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
-import primegap.sieve.SieveGap;
 import primegap.sieve.SlidingWindowSieve;
+import primegap.sieve.SlidingWindowSieveGap;
 import primegap.util.Java;
 
-public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
-	public SIMDSlidingWindowSieve(SieveGap sieve, int size) {
+class SIMDSlidingWindowSieve extends SlidingWindowSieve {
+	public SIMDSlidingWindowSieve(SlidingWindowSieveGap sieve, int size) {
 		super(sieve, size);
 	}
 
-	protected SIMDSlidingWindowSieve(SieveGap sieve, SlidingWindowSieve delegate) {
+	protected SIMDSlidingWindowSieve(SlidingWindowSieveGap sieve, SlidingWindowSieve delegate) {
 		super(sieve, delegate);
 	}
 
-	protected SIMDSlidingWindowSieve(SieveGap sieve, int size, long range) {
+	protected SIMDSlidingWindowSieve(SlidingWindowSieveGap sieve, int size, long range) {
 		super(sieve, size, range);
 	}
 
 	static boolean isSIMDEnabled = Java.SIMD.enable();
 
-	static final VectorSpecies<Long> SPECIES = LongVector.SPECIES_MAX;
+	protected static final VectorSpecies<Long> SPECIES = LongVector.SPECIES_PREFERRED;
 
-	private static LongVector buildMask128(long[] buf, long p0, long p1) {
-		buf[0] = 1L << (int) (p0 & 63);
-		buf[1] = 1L << (int) (p1 & 63);
-		return LongVector.fromArray(LongVector.SPECIES_128, buf, 0);
+	private static final String name = "SIMD" + SPECIES.length() * Long.SIZE;
+
+	@Override
+	protected String name() {
+		return name;
 	}
 
-	private void markMultiplesOfSimd128(long bitPos, long[] tab, long pLong) {
-		// Hard-coded for SPECIES_256 (4 lanes): pos0..pos3 live in registers.
+	@Override
+	protected long[] newTab(int size) {
+		// align size to vector length for better SIMD performance (no tail handling)
+		int ajusted = (size + SPECIES.length() - 1) & -SPECIES.length();
+		return super.newTab(ajusted);
+	}
+
+	@Override
+	protected void updateSeq(long[] tab, int from, long to, long step) {
+		if (step >= 64) {
+			super.updateSeq(tab, from, to, step);
+		} else {
+			// SIMD dispatch: fast hard-coded 256-bit path, generic fallback otherwise
+			switch (SPECIES.length()) {
+			case 4:
+				updateSeqSimd256(tab, from, to, (int) step);
+				break;
+			case 2:
+				updateSeqSimd128(tab, from, to, (int) step);
+				break;
+			default:
+				updateSeqSimdGen(tab, from, to, (int) step);
+				break;
+			}
+		}
+	}
+
+	private void updateSeqSimd128(long[] tab, int bitPos, long windowSize, int pLong) {
+		var SPECIES = LongVector.SPECIES_128;
+
+		// Hard-coded for SPECIES_128 (2 lanes): pos0..pos1 live in registers.
 		// vMasks encodes one bit per lane; shifted left by pLong each inner step.
 		// pos0 (smallest anchor) drives the outer loop — no window overflow.
 		// Inner loop exits when vMasks == 0: all bits shifted out, tail included.
 
-		int shift = (int) (pLong & 63);
-		long windowSize = tab.length * 64L;
 		long[] buf = new long[2];
 
 		long viEnd = (bitPos + 128L) & -128L;
 		long lane1Start = viEnd - 64L;
 
 		long pos0 = bitPos;
-		long pos1 = pos0;
-		while (pos1 < lane1Start)
-			pos1 += pLong;
 
-		LongVector vMasks = buildMask128(buf, pos0, pos1);
-		LongVector zero = LongVector.zero(LongVector.SPECIES_128);
-
+		LongVector zero = LongVector.zero(SPECIES);
 		do {
 			int vi = (int) (viEnd >>> 6) - 2;
 
-			while (!vMasks.eq(zero).allTrue()) {
-				LongVector.fromArray(LongVector.SPECIES_128, tab, vi).or(vMasks).intoArray(tab, vi);
-				vMasks = vMasks.lanewise(VectorOperators.LSHL, shift);
+			long pos1 = pos0;
+			while (pos1 < lane1Start)
+				pos1 += pLong;
+
+			LongVector vMasks = buildMask128(buf, pos0, pos1);
+
+			var vTab = LongVector.fromArray(SPECIES, tab, vi);
+			do {
 				pos0 += pLong;
-			}
+				vTab = vTab.or(vMasks);
+				vMasks = vMasks.lanewise(VectorOperators.LSHL, pLong);
+			} while (!vMasks.eq(zero).allTrue());
+			// } while (vMasks.reduceLanesToLong(VectorOperators.OR) != 0L);
+			vTab.intoArray(tab, vi);
 
 			if (pos0 >= windowSize)
 				break;
@@ -73,32 +105,17 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 			// advance it to the first multiple of p in lane 0 of the new block
 			while (pos0 < viEnd - 128L)
 				pos0 += pLong;
-
-			// Recompute pos1/pos2/pos3 from updated pos0
-			pos1 = pos0;
-			while (pos1 < lane1Start)
-				pos1 += pLong;
-
-			vMasks = buildMask128(buf, pos0, pos1);
 		} while (pos0 < windowSize);
 	}
 
-	private static LongVector buildMask256(long[] buf, long p0, long p1, long p2, long p3) {
-		buf[0] = 1L << (int) (p0 & 63);
-		buf[1] = 1L << (int) (p1 & 63);
-		buf[2] = 1L << (int) (p2 & 63);
-		buf[3] = 1L << (int) (p3 & 63);
-		return LongVector.fromArray(LongVector.SPECIES_256, buf, 0);
-	}
+	private void updateSeqSimd256(long[] tab, int bitPos, long windowSize, int pLong) {
+		var SPECIES = LongVector.SPECIES_256;
 
-	private void markMultiplesOfSimd256(long bitPos, long[] tab, long pLong) {
 		// Hard-coded for SPECIES_256 (4 lanes): pos0..pos3 live in registers.
 		// vMasks encodes one bit per lane; shifted left by pLong each inner step.
 		// pos0 (smallest anchor) drives the outer loop — no window overflow.
 		// Inner loop exits when vMasks == 0: all bits shifted out, tail included.
 
-		int shift = (int) (pLong & 63);
-		long windowSize = tab.length * 64L;
 		long[] buf = new long[4];
 
 		long viEnd = (bitPos + 256L) & -256L;
@@ -117,17 +134,20 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 		while (pos3 < lane3Start)
 			pos3 += pLong;
 
-		LongVector vMasks = buildMask256(buf, pos0, pos1, pos2, pos3);
-		LongVector zero = LongVector.zero(LongVector.SPECIES_256);
+		LongVector zero = LongVector.zero(SPECIES);
 
 		do {
 			int vi = (int) (viEnd >>> 6) - 4;
 
-			while (!vMasks.eq(zero).allTrue()) {
-				LongVector.fromArray(LongVector.SPECIES_256, tab, vi).or(vMasks).intoArray(tab, vi);
-				vMasks = vMasks.lanewise(VectorOperators.LSHL, shift);
+			LongVector vMasks = buildMask256(buf, pos0, pos1, pos2, pos3);
+
+			var vTab = LongVector.fromArray(SPECIES, tab, vi);
+			do {
 				pos0 += pLong;
-			}
+				vTab = vTab.or(vMasks);
+				vMasks = vMasks.lanewise(VectorOperators.LSHL, pLong);
+			} while (!vMasks.eq(zero).allTrue());
+			vTab.intoArray(tab, vi);
 
 			if (pos0 >= windowSize)
 				break;
@@ -153,17 +173,15 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 			pos3 = pos2;
 			while (pos3 < lane3Start)
 				pos3 += pLong;
-
-			vMasks = buildMask256(buf, pos0, pos1, pos2, pos3);
-
 		} while (pos0 < windowSize);
 	}
 
-	private void markMultiplesOfSimdGeneric(long bitPos, long[] tab, long pLong) {
-		// Generic version: works for any SPECIES (128, 256, 512).
+	private void updateSeqSimdGen(long[] tab, int bitPos, long windowSize, int pLong) {
+		var SPECIES = SIMDSlidingWindowSieve.SPECIES;
+
+		// Generic version: works for any SPECIES (256, 512, or more).
 		// pos[] and buf[] on heap — less JIT-friendly but fully parameterized.
 
-		int shift = (int) (pLong & 63);
 		int nLanes = SPECIES.length();
 		int blockBits = nLanes * Long.SIZE;
 		long winSize = tab.length * 64L;
@@ -190,11 +208,13 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 		do {
 			int vi = (int) (viEnd >>> 6) - nLanes;
 
-			while (!vMasks.eq(zero).allTrue()) {
-				LongVector.fromArray(SPECIES, tab, vi).or(vMasks).intoArray(tab, vi);
-				vMasks = vMasks.lanewise(VectorOperators.LSHL, shift);
+			var vTab = LongVector.fromArray(SPECIES, tab, vi);
+			do {
 				pos[0] += pLong;
-			}
+				vTab = vTab.or(vMasks);
+				vMasks = vMasks.lanewise(VectorOperators.LSHL, pLong);
+			} while (!vMasks.eq(zero).allTrue());
+			vTab.intoArray(tab, vi);
 
 			if (pos[0] >= winSize)
 				break;
@@ -221,45 +241,19 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 		} while (pos[0] < winSize);
 	}
 
-	@Override
-	protected void markMultiplesOf(BigInteger start, long[] tab, BigInteger p) {
-		// First odd multiple of p >= start inside the window
-		BigInteger n = start.remainder(p);
-		if (n.signum() > 0)
-			n = p.subtract(n);
-		if (n.testBit(0))
-			n = n.add(p);
-		if (n.compareTo(windowRange_) >= 0)
-			return;
+	// Mask building
 
-		long bitPos = n.longValue() >>> 1;
-		long windowSize = tab.length * 64L;
+	private static LongVector buildMask128(long[] buf, long p0, long p1) {
+		buf[0] = 1L << (int) (p0 & 63);
+		buf[1] = 1L << (int) (p1 & 63);
+		return LongVector.fromArray(LongVector.SPECIES_128, buf, 0);
+	}
 
-		// Single multiple: scalar write
-		if (p.compareTo(windowRange_) >= 0) {
-			tab[(int) (bitPos >>> 6)] |= 1L << (int) (bitPos & 63);
-			return;
-		}
-
-		long pLong = p.longValue();
-
-		// Scalar path: p >= 64, at most one multiple per long
-		if (pLong >= 64) {
-			long pos = bitPos;
-			while (pos < windowSize) {
-				tab[(int) (pos >>> 6)] |= 1L << (int) (pos & 63);
-				pos += pLong;
-			}
-			return;
-		}
-
-		// SIMD dispatch: fast hard-coded 256-bit path, generic fallback otherwise
-		if (SPECIES == LongVector.SPECIES_256) {
-			markMultiplesOfSimd256(bitPos, tab, pLong);
-		} else if (SPECIES == LongVector.SPECIES_128) {
-			markMultiplesOfSimd128(bitPos, tab, pLong);
-		} else {
-			markMultiplesOfSimdGeneric(bitPos, tab, pLong);
-		}
+	private static LongVector buildMask256(long[] buf, long p0, long p1, long p2, long p3) {
+		buf[0] = 1L << (int) (p0 & 63);
+		buf[1] = 1L << (int) (p1 & 63);
+		buf[2] = 1L << (int) (p2 & 63);
+		buf[3] = 1L << (int) (p3 & 63);
+		return LongVector.fromArray(LongVector.SPECIES_256, buf, 0);
 	}
 };

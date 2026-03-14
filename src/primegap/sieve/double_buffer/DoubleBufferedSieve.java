@@ -9,7 +9,7 @@ import primegap.sieve.DelegatingSlidingWindowSieve;
 import primegap.sieve.SlidingWindowSieve;
 import primegap.util.Machine;
 
-public class DoubleBufferedSieve extends DelegatingSlidingWindowSieve {
+class DoubleBufferedSieve extends DelegatingSlidingWindowSieve {
 	final NextWindowRunnable prefetch;
 	long[] nextTab = null;
 
