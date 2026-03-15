@@ -10,8 +10,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 import primegap.naive.NaiveGap;
-import primegap.sieve.SieveGap;
-import primegap.sieve.simd.SIMDSieveGap;
 import primegap.util.Java;
 import primegap.util.Machine;
 import primegap.util.NullStream;

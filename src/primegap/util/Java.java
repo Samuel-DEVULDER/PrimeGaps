@@ -14,6 +14,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.jar.JarFile;
+import java.util.stream.LongStream;
 
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorOperators.Comparison;
@@ -144,4 +145,10 @@ public class Java {
 		Thread hook = new Thread(action);
 		Runtime.getRuntime().addShutdownHook(hook);
 	}
+	
+	public static LongStream rangeWithStep(long start, long endExclusive, long step) {
+	    long count = (endExclusive - start + step - 1) / step;
+	    return LongStream.range(0, count).map(i -> start + i * step);
+	}
+	
 }

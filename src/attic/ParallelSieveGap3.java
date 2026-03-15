@@ -1,17 +1,19 @@
-package primegap.sieve;
+package attic;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 
+import primegap.sieve.SieveGap;
+import primegap.sieve.SlidingWindowSieve;
 import primegap.util.Machine;
 
-public class ParallelSieveGap extends SieveGap {
+public class ParallelSieveGap3 extends SieveGap {
 	class ParallelWindowedSieve extends SlidingWindowSieve {
 		static final VarHandle VH = MethodHandles.arrayElementVarHandle(long[].class);
 		volatile boolean concurrent;
 
 		public ParallelWindowedSieve(int size) {
-			super(ParallelSieveGap.this, size);
+			super(ParallelSieveGap3.this, size);
 		}
 
 		@Override
@@ -51,7 +53,7 @@ public class ParallelSieveGap extends SieveGap {
 	}
 
 	public static void main(String[] args) {
-		new ParallelSieveGap().run();
+		new ParallelSieveGap3().run();
 	}
 
 }

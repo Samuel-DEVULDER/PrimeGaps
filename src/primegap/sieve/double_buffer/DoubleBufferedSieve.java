@@ -14,7 +14,7 @@ class DoubleBufferedSieve extends AbstractSlidingWindowSieve.Delegating {
 
 	public DoubleBufferedSieve(AbstractSlidingWindowSieve delegate) {
 		super(delegate.sieve, delegate);
-		prefetch = new NextWindowRunnable(tabLen);
+		prefetch = new NextWindowRunnable(getTab().length);
 	}
 
 	@Override
