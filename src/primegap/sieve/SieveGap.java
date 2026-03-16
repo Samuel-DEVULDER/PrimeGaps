@@ -14,8 +14,9 @@ public class SieveGap extends NaiveGap {
 	protected void stopping(Info info) {
 		super.stopping(info);
 		supplier.primes.close();
+		supplier = null;
 	}
-	
+
 	// 128 -> 5,232,179.3
 	// 64 -> 5,861,262.1
 	// 48 -> 5,913,321.2
@@ -35,8 +36,11 @@ public class SieveGap extends NaiveGap {
 
 	@Override
 	protected String name() {
-		return SieveGap.class.getSimpleName() + "/" + supplier.name();
+		return name;
 	}
+
+	private String name = SieveGap.class.getSimpleName() + "/" + supplier.name();
+
 
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 		return new SlidingWindowSieve(this, size);
@@ -52,7 +56,7 @@ public class SieveGap extends NaiveGap {
 	}
 
 	public static void main(String[] args) {
-		//probeOptimalTabLen(System.out);
+		// probeOptimalTabLen(System.out);
 		new SieveGap().run();
 	}
 
