@@ -5,17 +5,14 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.TreeSet;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
-import primegap.naive.NaiveGap;
 import primegap.util.Java;
 import primegap.util.Machine;
 import primegap.util.NullStream;
 
 public class Benchmark {
-	final Duration RUNTIME = Duration.ofSeconds(90);
+	final Duration RUNTIME = Duration.ofSeconds(600);
 	final Duration PAUSE = Duration.ofSeconds(10);
 
 	record Algo(String name, double speed) implements Comparable<Algo> {
@@ -25,12 +22,17 @@ public class Benchmark {
 		}
 	}
 
-	static <T> T mute(NaiveGap impl, Supplier<T> sup) {
+	static class TimeoutException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+
+	}
+
+	static <T> T silentRun(BigIntegerGap impl, Supplier<T> sup) {
 		PrintStream out = System.out, err = System.err;
 		try {
 			PrintStream ps = NullStream.of(() -> {
 				if (impl != null && impl.isStopping())
-					throw new RuntimeException();
+					throw new TimeoutException();
 			});
 			System.setOut(ps);
 			System.setErr(ps);
@@ -41,13 +43,20 @@ public class Benchmark {
 		}
 	}
 
+	static void silentRun(BigIntegerGap impl) {
+		silentRun(impl, () -> {
+			impl.run();
+			return Void.TYPE;
+		});
+	}
+
 	@SafeVarargs
-	final void run(Class<? extends NaiveGap>... classes) throws Exception {
+	final void run(Class<? extends BigIntegerGap>... classes) throws Exception {
 		Collection<Algo> col = new TreeSet<>();
 		int i = 0;
 		for (var cls : classes) {
 			final var cst = cls.getConstructor();
-			NaiveGap impl = mute(null, () -> {
+			BigIntegerGap impl = silentRun(null, () -> {
 				try {
 					return cst.newInstance();
 				} catch (Exception ex) {
@@ -55,35 +64,27 @@ public class Benchmark {
 				}
 			});
 			System.out.printf("%d/%d Testing %s...", ++i, classes.length, impl.name());
-			AtomicLong time = new AtomicLong();
-			CountDownLatch started = new CountDownLatch(1);
-			Thread bench = new Thread() {
+
+			Thread stopWatch = new Thread() {
 				public void run() {
-					started.countDown();
-					long start = System.nanoTime();
-					time.set(start);
-					impl.run();
-					time.set(start - System.nanoTime());
+					try {
+						Thread.sleep(RUNTIME);
+						impl.stop();
+					} catch (InterruptedException e) {
+					}
 				};
 			};
 
-			mute(impl, () -> {
-				try {
-					bench.start();
-					started.await();
-					Thread.sleep(RUNTIME);
-					impl.stop();
-					bench.join(RUNTIME);
-				} catch (InterruptedException e) {
-				}
-				return Void.TYPE;
-			});
-			double duration = time.get(); // nSec
-			if (duration < 0) {
-				duration = -duration;
-			} else {
-				duration = System.nanoTime() - duration;
+			stopWatch.start();
+			long start = System.nanoTime();
+			try {
+				silentRun(impl);
+			} catch (TimeoutException ignored) {
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				continue;
 			}
+			double duration = System.nanoTime() - start;
 			duration /= 1e9; // sec
 			long numPrimes = 0;
 			for (long c : impl.gapCounts)
@@ -107,7 +108,7 @@ public class Benchmark {
 
 	public static void main(String[] args) {
 		try {
-			var classes = mute(null, () -> Java.findSubclasses(NaiveGap.class));
+			var classes = silentRun(null, () -> Java.findSubclasses(BigIntegerGap.class));
 //			new Benchmark().run(SIMDSieveGap.class, SieveGap.class);
 			new Benchmark().run(classes);
 		} catch (Exception e) {
