@@ -84,12 +84,15 @@ public abstract class AbstractPrimeGap {
 		});
 	}
 
+	public final int MILLER_RABIN_PASSES = 5;
+
 	protected boolean isPrime(BigInteger N) {
 		if (N.testBit(0) == false)
 			return N.equals(TWO);
 
-		final int numMillerRabin = 5;
-		return IntStream.range(0, 1).parallel().allMatch(i -> i == 0 ? N.isProbablePrime(1) : passesMillerRabin(N, numMillerRabin-1));
+		return IntStream.range(0, 1).parallel().allMatch(i -> i == 0 //
+				? N.isProbablePrime(1) // <= also contains Miller-Rabin.
+				: passesMillerRabin(N, MILLER_RABIN_PASSES - 1));
 	}
 
 	/**
