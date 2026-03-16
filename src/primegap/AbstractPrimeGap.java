@@ -88,7 +88,8 @@ public abstract class AbstractPrimeGap {
 		if (N.testBit(0) == false)
 			return N.equals(TWO);
 
-		return passesMillerRabin(N, 5) && N.isProbablePrime(1);
+		final int numMillerRabin = 5;
+		return IntStream.range(0, 1).parallel().allMatch(i -> i == 0 ? N.isProbablePrime(1) : passesMillerRabin(N, numMillerRabin-1));
 	}
 
 	/**
@@ -126,7 +127,7 @@ public abstract class AbstractPrimeGap {
 
 	// --- Prime discovery rate tracking ---
 	private long primeCallCount = 0;
-	
+
 	public long getPrimeCallCount() {
 		return primeCallCount;
 	}
@@ -173,8 +174,8 @@ public abstract class AbstractPrimeGap {
 				}
 
 				// Compute average prime discovery rate
-				String rateStr = String.format(Locale.ENGLISH, "%,.0f", (getPrimeCallCount() * 1e9) / total).replace(',',
-						' ');
+				String rateStr = String.format(Locale.ENGLISH, "%,.0f", (getPrimeCallCount() * 1e9) / total)
+						.replace(',', ' ');
 
 				printf(">> %d\n + %s\n = %s\n", gap, P, Q);
 				printf("%.3fs (tot=%.3fs), %d bits, %d digits, " + "x%.2g prev, %s%.2f merit, ~%g, %s p/s.\n",
