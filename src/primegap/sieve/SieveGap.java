@@ -39,7 +39,7 @@ public class SieveGap extends NaiveGap {
 		return name;
 	}
 
-	private String name = SieveGap.class.getSimpleName() + "/" + supplier.name();
+	private String name = SieveGap.class.getSimpleName() + supplier.name();
 
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 		return newSlidingWindowSieve(size, false);
