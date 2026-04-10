@@ -287,7 +287,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	}
 
 	protected String name() {
-		return this.getClass().getSimpleName() + (prefetch != null ? "/DoubleBuffer" : "");
+		return prefetch != null ? "/DoubleBuffer" : "";
 	}
 
 	final NextWindowRunnable prefetch;

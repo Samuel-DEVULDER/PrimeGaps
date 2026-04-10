@@ -238,11 +238,12 @@ abstract class WheelSieveGap extends SieveGap {
 		abstract protected int jumps(int rem, int pMod);
 
 		abstract protected int MOD();
-		
+
 		@Override
 		protected String name() {
-			return "WHEEL_" + MOD();
+			return name;
 		}
+		final String name = super.name() + "/WHEEL_" + MOD();
 
 		protected void markMultiplesOf(BigInteger start, long tab[], BigInteger p) {
 			// Find offset to first multiple of p >= start
@@ -380,7 +381,7 @@ abstract class WheelSieveGap extends SieveGap {
 		}
 	}
 
-	protected WheelSieve newWheelSieve(int size, boolean doubleBuffer,int... primes) {
+	protected WheelSieve newWheelSieve(int size, boolean doubleBuffer, int... primes) {
 		return new WheelSieve(size, doubleBuffer, primes);
 	}
 }

@@ -11,8 +11,9 @@ class ParallelSieve extends SlidingWindowSieve {
 
 	@Override
 	protected String name() {
-		return "Parallel/" + super.name();
+		return name;
 	}
+	private final String name = super.name() + "/Parallel";
 
 //	static final VarHandle VH = MethodHandles.arrayElementVarHandle(long[].class);
 //

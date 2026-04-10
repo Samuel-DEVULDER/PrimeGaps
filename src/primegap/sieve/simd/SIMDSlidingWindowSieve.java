@@ -9,14 +9,14 @@ import primegap.util.Java;
 
 public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 	static boolean isSIMDEnabled = Java.SIMD.enable();
-	
+
 	protected static final VectorSpecies<Long> SPECIES = LongVector.SPECIES_PREFERRED;
 
 	public SIMDSlidingWindowSieve(SieveGap sieve, int size, boolean doubleBuffer) {
 		super(sieve, size, doubleBuffer);
 	}
 
-	private static final String name = "SIMD_" + SPECIES.length() * Long.SIZE;
+	private final String name = super.name() + "/SIMD_" + SPECIES.length() * Long.SIZE;
 
 	@Override
 	protected String name() {
@@ -31,17 +31,18 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 	}
 
 	protected void updateSeq64(long[] tab, int from, long to, long step) {
-		for(long pos = from; pos < to; pos += step) {
+		for (long pos = from; pos < to; pos += step) {
 			int idx = (int) (pos >>> 6);
 			tab[idx] |= 1L << (pos & 63);
 		}
 	}
-	
+
 	@Override
 	protected void updateSeq(long[] tab, int from, long to, long step) {
 		if (step >= 64) {
-			// No SIMD benefit for steps >= 64: only one bit set per long, so no vectorization possible.
-			updateSeq64(tab, from, to, step);		
+			// No SIMD benefit for steps >= 64: only one bit set per long, so no
+			// vectorization possible.
+			updateSeq64(tab, from, to, step);
 		} else {
 			// SIMD dispatch: fast hard-coded 256-bit path, generic fallback otherwise
 			switch (SPECIES.length()) {

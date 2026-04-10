@@ -9,11 +9,6 @@ class ParallelSIMDSieve extends SIMDSlidingWindowSieve {
 		super(sieve, size, doubleBuffer);
 	}
 
-	@Override
-	protected String name() {
-		return "Parallel/" + super.name();
-	}
-
 //	static final VarHandle VH = MethodHandles.arrayElementVarHandle(long[].class);
 //
 //	@Override
