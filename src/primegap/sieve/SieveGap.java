@@ -41,9 +41,12 @@ public class SieveGap extends NaiveGap {
 
 	private String name = SieveGap.class.getSimpleName() + "/" + supplier.name();
 
-
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new SlidingWindowSieve(this, size);
+		return newSlidingWindowSieve(size, false);
+	}
+	
+	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doublBuffer) {
+		return new SlidingWindowSieve(this, size, doublBuffer);
 	}
 
 	@Override
@@ -115,8 +118,8 @@ public class SieveGap extends NaiveGap {
 				// === Mesure : SLIDES cycles markAllMultiples + slideWindow ===
 				long t0 = System.nanoTime();
 				for (int i = 0; i < SLIDES; i++) {
-					sw.fillTab(sw.getTab(), 0);
 					sw.markAllMultiples();
+					sw.fillTab(sw.tab, 0);
 					sw.slideWindow();
 				}
 				long dt = System.nanoTime() - t0;

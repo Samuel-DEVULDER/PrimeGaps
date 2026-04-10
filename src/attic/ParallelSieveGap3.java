@@ -13,7 +13,7 @@ public class ParallelSieveGap3 extends SieveGap {
 		volatile boolean concurrent;
 
 		public ParallelWindowedSieve(int size) {
-			super(ParallelSieveGap3.this, size);
+			super(ParallelSieveGap3.this, size, false);
 		}
 
 		@Override
@@ -31,7 +31,7 @@ public class ParallelSieveGap3 extends SieveGap {
 
 		protected void markAllMultiples() {
 			concurrent = false;
-			fillTab(getTab(), 0);
+			fillTab(tab, 0);
 
 			long now = Machine.getCpuTimeNano();
 			primes.stream().takeWhile(p -> p.intValue() <= small_thr).forEach(this::markMultiplesOf);

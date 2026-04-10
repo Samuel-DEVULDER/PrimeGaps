@@ -6,10 +6,10 @@ import primegap.util.Java;
 
 public class ParallelSIMDSieveGap extends SIMDSieveGap {
 	static boolean enabled = Java.SIMD.enable();
-	
+
 	@Override
-	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new ParallelSIMDSieve(this, size);
+	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doubleBuffer) {
+		return new ParallelSIMDSieve(this, size, doubleBuffer);
 	}
 
 	public static void main(String[] args) {

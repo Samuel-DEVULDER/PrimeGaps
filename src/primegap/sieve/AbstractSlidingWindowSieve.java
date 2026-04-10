@@ -5,8 +5,11 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.PrimitiveIterator;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
+import primegap.AbstractPrimeGap;
 import primegap.util.IncreasingBigIntegers;
 import primegap.util.Machine;
 
@@ -19,6 +22,32 @@ import primegap.util.Machine;
  * </p>
  */
 public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger> {
+	/**
+	 * bootstraps the sieve by setting the initial window start and pending
+	 * iterator. Should be called by the "final" constructor once everything else is
+	 * ready.
+	 */
+	abstract protected void bootstrap();
+
+	/**
+	 * Converts bit index k to numeric offset from start. Default (wheel2): bit k ->
+	 * 2k.
+	 */
+	abstract protected long bitposToNum(int bitpos);
+
+	/**
+	 * Clears the bit for each odd multiple of p within the current window. Uses bit
+	 * S * accumulation to minimize memory accesses (one write per long).
+	 * <p>
+	 * Since only odd numbers are represented, bit k corresponds to number start +
+	 * 2*k. For an odd prime p, consecutive odd multiples are spaced by 2*p in
+	 * number space, which corresponds to spacing p in bit position space.
+	 * </p>
+	 * 
+	 * @param p an odd prime number
+	 */
+	abstract protected void markMultiplesOf(BigInteger start, long tab[], BigInteger prime);
+
 	final public SieveGap sieve;
 
 	/** Collection of all discovered primes, maintained in sorted order */
@@ -27,7 +56,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	/** Bit-packed array representing odd prime candidates in the current window */
 	public final int tabLen; // do not use tab.length directly since it may be adapted for wheel alignment or
 								// SIMD padding
-	private long[] tab;
+	protected long[] tab;
 
 	/** Number of odd candidates represented */
 	protected final int windowSize;
@@ -60,26 +89,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	/** do we need to continue marking next primes */
 	protected boolean doMarking = true;
 
-	// Delegate constructor for creating a new sieve with the same configuration as
-	// an existing one
-	AbstractSlidingWindowSieve(SieveGap sieve, AbstractSlidingWindowSieve delegate) {
-		this.sieve = delegate.sieve;
-		this.primes = delegate.primes;
-		this.setTab(delegate.getTab());
-		this.tabLen = delegate.tabLen;
-		this.windowSize = delegate.windowSize;
-		this.windowRange = delegate.windowRange;
-		this.windowRange_bigint = delegate.windowRange_bigint;
-		this.windowSize_bigint = delegate.windowSize_bigint;
-		this.start = delegate.start;
-		this.limit = delegate.limit;
-		this.pending = delegate.pending;
-		this.last = delegate.last;
-		this.mask = delegate.mask;
-		this.last_tab = delegate.last_tab;
-	}
-
-	protected AbstractSlidingWindowSieve(SieveGap sieve, int size, long range) {
+	protected AbstractSlidingWindowSieve(SieveGap sieve, int size, long range, boolean doubleBuffer) {
 		this.sieve = sieve;
 
 		this.primes = new IncreasingBigIntegers(1 << 24, 896779142 / 2 / 2 / 2); // 16Mb
@@ -88,25 +98,9 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		this.windowRange = range; // Actual consecutive numbers covered
 		this.windowSize_bigint = v(this.windowSize);
 		this.windowRange_bigint = v(this.windowRange);
-		this.setTab(newTab(this.tabLen = size));
+		this.tab = newTab(this.tabLen = size);
+		this.prefetch = doubleBuffer ? new NextWindowRunnable(this.tabLen) : null;
 	}
-
-	// -------------------------------------------------------------------
-	// Wheel hooks - override these in subclasses
-	// -------------------------------------------------------------------
-
-	/**
-	 * bootstraps the sieve by setting the initial window start and pending
-	 * iterator. Should be called by the "final" constructor once everything else is
-	 * ready.
-	 */
-	abstract protected void bootstrap();
-
-	/**
-	 * Converts bit index k to numeric offset from start. Default (wheel2): bit k ->
-	 * 2k.
-	 */
-	abstract protected long bitposToNum(int bitpos);
 
 	// -------------------------------------------------------------------
 	// Core internals
@@ -151,46 +145,40 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		// this.start = start.add(ONE);
 		// }
 
-		String s = String.format(Locale.ENGLISH, "start=%s %.1f%% ~%.1f", this.getStart(),
-				(numPrimes() * 100.0) / primes.limit(), getLastPrime().doubleValue() / sieve.getPrimeCallCount());
+		String s = String.format(Locale.ENGLISH, "start=%s %.1f%% ~%.1f", start, (numPrimes() * 100.0) / primes.limit(),
+				getLastPrime().doubleValue() / sieve.getPrimeCallCount());
 		System.err.print(s + "\b".repeat(s.length()));
 
 		// Sieve limit: sqrt(start + windowRange)
-		limit = this.getStart().add(windowRange_bigint).sqrt();
+		limit = start.add(windowRange_bigint).sqrt();
 		if (primes.isFull())
 			if (primes.getLast().compareTo(limit) < 0)
 				throw new RuntimeException(
 						"Primes size limit is too short (" + primes.sizeLong() + "). Please increase!");
 		markAllMultiples();
 
-		last_tab = (mask = -1) ^ getTab(getTab(), last = 0);
+		last_tab = (mask = -1) ^ getTab(tab, last = 0);
 
 		doMarking = true;
 	}
 
 	protected void markMultiplesOf(BigInteger P) {
-		markMultiplesOf(getStart(), getTab(), P);
+		markMultiplesOf(start, tab, P);
 	}
 
 	protected void markAllMultiples() {
-		fillTab(getTab(), 0);
+		if (prefetch != null && prefetch.swap()) {
+			return;
+		}
+		doMarkAllMultiples();
+	}
+
+	protected void doMarkAllMultiples() {
+		fillTab(tab, 0);
 		long now = Machine.getCpuTimeNano();
 		primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).forEach(this::markMultiplesOf);
 		SieveGap.dbg("all=", (Machine.getCpuTimeNano() - now) / 1e6, "ms              ");
 	}
-
-	/**
-	 * Clears the bit for each odd multiple of p within the current window. Uses bit
-	 * S * accumulation to minimize memory accesses (one write per long).
-	 * <p>
-	 * Since only odd numbers are represented, bit k corresponds to number start +
-	 * 2*k. For an odd prime p, consecutive odd multiples are spaced by 2*p in
-	 * number space, which corresponds to spacing p in bit position space.
-	 * </p>
-	 * 
-	 * @param p an odd prime number
-	 */
-	abstract protected void markMultiplesOf(BigInteger start, long tab[], BigInteger p);
 
 	/**
 	 * Finds the next set bit in the window, representing the next prime candidate.
@@ -205,7 +193,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 			while (v == 0L) {
 				if (++last == tabLen)
 					return -1;
-				last_tab = v = ~getTab(getTab(), last);
+				last_tab = v = ~getTab(tab, last);
 			}
 			int i = Long.numberOfTrailingZeros(v);
 			mask = -2L << i;
@@ -217,7 +205,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				int i = (last += 64) >>> last_shift;
 				if (i == tabLen)
 					return -1;
-				last_tab = v = ~getTab(getTab(), i);
+				last_tab = v = ~getTab(tab, i);
 			}
 			int i = Long.numberOfTrailingZeros(v);
 			mask = -2L << i;
@@ -272,7 +260,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		}
 
 		// Convert bit position to actual odd number: start + 2*k
-		BigInteger prime = getStart().add(v(bitposToNum(k)));
+		BigInteger prime = start.add(v(bitposToNum(k)));
 		// System.err.println("Candidate bit=" + k + ", num=" + bitposToNum(k) + ",
 		// prime=" + prime + " (rem="
 		// + prime.mod(v(30)) + ")");
@@ -281,13 +269,12 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		if (doMarking) {
 			if (prime.compareTo(limit) <= 0) {
 				long now = Machine.getCpuTimeNano();
-				markMultiplesOf(getStart(), getTab(), prime);
-				last_tab = ~getTab(getTab(), last >>> last_shift);
-				SieveGap.dbg("Marking multiples of ", prime, " in ",
-						(Machine.getCpuTimeNano() - now) / 1e6, "ms.");
+				markMultiplesOf(start, tab, prime);
+				last_tab = ~getTab(tab, last >>> last_shift);
+				SieveGap.dbg("Marking multiples of ", prime, " in ", (Machine.getCpuTimeNano() - now) / 1e6, "ms.");
 			} else {
 				doMarking = false;
-				SieveGap.dbg("disabled marking for ", getStart());
+				SieveGap.dbg("disabled marking for ", start);
 			}
 		}
 
@@ -296,50 +283,60 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 
 	// Slide window by windowRange (128 * tab.length consecutive numbers)
 	protected void slideWindow() {
-		setStart(getStart().add(windowRange_bigint));
+		setStart(start.add(windowRange_bigint));
 	}
 
 	protected String name() {
-		return this.getClass().getSimpleName();
+		return this.getClass().getSimpleName() + (prefetch != null ? "/DoubleBuffer" : "");
 	}
 
-	public BigInteger getStart() {
-		return start;
-	}
+	final NextWindowRunnable prefetch;
 
-	public long[] getTab() {
-		return tab;
-	}
+	class NextWindowRunnable implements Runnable {
+		CompletableFuture<Void> nextWindowFuture = null;
 
-	public void setTab(long[] tab) {
-		this.tab = tab;
-	}
+		long[] nextTab;
+		BigInteger currStart, nextStart, limit;
 
-	public static class Delegating extends AbstractSlidingWindowSieve {
-		protected final AbstractSlidingWindowSieve delegate;
-
-		public Delegating(SieveGap sieve, AbstractSlidingWindowSieve delegate) {
-			super(sieve, delegate);
-			this.delegate = delegate;
+		NextWindowRunnable(int size) {
+			nextTab = newTab(size);
 		}
 
-		protected void bootstrap() {
-			throw new UnsupportedOperationException("bootstrap should be called on the delegate, not the wrapper");
+		boolean swap() {
+			if (nextWindowFuture != null)
+				try {
+					nextWindowFuture.get();
+					long[] t = nextTab;
+					nextTab = tab;
+					tab = t;
+					return true;
+				} catch (InterruptedException | ExecutionException e) {
+					e.printStackTrace();
+				}
+			nextWindowFuture = ready(start) ? CompletableFuture.runAsync(this) : null;
+			return false;
+		}
+
+		boolean ready(BigInteger start) {
+			if (!start.equals(this.currStart)) {
+				this.currStart = start;
+				this.nextStart = start.add(windowRange_bigint);
+				this.limit = nextStart.add(windowRange_bigint).sqrt();
+			}
+			BigInteger last = primes.getLast();
+			return last != null && last.compareTo(limit) >= 0;
+		}
+
+		protected void markMultiplesOf(BigInteger P) {
+			AbstractSlidingWindowSieve.this.markMultiplesOf(nextStart, nextTab, P);
 		}
 
 		@Override
-		protected String name() {
-			return delegate.name();
-		}
-
-		@Override
-		protected long bitposToNum(int bitpos) {
-			return delegate.bitposToNum(bitpos);
-		}
-
-		@Override
-		protected void markMultiplesOf(BigInteger start, long[] tab, BigInteger p) {
-			delegate.markMultiplesOf(start, tab, p);
+		public void run() {
+			fillTab(nextTab, 0);
+			long now = Machine.getCpuTimeNano();
+			primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).forEach(this::markMultiplesOf);
+			AbstractPrimeGap.dbg("all(prefetch)=", (Machine.getCpuTimeNano() - now) / 1e6, "ms              ");
 		}
 	}
 }

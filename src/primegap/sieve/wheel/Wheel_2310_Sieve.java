@@ -4,8 +4,8 @@ import primegap.sieve.AbstractSlidingWindowSieve;
 
 public class Wheel_2310_Sieve extends WheelSieveGap {
 	@Override
-	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
-		return newWheelSieve(size, 2, 3, 5, 7, 11);
+	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doubleBuffer) {
+		return newWheelSieve(size, doubleBuffer, 2, 3, 5, 7, 11);
 	}
 
 	public Wheel_2310_Sieve() {

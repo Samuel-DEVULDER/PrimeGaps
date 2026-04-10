@@ -9,8 +9,8 @@ public class Wheel_6_Sieve extends WheelSieveGap {
 		private static final int[] JUMPS = { -1, 1, -1, -1, -1, 1, -1, 4, 2, 2, 1, 2, -1, 3, -1, 1, -1, 1, -1, 2, 1, -1,
 				1, 2, -1, 1, -1, 1, -1, 3, -1, 2, 1, 2, 2, 4 };
 
-		public WheelSieve(int size) {
-			super(adaptSize(size),adaptRange(adaptSize(size) * 64));
+		public WheelSieve(int size, boolean doubleBuffer) {
+			super(adaptSize(size),adaptRange(adaptSize(size) * 64), doubleBuffer);
 			bootstrap();
 		}
 
@@ -60,8 +60,8 @@ public class Wheel_6_Sieve extends WheelSieveGap {
 	}
 
 	@Override
-	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new WheelSieve(size);
+	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doubleBuffer) {
+		return new WheelSieve(size, doubleBuffer);
 	}
 
 	public Wheel_6_Sieve() {

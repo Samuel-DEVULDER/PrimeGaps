@@ -12,7 +12,7 @@ import primegap.util.Machine;
 import primegap.util.NullStream;
 
 public class Benchmark {
-	final Duration RUNTIME = Duration.ofSeconds(600);
+	final Duration RUNTIME = Duration.ofSeconds(90);
 	final Duration PAUSE = Duration.ofSeconds(10);
 
 	record Algo(String name, double speed) implements Comparable<Algo> {

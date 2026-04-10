@@ -5,8 +5,8 @@ import primegap.sieve.simd.SIMDSlidingWindowSieve;
 import primegap.util.Java;
 
 class ParallelSIMDSieve extends SIMDSlidingWindowSieve {
-	public ParallelSIMDSieve(SieveGap sieve, int size) {
-		super(sieve, size);
+	public ParallelSIMDSieve(SieveGap sieve, int size, boolean doubleBuffer) {
+		super(sieve, size, doubleBuffer);
 	}
 
 	@Override

@@ -225,8 +225,8 @@ abstract class WheelSieveGap extends SieveGap {
 	}
 
 	protected abstract class AbstracWheelSieve extends AbstractSlidingWindowSieve {
-		protected AbstracWheelSieve(int size, long range) {
-			super(WheelSieveGap.this, size, range);
+		protected AbstracWheelSieve(int size, long range, boolean doubleBuffer) {
+			super(WheelSieveGap.this, size, range, doubleBuffer);
 		}
 
 		abstract protected void bootstrap();
@@ -329,13 +329,13 @@ abstract class WheelSieveGap extends SieveGap {
 		final int MOD;
 		final int BPA;
 
-		protected WheelSieve(int size, int... primes) {
-			this(size, Wheel.of(primes));
+		protected WheelSieve(int size, boolean doubleBuffer, int... primes) {
+			this(size, Wheel.of(primes), doubleBuffer);
 			bootstrap();
 		}
 
-		protected WheelSieve(int size, Wheel w) {
-			super(w.adaptSize(size), w.adaptRange(w.adaptSize(size) * 64));
+		protected WheelSieve(int size, Wheel w, boolean doubleBuffer) {
+			super(w.adaptSize(size), w.adaptRange(w.adaptSize(size) * 64), doubleBuffer);
 
 			WHEEL = w;
 
@@ -380,7 +380,7 @@ abstract class WheelSieveGap extends SieveGap {
 		}
 	}
 
-	protected WheelSieve newWheelSieve(int size, int... primes) {
-		return new WheelSieve(size, primes);
+	protected WheelSieve newWheelSieve(int size, boolean doubleBuffer,int... primes) {
+		return new WheelSieve(size, doubleBuffer, primes);
 	}
 }

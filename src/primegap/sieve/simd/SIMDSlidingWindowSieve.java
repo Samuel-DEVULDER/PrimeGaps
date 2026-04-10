@@ -12,8 +12,8 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 	
 	protected static final VectorSpecies<Long> SPECIES = LongVector.SPECIES_PREFERRED;
 
-	public SIMDSlidingWindowSieve(SieveGap sieve, int size) {
-		super(sieve, size);
+	public SIMDSlidingWindowSieve(SieveGap sieve, int size, boolean doubleBuffer) {
+		super(sieve, size, doubleBuffer);
 	}
 
 	private static final String name = "SIMD_" + SPECIES.length() * Long.SIZE;

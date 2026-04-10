@@ -8,8 +8,8 @@ public class SIMDSieveGap extends SieveGap {
 	static boolean enabled = Java.SIMD.enable();
 	
 	@Override
-	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new SIMDSlidingWindowSieve(this, size);
+	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doubleBuffer) {
+		return new SIMDSlidingWindowSieve(this, size, doubleBuffer);
 	}
 
 	public static void main(String[] args) {

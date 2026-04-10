@@ -27,20 +27,12 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 	 *               convenient range (e.g., powers of 2).
 	 * @param primes the shared TreeSet to store discovered primes
 	 */
-	public SlidingWindowSieve(SieveGap sieve, int size) {
-		super(sieve, adaptSize(size), adaptRange(adaptSize(size) * 64));
+	public SlidingWindowSieve(SieveGap sieve, int size, boolean doubleBuffer) {
+		super(sieve, adaptSize(size), adaptRange(adaptSize(size) * 64), doubleBuffer);
 		bootstrap();
 	}
 	
-	@Override
-	protected String name() {
-		return "SlidingWindow";
-	}
-
-	// -------------------------------------------------------------------
-	// Wheel hooks - override these in subclasses
-	// -------------------------------------------------------------------
-
+	
 	/**
 	 * Adjusts the requested tabLen for safety and wheel alignment. Default
 	 * (wheel2): clamp so that windowRange = tabLen*128 fits in a long.

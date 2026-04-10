@@ -146,9 +146,34 @@ public class Java {
 		Runtime.getRuntime().addShutdownHook(hook);
 	}
 	
+	public static LongStream shuffledRange(long from, long to) {
+	    long range = Math.subtractExact(to, from);  // overflow safe
+	    if (range <= 0 || range >= 1L<<30)
+	        throw new IllegalArgumentException("range: 1..2^30-1");
+	    
+	    long mask = (range << 2) | 3;
+	    mask |= mask >> 4;
+	    mask |= mask >> 8;
+	    mask |= mask >> 16;
+	    
+	    long[] perm = new long[(int)range];
+	    long n = 1;
+	    
+	    for (int idx = 0; idx < range;) {
+	        n = (n * 5L) & mask;
+	        long x = (n - 1L) >>> 2;
+	        if (x < range) {
+	            perm[idx++] = from + x;
+	        }
+	    }
+	    return LongStream.of(perm);
+	}
+
+	
 	public static LongStream rangeWithStep(long start, long endExclusive, long step) {
 	    long count = (endExclusive - start + step - 1) / step;
 	    return LongStream.range(0, count).map(i -> start + i * step);
+	    //return shuffledRange(0, count).map(i -> start + i * step);
 	}
 	
 }

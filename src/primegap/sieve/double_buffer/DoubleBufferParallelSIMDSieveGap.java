@@ -6,7 +6,7 @@ import primegap.sieve.simd.parallel.ParallelSIMDSieveGap;
 public class DoubleBufferParallelSIMDSieveGap extends ParallelSIMDSieveGap {
 	@Override
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new DoubleBufferedSieve(super.newSlidingWindowSieve(size));
+		return newSlidingWindowSieve(size, true);
 	}
 
 	public static void main(String[] args) {

@@ -13,8 +13,8 @@ public class Wheel_30_Sieve extends WheelSieveGap {
 	 * methods are overridden; everything else is inherited.
 	 */
 	class OptWheelSieve extends WheelSieve {
-		public OptWheelSieve(int size) {
-			super(size, 2, 3, 5);
+		public OptWheelSieve(int size, boolean doubleBuffer) {
+			super(size, doubleBuffer, 2, 3, 5);
 		}
 
 		/** bit k -> (k >> 3) * 30 + RESIDUES[k & 7] (shift/mask since bpa=8=2^3) */
@@ -35,8 +35,8 @@ public class Wheel_30_Sieve extends WheelSieveGap {
 	}
 
 	@Override
-	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
-		return new OptWheelSieve(size);
+	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doubleBuffer) {
+		return new OptWheelSieve(size, doubleBuffer);
 	}
 	
 	public Wheel_30_Sieve() {
