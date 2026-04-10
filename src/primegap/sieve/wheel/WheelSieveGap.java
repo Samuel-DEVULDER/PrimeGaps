@@ -241,9 +241,12 @@ abstract class WheelSieveGap extends SieveGap {
 
 		@Override
 		protected String name() {
+			if (name == null)
+				name = super.name() + "/WHEEL_" + MOD();
 			return name;
 		}
-		final String name = super.name() + "/WHEEL_" + MOD();
+
+		private String name;
 
 		protected void markMultiplesOf(BigInteger start, long tab[], BigInteger p) {
 			// Find offset to first multiple of p >= start

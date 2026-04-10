@@ -6,10 +6,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import primegap.naive.NaiveGap;
+import primegap.naive.ParallelMillerRabinGap;
 import primegap.util.NullStream;
 
-public class SieveGap extends NaiveGap {
+public class SieveGap extends ParallelMillerRabinGap {
 	@Override
 	protected void stopping(Info info) {
 		super.stopping(info);

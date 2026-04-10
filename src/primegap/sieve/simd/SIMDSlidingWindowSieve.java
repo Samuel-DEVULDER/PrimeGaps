@@ -16,10 +16,12 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 		super(sieve, size, doubleBuffer);
 	}
 
-	private final String name = super.name() + "/SIMD_" + SPECIES.length() * Long.SIZE;
+	private String name;
 
 	@Override
 	protected String name() {
+		if (name == null)
+			name = super.name() + "/SIMD_" + SPECIES.length() * Long.SIZE;
 		return name;
 	}
 

@@ -4,10 +4,10 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import primegap.naive.NaiveGap;
+import primegap.naive.ParallelMillerRabinGap;
 import primegap.util.IncreasingBigIntegers;
 
-public class SieveGap2 extends NaiveGap {
+public class SieveGap2 extends ParallelMillerRabinGap {
 
 	/**
 	 * Windowed Sieve of Eratosthenes optimized for finding large primes starting

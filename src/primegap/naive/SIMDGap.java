@@ -12,7 +12,7 @@ import jdk.incubator.vector.VectorOperators.Comparison;
 import jdk.incubator.vector.VectorSpecies;
 import primegap.util.Java;
 
-public class SIMDGap extends NaiveGap {
+public class SIMDGap extends ParallelMillerRabinGap {
 	
 	/**
 	 * WheelBig 210 generates BigInteger candidates using wheel factorization with
