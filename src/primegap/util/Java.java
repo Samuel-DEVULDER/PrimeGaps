@@ -2,6 +2,7 @@ package primegap.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Modifier;
@@ -10,9 +11,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.stream.LongStream;
 
@@ -108,7 +113,8 @@ public class Java {
 				int exitCode = 1;
 				try {
 					exitCode = new ProcessBuilder(new ArrayList<>(cmd)).inheritIO().start().waitFor();
-					//Thread.sleep(100); // small delay to ensure child process has time to print output before parent exits
+					// Thread.sleep(100); // small delay to ensure child process has time to print
+					// output before parent exits
 				} catch (InterruptedException | IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -145,35 +151,67 @@ public class Java {
 		Thread hook = new Thread(action);
 		Runtime.getRuntime().addShutdownHook(hook);
 	}
-	
+
 	public static LongStream shuffledRange(long from, long to) {
-	    long range = Math.subtractExact(to, from);  // overflow safe
-	    if (range <= 0 || range >= 1L<<30)
-	        throw new IllegalArgumentException("range: 1..2^30-1");
-	    
-	    long mask = (range << 2) | 3;
-	    mask |= mask >> 4;
-	    mask |= mask >> 8;
-	    mask |= mask >> 16;
-	    
-	    long[] perm = new long[(int)range];
-	    long n = 1;
-	    
-	    for (int idx = 0; idx < range;) {
-	        n = (n * 5L) & mask;
-	        long x = (n - 1L) >>> 2;
-	        if (x < range) {
-	            perm[idx++] = from + x;
-	        }
-	    }
-	    return LongStream.of(perm);
+		long range = Math.subtractExact(to, from); // overflow safe
+		if (range <= 0 || range >= 1L << 30)
+			throw new IllegalArgumentException("range: 1..2^30-1");
+
+		long mask = (range << 2) | 3;
+		mask |= mask >> 4;
+		mask |= mask >> 8;
+		mask |= mask >> 16;
+
+		long[] perm = new long[(int) range];
+		long n = 1;
+
+		for (int idx = 0; idx < range;) {
+			n = (n * 5L) & mask;
+			long x = (n - 1L) >>> 2;
+			if (x < range) {
+				perm[idx++] = from + x;
+			}
+		}
+		return LongStream.of(perm);
 	}
 
-	
 	public static LongStream rangeWithStep(long start, long endExclusive, long step) {
-	    long count = (endExclusive - start + step - 1) / step;
-	    return LongStream.range(0, count).map(i -> start + i * step);
-	    //return shuffledRange(0, count).map(i -> start + i * step);
+		long count = (endExclusive - start + step - 1) / step;
+		return LongStream.range(0, count).map(i -> start + i * step);
+		// return shuffledRange(0, count).map(i -> start + i * step);
 	}
-	
+
+	public static <T> Class<? extends T>[] printHierarchy(Class<T> root, PrintStream out) {
+		Class<? extends T>[] classes = findSubclasses(root);
+
+		Map<Class<?>, List<Class<?>>> children = new LinkedHashMap<>();
+
+		for (Class<?> clazz : classes) {
+			if (clazz == root)
+				continue;
+			for (Class<?> parent = clazz.getSuperclass(); parent != null; clazz = parent, parent = parent
+					.getSuperclass()) {
+				List<Class<?>> l = children.computeIfAbsent(parent, k -> new ArrayList<>());
+				if (!l.contains(clazz))
+					l.add(clazz);
+				if (parent == root) {
+					break;
+				}
+			}
+		}
+		new Object() {
+			void print(Class<?> node, Map<Class<?>, List<Class<?>>> children, String prefix, PrintStream out) {
+				out.printf(Modifier.isAbstract(node.getModifiers()) ? "%s*%n" : "%s%n", node.getSimpleName());
+				List<Class<?>> kids = children.getOrDefault(node, List.of());
+				for (int i = 0; i < kids.size(); i++) {
+					boolean last = (i == kids.size() - 1);
+					out.printf("%s%s", prefix, last ? "+-- " : "|-- ");
+					print(kids.get(i), children, prefix + (last ? "    " : "|   "), out);
+				}
+			}
+		}.print(root, children, "", out);
+
+		return classes;
+	}
+
 }

@@ -27,7 +27,7 @@ public class Benchmark {
 
 	}
 
-	static <T> T silentRun(BigIntegerGap impl, Supplier<T> sup) {
+	static <T> T silentRun(BigIntegerNextProbablePrimeGap impl, Supplier<T> sup) {
 		PrintStream out = System.out, err = System.err;
 		try {
 			PrintStream ps = NullStream.of(() -> {
@@ -43,7 +43,7 @@ public class Benchmark {
 		}
 	}
 
-	static void silentRun(BigIntegerGap impl) {
+	static void silentRun(BigIntegerNextProbablePrimeGap impl) {
 		silentRun(impl, () -> {
 			impl.run();
 			return Void.TYPE;
@@ -51,19 +51,19 @@ public class Benchmark {
 	}
 
 	@SafeVarargs
-	final void run(Class<? extends BigIntegerGap>... classes) throws Exception {
+	final void run(Class<? extends BigIntegerNextProbablePrimeGap>... classes) throws Exception {
 		Collection<Algo> col = new TreeSet<>();
 		int i = 0;
 		for (var cls : classes) {
 			final var cst = cls.getConstructor();
-			BigIntegerGap impl = silentRun(null, () -> {
+			BigIntegerNextProbablePrimeGap impl = silentRun(null, () -> {
 				try {
 					return cst.newInstance();
 				} catch (Exception ex) {
 					throw new RuntimeException(ex);
 				}
 			});
-			System.out.printf("%d/%d Testing %s...", ++i, classes.length, impl.name());
+			System.out.printf("%d/%d Testing %s...", ++i, classes.length, impl.getClass().getSimpleName());
 
 			Thread stopWatch = new Thread() {
 				public void run() {
@@ -108,7 +108,9 @@ public class Benchmark {
 
 	public static void main(String[] args) {
 		try {
-			var classes = silentRun(null, () -> Java.findSubclasses(BigIntegerGap.class));
+			Class<BigIntegerNextProbablePrimeGap> root = BigIntegerNextProbablePrimeGap.class;
+			var classes = silentRun(null, () -> Java.findSubclasses(root));
+			Java.printHierarchy(AbstractPrimeGap.class, System.err);
 //			new Benchmark().run(SIMDSieveGap.class, SieveGap.class);
 			new Benchmark().run(classes);
 		} catch (Exception e) {
