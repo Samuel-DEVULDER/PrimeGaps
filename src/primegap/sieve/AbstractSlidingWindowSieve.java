@@ -303,18 +303,19 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		}
 
 		boolean swap() {
+			boolean ret = false;
 			if (nextWindowFuture != null)
 				try {
 					nextWindowFuture.get();
 					long[] t = nextTab;
 					nextTab = tab;
 					tab = t;
-					return true;
+					ret = true;
 				} catch (InterruptedException | ExecutionException e) {
 					e.printStackTrace();
 				}
 			nextWindowFuture = ready(start) ? CompletableFuture.runAsync(this) : null;
-			return false;
+			return ret;
 		}
 
 		boolean ready(BigInteger start) {
