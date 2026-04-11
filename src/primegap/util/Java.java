@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,8 +18,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SequencedMap;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.jar.JarFile;
 import java.util.stream.LongStream;
 
@@ -28,8 +25,6 @@ import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorOperators.Comparison;
 
 public class Java {
-	static Comparator<Class<?>> comparator = Comparator.comparing(Class::getSimpleName);
-
 	public static <E> Class<? extends E>[] findSubclasses(Class<E> parent) {
 		String cp = System.getProperty("java.class.path");
 		List<Class<? extends E>> result = new ArrayList<>();
@@ -58,8 +53,6 @@ public class Java {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-
-		result.sort(comparator);
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Class<E>[] classes = result.stream().map(c -> ((Class) c).asSubclass(parent)).toArray(Class[]::new);
@@ -192,7 +185,7 @@ public class Java {
 	public static <T> SequencedMap<Class<? extends T>, String> gettHierarchy(Class<T> root) {
 		Class<? extends T>[] classes = findSubclasses(root);
 
-		Map<Class<? extends T>, Set<Class<? extends T>>> children = new TreeMap<>(comparator);
+		Map<Class<? extends T>, Set<Class<? extends T>>> children = new LinkedHashMap<>();
 
 		for (Class<? extends T> clazz : classes) {
 			if (clazz == root)
@@ -200,7 +193,7 @@ public class Java {
 			for (Class<? extends T> parent = (Class<? extends T>) clazz.getSuperclass(); //
 					parent != null; clazz = parent, //
 					parent = (Class<? extends T>) parent.getSuperclass()) {
-				Set<Class<? extends T>> l = children.computeIfAbsent(parent, k -> new TreeSet<>(comparator));
+				Set<Class<? extends T>> l = children.computeIfAbsent(parent, k -> new LinkedHashSet<>());
 				l.add(clazz);
 				if (parent == root) {
 					break;
