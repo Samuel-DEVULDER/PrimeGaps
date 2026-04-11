@@ -9,6 +9,16 @@ class ParallelSIMDSieve extends SIMDSlidingWindowSieve {
 		super(sieve, size, doubleBuffer);
 	}
 
+	@Override
+	protected String name() {
+		if (name == null) {
+			name = super.name() + "/Parallel";
+		}
+		return name;
+	}
+
+	private String name;
+
 //	static final VarHandle VH = MethodHandles.arrayElementVarHandle(long[].class);
 //
 //	@Override
@@ -18,7 +28,7 @@ class ParallelSIMDSieve extends SIMDSlidingWindowSieve {
 
 	@Override
 	protected void updateSeq64(long[] tab, int from, long to, long step) {
-		if (step < 3*64) {
+		if (step < 4 * 64) {
 			super.updateSeq64(tab, from, to, step);
 		} else {
 			Java.rangeWithStep(from, to, step).parallel()
