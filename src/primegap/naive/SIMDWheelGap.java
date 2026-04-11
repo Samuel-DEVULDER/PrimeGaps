@@ -12,20 +12,29 @@ import jdk.incubator.vector.VectorOperators.Comparison;
 import jdk.incubator.vector.VectorSpecies;
 import primegap.util.Java;
 
-public class SIMDoduloGap extends ParallelMillerRabinGap {
-	
+/**
+ * SIMDRemainderGap implements a prime gap finder using wheel factorization and
+ * SIMD filtering on small primes. It generates candidate primes by skipping
+ * numbers that are not coprime to a selected wheel, and uses SIMD operations to
+ * quickly check for divisibility by small primes.
+ *
+ * The Wheel class is an abstract base class that provides the core
+ * functionality for generating candidates and checking for compositeness.
+ * Subclasses of Wheel implement different strategies for advancing to the next
+ * candidate.
+ *
+ * The main method demonstrates how to run the SIMDRemainderGap algorithm.
+ */
+public class SIMDWheelGap extends ParallelMillerRabinGap {
 	/**
-	 * WheelBig 210 generates BigInteger candidates using wheel factorization with
-	 * SIMD filtering on small primes.
-	 *
-	 * Forward/backward iteration is supported. Subclasses implement advance() to
-	 * avoid testing forward in hot loop.
-	 *
-	 * avg tracks the average delta observed (can be used for statistics).
+	 * The Wheel class generates candidate primes by skipping numbers that are not
+	 * coprime to a selected wheel. It uses SIMD operations to check for
+	 * divisibility by small primes, allowing for efficient filtering of composite
+	 * candidates.
 	 */
 	static public abstract class Wheel implements Supplier<BigInteger> {
 		Comparison UNSIGNED_GE = Java.SIMD.UNSIGNED_GE;
-		
+
 		// ================= STATIC WHEEL =================
 		protected static final int WHEEL_SIZE;
 		protected static final List<Integer> COPRIMES;
@@ -208,6 +217,10 @@ public class SIMDoduloGap extends ParallelMillerRabinGap {
 	}
 
 // ================= SUBCLASSES =================
+
+	/**
+	 * ForwardBranch advances the candidate by following the steps in a forward
+	 */
 	static public class ForwardBranch extends Wheel {
 		public ForwardBranch(BigInteger start) {
 			super(start);
@@ -224,6 +237,10 @@ public class SIMDoduloGap extends ParallelMillerRabinGap {
 		}
 	}
 
+	/**
+	 * BackwardBranch advances the candidate by following the steps in a backward
+	 * direction, effectively generating candidates in reverse order.
+	 */
 	static public class BackwardBranch extends Wheel {
 		public BackwardBranch(BigInteger start) {
 			super(start);
@@ -240,6 +257,10 @@ public class SIMDoduloGap extends ParallelMillerRabinGap {
 		}
 	}
 
+	/**
+	 * ForwardModulo advances the candidate by following the steps in a forward
+	 * direction, but uses modulo arithmetic to wrap around the steps array.
+	 */
 	static public class ForwardModulo extends Wheel {
 		public ForwardModulo(BigInteger start) {
 			super(start);
@@ -254,6 +275,10 @@ public class SIMDoduloGap extends ParallelMillerRabinGap {
 		}
 	}
 
+	/**
+	 * BackwardModulo advances the candidate by following the steps in a backward
+	 * direction, but uses modulo arithmetic to wrap around the steps array.
+	 */
 	static public class BackwardModulo extends Wheel {
 		public BackwardModulo(BigInteger start) {
 			super(start);
@@ -288,6 +313,6 @@ public class SIMDoduloGap extends ParallelMillerRabinGap {
 	}
 
 	public static void main(String[] args) throws Exception {
-		new SIMDoduloGap().run();
+		new SIMDWheelGap().run();
 	}
 }
