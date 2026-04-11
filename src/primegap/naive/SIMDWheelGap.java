@@ -12,7 +12,7 @@ import jdk.incubator.vector.VectorOperators.Comparison;
 import jdk.incubator.vector.VectorSpecies;
 import primegap.util.Java;
 
-public class SIMDGap extends ParallelMillerRabinGap {
+public class SIMDoduloGap extends ParallelMillerRabinGap {
 	
 	/**
 	 * WheelBig 210 generates BigInteger candidates using wheel factorization with
@@ -288,6 +288,6 @@ public class SIMDGap extends ParallelMillerRabinGap {
 	}
 
 	public static void main(String[] args) throws Exception {
-		new SIMDGap().run();
+		new SIMDoduloGap().run();
 	}
 }
