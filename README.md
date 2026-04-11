@@ -15,23 +15,26 @@ It all started with my answer in a
 
 The classes form an inheritance chain, each adding a layer of optimization:
 ```
-AbstractPrimeGap
-|-- NaiveGap
-|   +-- SIMDGap
+<AbstractPrimeGap>
+|-- BigIntegerNextProbablePrimeGap
+|   |-- ParallelMillerRabinGap
+|   |   +-- SIMDGap
 |   +-- SieveGap
-|       +-- ParallelSieveGap
-|       |   +-- ParallelWindowedSieve
-|       +-- DoubleBufferSieveGap
-|       |   +-- DoubleBufferWindowedSieve
-|       +-- WheelSieveGap
-|           +-- Wheel2Sieve
-|           +-- Wheel6Sieve
-|           +-- Wheel30Sieve
-|           +-- Wheel210Sieve
-|           +-- Wheel2310Sieve
-|           +-- AbstracWheelSieve
-|               +-- WheelSieve
-|               +-- OptWheelSieve
+|       |-- <AbstractWheelSieveGap>
+|       |   |-- Wheel_210_Sieve
+|       |   |   +-- DoubleBufferWheel210SieveGap
+|       |   |-- Wheel_2310_Sieve
+|       |   |-- Wheel_2_Sieve
+|       |   |-- Wheel_30_Sieve
+|       |   |   +-- DoubleBufferWheel30SieveGap
+|       |   +-- Wheel_6_Sieve
+|       |-- DoubleBufferSieveGap
+|       |-- ParallelSieveGap
+|       |   +-- DoubleBufferParallelSieveGap
+|       +-- SIMDSieveGap
+|           |-- DoubleBufferSIMDSieveGap
+|           +-- ParallelSIMDSieveGap
+|               +-- DoubleBufferParallelSIMDSieveGap
 +-- FactorialGap
 ```
 

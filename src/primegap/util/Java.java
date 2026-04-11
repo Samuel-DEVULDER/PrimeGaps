@@ -2,7 +2,6 @@ package primegap.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Modifier;
@@ -11,13 +10,17 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SequencedMap;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.jar.JarFile;
 import java.util.stream.LongStream;
 
@@ -25,6 +28,8 @@ import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorOperators.Comparison;
 
 public class Java {
+	static Comparator<Class<?>> comparator = Comparator.comparing(Class::getSimpleName);
+
 	public static <E> Class<? extends E>[] findSubclasses(Class<E> parent) {
 		String cp = System.getProperty("java.class.path");
 		List<Class<? extends E>> result = new ArrayList<>();
@@ -53,6 +58,8 @@ public class Java {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+
+		result.sort(comparator);
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		Class<E>[] classes = result.stream().map(c -> ((Class) c).asSubclass(parent)).toArray(Class[]::new);
@@ -181,37 +188,41 @@ public class Java {
 		// return shuffledRange(0, count).map(i -> start + i * step);
 	}
 
-	public static <T> Class<? extends T>[] printHierarchy(Class<T> root, PrintStream out) {
+	@SuppressWarnings("unchecked")
+	public static <T> SequencedMap<Class<? extends T>, String> gettHierarchy(Class<T> root) {
 		Class<? extends T>[] classes = findSubclasses(root);
 
-		Map<Class<?>, List<Class<?>>> children = new LinkedHashMap<>();
+		Map<Class<? extends T>, Set<Class<? extends T>>> children = new TreeMap<>(comparator);
 
-		for (Class<?> clazz : classes) {
+		for (Class<? extends T> clazz : classes) {
 			if (clazz == root)
 				continue;
-			for (Class<?> parent = clazz.getSuperclass(); parent != null; clazz = parent, parent = parent
-					.getSuperclass()) {
-				List<Class<?>> l = children.computeIfAbsent(parent, k -> new ArrayList<>());
-				if (!l.contains(clazz))
-					l.add(clazz);
+			for (Class<? extends T> parent = (Class<? extends T>) clazz.getSuperclass(); //
+					parent != null; clazz = parent, //
+					parent = (Class<? extends T>) parent.getSuperclass()) {
+				Set<Class<? extends T>> l = children.computeIfAbsent(parent, k -> new TreeSet<>(comparator));
+				l.add(clazz);
 				if (parent == root) {
 					break;
 				}
 			}
 		}
-		new Object() {
-			void print(Class<?> node, Map<Class<?>, List<Class<?>>> children, String prefix, PrintStream out) {
-				out.printf(Modifier.isAbstract(node.getModifiers()) ? "%s*%n" : "%s%n", node.getSimpleName());
-				List<Class<?>> kids = children.getOrDefault(node, List.of());
-				for (int i = 0; i < kids.size(); i++) {
-					boolean last = (i == kids.size() - 1);
-					out.printf("%s%s", prefix, last ? "+-- " : "|-- ");
-					print(kids.get(i), children, prefix + (last ? "    " : "|   "), out);
-				}
-			}
-		}.print(root, children, "", out);
+		return new Object() {
+			SequencedMap<Class<? extends T>, String> res = new LinkedHashMap<>();
 
-		return classes;
+			SequencedMap<Class<? extends T>, String> print(Class<? extends T> node,
+					Map<Class<? extends T>, Set<Class<? extends T>>> children, String prefix1, String prefix2) {
+				res.put(node, String.format(Modifier.isAbstract(node.getModifiers()) ? "%s<%s>" : "%s%s", prefix1,
+						node.getSimpleName()));
+				Set<Class<? extends T>> kids = children.getOrDefault(node, Collections.emptySet());
+				int idx = kids.size();
+				for (Class<? extends T> kid : kids) {
+					boolean last = --idx == 0;
+					print(kid, children, prefix2 + (last ? "+-- " : "|-- "), prefix2 + (last ? "    " : "|   "));
+				}
+				return res;
+			}
+		}.print(root, children, "", "");
 	}
 
 }

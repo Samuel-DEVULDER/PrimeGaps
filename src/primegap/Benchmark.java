@@ -4,6 +4,7 @@ import java.io.PrintStream;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
@@ -82,7 +83,7 @@ public class Benchmark {
 			} catch (TimeoutException ignored) {
 			} catch (Exception ex) {
 				ex.printStackTrace();
-				continue;
+				break;
 			}
 			double duration = System.nanoTime() - start;
 			duration /= 1e9; // sec
@@ -110,7 +111,7 @@ public class Benchmark {
 		try {
 			Class<BigIntegerNextProbablePrimeGap> root = BigIntegerNextProbablePrimeGap.class;
 			var classes = silentRun(null, () -> Java.findSubclasses(root));
-			Java.printHierarchy(AbstractPrimeGap.class, System.err);
+			Java.gettHierarchy(AbstractPrimeGap.class).forEach((k, v) -> System.err.println(v));
 //			new Benchmark().run(SIMDSieveGap.class, SieveGap.class);
 			new Benchmark().run(classes);
 		} catch (Exception e) {

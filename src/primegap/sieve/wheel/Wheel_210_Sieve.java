@@ -2,7 +2,7 @@ package primegap.sieve.wheel;
 
 import primegap.sieve.AbstractSlidingWindowSieve;
 
-public class Wheel_210_Sieve extends WheelSieveGap {
+public class Wheel_210_Sieve extends AbstractWheelSieveGap {
 	// =========================================================================
 	// Wheel210Sieve - 48 candidates per 210 integers (~77% fewer than odd-only)
 	// =========================================================================

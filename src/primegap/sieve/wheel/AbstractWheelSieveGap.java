@@ -8,7 +8,7 @@ import java.util.List;
 import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
 
-abstract class WheelSieveGap extends SieveGap {
+abstract class AbstractWheelSieveGap extends SieveGap {
 
 	// =========================================================================
 	// Wheel record
@@ -226,7 +226,7 @@ abstract class WheelSieveGap extends SieveGap {
 
 	protected abstract class AbstracWheelSieve extends AbstractSlidingWindowSieve {
 		protected AbstracWheelSieve(int size, long range, boolean doubleBuffer) {
-			super(WheelSieveGap.this, size, range, doubleBuffer);
+			super(AbstractWheelSieveGap.this, size, range, doubleBuffer);
 		}
 
 		abstract protected void bootstrap();
