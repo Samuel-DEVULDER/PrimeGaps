@@ -4,7 +4,6 @@ import java.io.PrintStream;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Locale;
-import java.util.Map;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
@@ -64,7 +63,7 @@ public class Benchmark {
 					throw new RuntimeException(ex);
 				}
 			});
-			System.out.printf("%d/%d Testing %s...", ++i, classes.length, impl.getClass().getSimpleName());
+			System.out.printf("%d/%d Testing %s (%s)...", ++i, classes.length, impl.getClass().getSimpleName(), impl.name());
 
 			Thread stopWatch = new Thread() {
 				public void run() {
@@ -86,6 +85,7 @@ public class Benchmark {
 				break;
 			}
 			double duration = System.nanoTime() - start;
+			
 			duration /= 1e9; // sec
 			long numPrimes = 0;
 			for (long c : impl.gapCounts)
