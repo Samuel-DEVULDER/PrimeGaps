@@ -9,7 +9,7 @@ import java.util.Locale;
 import primegap.util.Java;
 import primegap.util.Machine;
 
-public class BigIntegerNextProbablePrimeGap extends AbstractPrimeGap {
+public class JavaNextProbablePrimeGap extends AbstractPrimeGap {
 	private volatile Boolean stopping;
 	{
 		Java.atexit(() -> {
@@ -127,7 +127,7 @@ public class BigIntegerNextProbablePrimeGap extends AbstractPrimeGap {
 	}
 
 	public static void main(String[] args) throws Exception {
-		new BigIntegerNextProbablePrimeGap().run();
+		new JavaNextProbablePrimeGap().run();
 	}
 
 }
