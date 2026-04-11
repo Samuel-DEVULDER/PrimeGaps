@@ -4,7 +4,7 @@ import java.util.stream.IntStream;
 
 import primegap.sieve.AbstractSlidingWindowSieve;
 
-public class Wheel_6_Sieve extends AbstractWheelSieveGap {
+public class Wheel_6_SieveGap extends AbstractWheelSieveGap {
 	class WheelSieve extends AbstracWheelSieve {
 		private static final int[] JUMPS = { -1, 1, -1, -1, -1, 1, -1, 4, 2, 2, 1, 2, -1, 3, -1, 1, -1, 1, -1, 2, 1, -1,
 				1, 2, -1, 1, -1, 1, -1, 3, -1, 2, 1, 2, 2, 4 };
@@ -64,7 +64,7 @@ public class Wheel_6_Sieve extends AbstractWheelSieveGap {
 		return new WheelSieve(size, doubleBuffer);
 	}
 
-	public Wheel_6_Sieve() {
+	public Wheel_6_SieveGap() {
 		super();
 	}
 }
