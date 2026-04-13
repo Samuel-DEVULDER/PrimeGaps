@@ -11,6 +11,11 @@ import primegap.util.Java;
 import primegap.util.Machine;
 import primegap.util.NullStream;
 
+/**
+ * A benchmark class to compare the performance of different implementations of
+ * PrimeGap. It runs each implementation for a specified duration and measures
+ * the number of primes found per second.
+ */
 public class Benchmark {
 	final Duration RUNTIME = Duration.ofSeconds(90);
 	final Duration PAUSE = Duration.ofSeconds(10);
@@ -63,7 +68,8 @@ public class Benchmark {
 					throw new RuntimeException(ex);
 				}
 			});
-			System.out.printf("%d/%d Testing %s (%s)...", ++i, classes.length, impl.getClass().getSimpleName(), impl.name());
+			System.out.printf("%d/%d Testing %s (%s)...", ++i, classes.length, impl.getClass().getSimpleName(),
+					impl.name());
 
 			Thread stopWatch = new Thread() {
 				public void run() {
@@ -85,7 +91,7 @@ public class Benchmark {
 				break;
 			}
 			double duration = System.nanoTime() - start;
-			
+
 			duration /= 1e9; // sec
 			long numPrimes = 0;
 			for (long c : impl.gapCounts)

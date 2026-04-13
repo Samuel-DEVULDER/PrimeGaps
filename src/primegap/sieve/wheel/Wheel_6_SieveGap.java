@@ -4,6 +4,14 @@ import java.util.stream.IntStream;
 
 import primegap.sieve.AbstractSlidingWindowSieve;
 
+/**
+ * This implementation uses a wheel of size 6, which skips numbers that are
+ * divisible by 2 and 3. The wheel has two positions: 1 and 5 (mod 6). This
+ * allows us to skip even numbers and multiples of 3, which are not prime (except
+ * for 2 and 3 themselves). The jumps array is used to determine how to move to
+ * the next candidate number based on the current residue and the prime being
+ * sieved. 
+ */	
 public class Wheel_6_SieveGap extends AbstractWheelSieveGap {
 	class WheelSieve extends AbstracWheelSieve {
 		private static final int[] JUMPS = { -1, 1, -1, -1, -1, 1, -1, 4, 2, 2, 1, 2, -1, 3, -1, 1, -1, 1, -1, 2, 1, -1,

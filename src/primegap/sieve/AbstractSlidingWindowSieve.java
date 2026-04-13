@@ -14,12 +14,22 @@ import primegap.util.IncreasingBigIntegers;
 import primegap.util.Machine;
 
 /**
- * Windowed Sieve of Eratosthenes optimized for finding large primes starting
- * from an arbitrary BigInteger position.
+ * This abstract class defines the core logic of a sliding window sieve, while
+ * allowing subclasses to customize the bit representation and marking strategy.
  * <p>
- * The sieve works incrementally: as primes are discovered, they are immediately
- * used to mark their multiples as composite in the current and future windows.
- * </p>
+ * The main responsibilities of this class include:
+ * <ul>
+ * <li>Maintaining the current window of candidate numbers using a bit-packed
+ * array.</li>
+ * <li>Providing a method to mark multiples of discovered primes as
+ * composite.</li>
+ * <li>Implementing the logic to slide the window forward and initialize it with
+ * known primes.</li>
+ * <li>Supplying the next prime number on demand, handling window exhaustion and
+ * sliding as needed.</li>
+ * </ul>
+ * Subclasses can override methods to implement specific optimizations such as
+ * wheel factorization or SIMD-friendly layouts.
  */
 public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger> {
 	/**
@@ -249,12 +259,12 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				return lastPrime = v(-k);
 		} else {
 			while ((k = next()) < 0) {
-				//long now = Machine.getCpuTimeNano();
-				//if (pending != EMPTY) {
-					pending = EMPTY;
-				//}
+				// long now = Machine.getCpuTimeNano();
+				// if (pending != EMPTY) {
+				pending = EMPTY;
+				// }
 				slideWindow();
-				//SieveGap.dbg("Slide done (", (Machine.getCpuTimeNano() - now) / 1e9,"s)                                                ");
+				// SieveGap.dbg("Slide done (", (Machine.getCpuTimeNano() - now) / 1e9,"s) ");
 			}
 		}
 

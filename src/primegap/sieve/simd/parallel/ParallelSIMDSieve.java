@@ -4,6 +4,14 @@ import primegap.sieve.SieveGap;
 import primegap.sieve.simd.SIMDSlidingWindowSieve;
 import primegap.util.Java;
 
+/**
+ * Parallel version of the SIMD sliding window sieve.
+ * <p>
+ * This class extends the SIMDSlidingWindowSieve and overrides the method to
+ * update the sieve table in parallel when the step size is large enough. It
+ * uses Java's parallel streams to efficiently update the sieve table across
+ * multiple threads, improving performance for larger step sizes.
+ */
 class ParallelSIMDSieve extends SIMDSlidingWindowSieve {
 	public ParallelSIMDSieve(SieveGap sieve, int size, boolean doubleBuffer) {
 		super(sieve, size, doubleBuffer);

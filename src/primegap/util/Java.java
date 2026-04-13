@@ -24,7 +24,23 @@ import java.util.stream.LongStream;
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorOperators.Comparison;
 
+/**
+ * Various java utilities, such as finding subclasses of a class, enabling
+ * Vector API, providing atexit() hooks as in C, and generating In/Long range
+ * stream with steps.
+ */
 public class Java {
+	/**
+	 * Finds all non-abstract subclasses of the given parent class that are
+	 * available in the current classpath. This method scans both directories and
+	 * JAR files in the classpath, loading classes and checking their type
+	 * hierarchy.
+	 *
+	 * @param <E>    the type of the parent class
+	 * @param parent the parent class to find subclasses of
+	 * @return an array of classes that are non-abstract subclasses of the given
+	 *         parent class
+	 */
 	public static <E> Class<? extends E>[] findSubclasses(Class<E> parent) {
 		String cp = System.getProperty("java.class.path");
 		List<Class<? extends E>> result = new ArrayList<>();
@@ -75,6 +91,65 @@ public class Java {
 		}
 	}
 
+	/**
+	 * Builds a map representing the class hierarchy of subclasses of the given root
+	 * class. The map keys are the classes, and the values are formatted strings
+	 * that visually represent the hierarchy using indentation and symbols. The
+	 * method first finds all subclasses of the root class, then constructs a tree
+	 * structure based on their superclass relationships, and finally generates a
+	 * formatted map that can be used to display the hierarchy in a readable format.
+	 *
+	 * @param <T>  the type of the root class
+	 * @param root the root class to build the hierarchy from
+	 * @return a SequencedMap where keys are classes and values are formatted
+	 *         strings representing the hierarchy
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> SequencedMap<Class<? extends T>, String> gettHierarchy(Class<T> root) {
+		Class<? extends T>[] classes = findSubclasses(root);
+
+		Map<Class<? extends T>, Set<Class<? extends T>>> children = new LinkedHashMap<>();
+
+		for (Class<? extends T> clazz : classes) {
+			if (clazz == root)
+				continue;
+			for (Class<? extends T> parent = (Class<? extends T>) clazz.getSuperclass(); //
+					parent != null; clazz = parent, //
+					parent = (Class<? extends T>) parent.getSuperclass()) {
+				Set<Class<? extends T>> l = children.computeIfAbsent(parent, k -> new LinkedHashSet<>());
+				l.add(clazz);
+				if (parent == root) {
+					break;
+				}
+			}
+		}
+		return new Object() {
+			SequencedMap<Class<? extends T>, String> res = new LinkedHashMap<>();
+
+			SequencedMap<Class<? extends T>, String> print(Class<? extends T> node,
+					Map<Class<? extends T>, Set<Class<? extends T>>> children, String prefix1, String prefix2) {
+				res.put(node, String.format(Modifier.isAbstract(node.getModifiers()) ? "%s<%s>" : "%s%s", prefix1,
+						node.getSimpleName()));
+				Set<Class<? extends T>> kids = children.getOrDefault(node, Collections.emptySet());
+				int idx = kids.size();
+				for (Class<? extends T> kid : kids) {
+					boolean last = --idx == 0;
+					print(kid, children, prefix2 + (last ? "+-- " : "|-- "), prefix2 + (last ? "    " : "|   "));
+				}
+				return res;
+			}
+		}.print(root, children, "", "");
+	}
+
+	/**
+	 * The SIMD class provides a method to enable the Vector API incubator module
+	 * and defines a constant for the unsigned greater-than-or-equal comparison
+	 * operator. The enable() method checks if the module is already loaded, and if
+	 * not, it relaunches the current JVM process with the necessary module added to
+	 * the command line arguments. This allows the program to use SIMD operations
+	 * without requiring the user to manually specify the module when launching the
+	 * application.
+	 */
 	public static class SIMD {
 		/**
 		 * Relaunches the current JVM process with --add-modules=jdk.incubator.vector
@@ -147,11 +222,33 @@ public class Java {
 		}
 	}
 
+	/**
+	 * Registers a shutdown hook to run the given action when the JVM is exiting.
+	 * This can be used to perform cleanup tasks, such as releasing resources or
+	 * saving state, before the application terminates. The action will be executed
+	 * when the JVM is shutting down, either normally or due to an external signal
+	 * (e.g., Ctrl+C).
+	 *
+	 * @param action the Runnable action to execute on JVM shutdown
+	 */
 	public static void atexit(Runnable action) {
 		Thread hook = new Thread(action);
 		Runtime.getRuntime().addShutdownHook(hook);
 	}
 
+	/**
+	 * Generates a LongStream of long values in the range [from, to) in a shuffled
+	 * order. The method uses a permutation algorithm based on modular arithmetic to
+	 * create a pseudo-random sequence of numbers within the specified range. The
+	 * generated stream will contain all numbers from the range exactly once, but in
+	 * a random order.
+	 *
+	 * @param from the starting value of the range (inclusive)
+	 * @param to   the ending value of the range (exclusive)
+	 * @return a LongStream containing the shuffled values in the specified range
+	 * @throws IllegalArgumentException if the range is invalid (non-positive or too
+	 *                                  large)
+	 */
 	public static LongStream shuffledRange(long from, long to) {
 		long range = Math.subtractExact(to, from); // overflow safe
 		if (range <= 0 || range >= 1L << 30)
@@ -175,47 +272,25 @@ public class Java {
 		return LongStream.of(perm);
 	}
 
+	/**
+	 * Generates a LongStream of long values in the range [start, endExclusive) with
+	 * a specified step, in a shuffled order. The method calculates the number of
+	 * elements in the range based on the step and then generates a shuffled
+	 * sequence of indices, which are then mapped to the actual values in the range
+	 * using the formula start + i * step. This allows for generating a stream of
+	 * numbers that are evenly spaced by the given step, but in a random order.
+	 *
+	 * @param start        the starting value of the range (inclusive)
+	 * @param endExclusive the ending value of the range (exclusive)
+	 * @param step         the step size between consecutive values in the range
+	 * @return a LongStream containing the shuffled values in the specified range
+	 *         with the given step
+	 * @throws IllegalArgumentException if the range is invalid (non-positive or too
+	 *                                  large)
+	 */
 	public static LongStream rangeWithStep(long start, long endExclusive, long step) {
 		long count = (endExclusive - start + step - 1) / step;
-		return LongStream.range(0, count).map(i -> start + i * step);
-		// return shuffledRange(0, count).map(i -> start + i * step);
+		// return LongStream.range(0, count).map(i -> start + i * step);
+		return shuffledRange(0, count).map(i -> start + i * step);
 	}
-
-	@SuppressWarnings("unchecked")
-	public static <T> SequencedMap<Class<? extends T>, String> gettHierarchy(Class<T> root) {
-		Class<? extends T>[] classes = findSubclasses(root);
-
-		Map<Class<? extends T>, Set<Class<? extends T>>> children = new LinkedHashMap<>();
-
-		for (Class<? extends T> clazz : classes) {
-			if (clazz == root)
-				continue;
-			for (Class<? extends T> parent = (Class<? extends T>) clazz.getSuperclass(); //
-					parent != null; clazz = parent, //
-					parent = (Class<? extends T>) parent.getSuperclass()) {
-				Set<Class<? extends T>> l = children.computeIfAbsent(parent, k -> new LinkedHashSet<>());
-				l.add(clazz);
-				if (parent == root) {
-					break;
-				}
-			}
-		}
-		return new Object() {
-			SequencedMap<Class<? extends T>, String> res = new LinkedHashMap<>();
-
-			SequencedMap<Class<? extends T>, String> print(Class<? extends T> node,
-					Map<Class<? extends T>, Set<Class<? extends T>>> children, String prefix1, String prefix2) {
-				res.put(node, String.format(Modifier.isAbstract(node.getModifiers()) ? "%s<%s>" : "%s%s", prefix1,
-						node.getSimpleName()));
-				Set<Class<? extends T>> kids = children.getOrDefault(node, Collections.emptySet());
-				int idx = kids.size();
-				for (Class<? extends T> kid : kids) {
-					boolean last = --idx == 0;
-					print(kid, children, prefix2 + (last ? "+-- " : "|-- "), prefix2 + (last ? "    " : "|   "));
-				}
-				return res;
-			}
-		}.print(root, children, "", "");
-	}
-
 }

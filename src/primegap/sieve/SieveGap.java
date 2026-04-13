@@ -9,6 +9,16 @@ import java.util.List;
 import primegap.JavaNextProbablePrimeGap;
 import primegap.util.NullStream;
 
+/**
+ * This implementation uses a sliding window sieve to find the next prime after a
+ * given number N. The sieve is implemented as an AbstractSlidingWindowSieve,
+ * which maintains a window of numbers and marks the multiples of known primes
+ * within that window. The next prime is found by advancing the window until a
+ * prime is found that is greater than N.
+ *
+ * The implementation also includes a mechanism to count the gaps between primes
+ * and print statistics about the gaps when the program is stopped.
+ */
 public class SieveGap extends JavaNextProbablePrimeGap {
 	@Override
 	protected void stopping(Info info) {

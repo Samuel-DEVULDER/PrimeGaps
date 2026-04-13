@@ -8,6 +8,18 @@ import java.util.List;
 import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
 
+/**
+ * SieveGap implementation using wheel factorization to skip candidates
+ * divisible by small primes.
+ * <p>
+ * This class defines an abstract wheel sieve gap that utilizes wheel
+ * factorization to optimize the sieving process. It includes a nested Wheel
+ * record that encapsulates the wheel factorization data and provides methods
+ * for bootstrapping the sieve and marking multiples of primes. The WheelSieve
+ * class extends the AbstractSlidingWindowSieve and implements the necessary
+ * methods for mapping between bit positions and candidate numbers based on the
+ * wheel's properties.
+ */
 abstract class AbstractWheelSieveGap extends SieveGap {
 
 	// =========================================================================

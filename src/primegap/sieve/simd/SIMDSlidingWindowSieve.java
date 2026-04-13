@@ -7,6 +7,19 @@ import primegap.sieve.SlidingWindowSieve;
 import primegap.sieve.SieveGap;
 import primegap.util.Java;
 
+/**
+ * SIMD-optimized version of SlidingWindowSieve.
+ * <p>
+ * For small steps, falls back to non-SIMD implementation to avoid overhead.
+ * <p>
+ * For larger steps, uses SIMD vectorization to update multiple bits in
+ * parallel. Hard-coded optimized paths for 128-bit and 256-bit vectors, generic
+ * fallback for wider vectors (e.g. 512-bit on future hardware).
+ * 
+ * This is a generalization of SlidingWindowSieve that takes advantage of SIMD
+ * instructions to mark multiple bits using LongVectors (128, 256, 512 bits
+ * typically) in place of plain Long (64 bits) to improve memory band-width.
+ */
 public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 	static boolean isSIMDEnabled = Java.SIMD.enable();
 

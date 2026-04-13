@@ -9,6 +9,14 @@ import java.util.Locale;
 import primegap.util.Java;
 import primegap.util.Machine;
 
+/**
+ * This implementation uses Java's built-in nextProbablePrime() method to find the
+ * next prime. This method is based on a combination of trial division and
+ * Miller-Rabin primality testing, and is optimized for performance.
+ * 
+ * The implementation also includes a mechanism to count the gaps between primes and
+ * print statistics about the gaps when the program is stopped.
+ */
 public class JavaNextProbablePrimeGap extends AbstractPrimeGap {
 	private volatile Boolean stopping;
 	{

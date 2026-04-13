@@ -4,18 +4,12 @@ import java.math.BigInteger;
 import java.util.stream.IntStream;
 
 /**
- * Windowed Sieve of Eratosthenes optimized for finding large primes starting
- * from an arbitrary BigInteger position.
- * <p>
- * This implementation uses a bit-packed sliding window where each bit
- * represents an odd number only (even numbers are skipped). Bit k represents
- * the number: start + 2*k. Each long (64 bits) covers a range of 128
- * consecutive numbers (64 odd + 64 even skipped).
- * </p>
- * <p>
- * The sieve works incrementally: as primes are discovered, they are immediately
- * used to mark their multiples as composite in the current and future windows.
- * </p>
+ * This implementation is based on the classic Sieve of Eratosthenes algorithm,
+ * but it is optimized for finding large primes starting from an arbitrary
+ * BigInteger position. The sieve uses a sliding window approach, where a fixed-size
+ * bit array represents a range of numbers, and the algorithm marks multiples of
+ * discovered primes as composite within that window. As the window slides forward,
+ * new primes are discovered and used to mark their multiples in subsequent windows.
  */
 public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 	/**

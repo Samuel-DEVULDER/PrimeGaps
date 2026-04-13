@@ -2,6 +2,17 @@ package primegap.sieve.wheel;
 
 import primegap.sieve.AbstractSlidingWindowSieve;
 
+/**
+ * SieveGap implementation using a wheel of size 30.
+ * <p>
+ * This wheel skips all multiples of 2, 3, and 5, which are the first three
+ * primes. This results in only 8 candidates per 30 integers, which is about 73%
+ * fewer than the odd-only approach (which has 15 candidates per 30 integers).
+ * <p>
+ * The wheel-specific methods are implemented in the OptWheelSieve inner class,
+ * which uses the fact that there are 8 residues, a nice power of two which
+ * allows using bit-masking in place of arithmetic modulo.
+ */
 public class Wheel_30_SieveGap extends AbstractWheelSieveGap {
 
 	// =========================================================================
@@ -38,7 +49,7 @@ public class Wheel_30_SieveGap extends AbstractWheelSieveGap {
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doubleBuffer) {
 		return new OptWheelSieve(size, doubleBuffer);
 	}
-	
+
 	public Wheel_30_SieveGap() {
 		super();
 	}

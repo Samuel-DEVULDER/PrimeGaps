@@ -8,12 +8,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.LongSupplier;
 
+/**
+ * A utility class to gather and print machine information, including CPU model
+ * and cache sizes. It also includes a method to probe the cache hierarchy by
+ * measuring memory access latencies for different buffer sizes.
+ */
 public class Machine {
 	public static void printMachineInfo(PrintStream out) {
 		Runtime rt = Runtime.getRuntime();
 		out.printf("\r%-80s%n", "=== Machine Info ===");
-		out.printf("OS      : %s %s (%s)%n", System.getProperty("os.name"), System.getProperty("os.version"), System.getProperty("os.arch"));
-		out.printf("JVM     : %s %s (%s)%n",  System.getProperty("java.vm.name"), System.getProperty("java.version"), System.getProperty("java.vm.vendor"));
+		out.printf("OS      : %s %s (%s)%n", System.getProperty("os.name"), System.getProperty("os.version"),
+				System.getProperty("os.arch"));
+		out.printf("JVM     : %s %s (%s)%n", System.getProperty("java.vm.name"), System.getProperty("java.version"),
+				System.getProperty("java.vm.vendor"));
 		out.printf("CPUs    : %d%n", rt.availableProcessors());
 		out.printf("RAM     : %.1f GB total%n", rt.maxMemory() / 1e9);
 		printCpuModel(out);
@@ -152,11 +159,11 @@ public class Machine {
 		out.printf("%n=> Optimal sieve size : %d KB%n%n", optimal / 1024);
 		return optimal;
 	}
-	
+
 	public static long getCpuTimeNano() {
 		return timer.getAsLong();
 	}
-	
+
 	private static final LongSupplier timer = initTimer();
 
 	private static LongSupplier initTimer() {

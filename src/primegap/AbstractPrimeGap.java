@@ -8,6 +8,11 @@ import java.util.stream.IntStream;
 
 import primegap.util.Machine;
 
+/**
+ * Base class for prime gap search implementations. It provides common utilities
+ * such as primality testing and next prime generation, as well as a framework
+ * for tracking the performance of the search.
+ */
 public abstract class AbstractPrimeGap {
 	protected boolean running(int gap) {
 		return gap <= 464 * 2; // 464;
@@ -50,49 +55,10 @@ public abstract class AbstractPrimeGap {
 //		System.err.println();
 	}
 
-	/**
-	 * Returns true iff this BigInteger passes the specified number of Miller-Rabin
-	 * tests. This test is taken from the DSA spec (NIST FIPS 186-2).
-	 *
-	 * The following assumptions are made: This BigInteger is a positive, odd number
-	 * greater than 2. iterations<=50.
-	 */
-	static protected boolean passesMillerRabin(BigInteger N, int iterations) {
-		// Find a and m such that m is odd and this == 1 + 2**a * m
-		BigInteger thisMinusOne = N.subtract(ONE);
-		BigInteger m_ = thisMinusOne;
-		int a = m_.getLowestSetBit();
-		BigInteger m = m_.shiftRight(a);
-
-		return IntStream.range(0, iterations).parallel().allMatch(ignored -> {
-			Random rnd = ThreadLocalRandom.current();
-			// Generate a uniform random on (1, this)
-			BigInteger b;
-			do {
-				b = new BigInteger(N.bitLength(), rnd);
-			} while (b.compareTo(ONE) <= 0 || b.compareTo(N) >= 0);
-
-			int j = 0;
-			BigInteger z = b.modPow(m, N);
-			while (!((j == 0 && z.equals(ONE)) || z.equals(thisMinusOne))) {
-				if (j > 0 && z.equals(ONE) || ++j == a)
-					return false;
-				z = z.modPow(TWO, N);
-			}
-
-			return true;
-		});
-	}
-
 	public final int MILLER_RABIN_PASSES = 5;
 
 	protected boolean isPrime(BigInteger N) {
-		if (N.testBit(0) == false)
-			return N.equals(TWO);
-
-		return IntStream.range(0, 1).parallel().allMatch(i -> i == 0 //
-				? N.isProbablePrime(1) // <= also contains Miller-Rabin.
-				: passesMillerRabin(N, MILLER_RABIN_PASSES - 1));
+		return N.isProbablePrime(MILLER_RABIN_PASSES);
 	}
 
 	/**

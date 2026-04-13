@@ -10,6 +10,21 @@ import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 
+/**
+ * This class implements a collection of increasing BigIntegers that are stored
+ * in a temporary file on disk. The integers are stored as deltas from the
+ * previous integer, using a variable-length encoding to save space. The class
+ * provides methods to add integers to the collection and to iterate over the
+ * integers in order.
+ * 
+ * The implementation uses a cleaner to ensure that the temporary file is
+ * deleted when the collection is no longer in use, and also provides a close()
+ * method for manual cleanup.
+ * 
+ * The collection is designed to handle a large number of integers without
+ * consuming a lot of memory, making it suitable for applications that need to
+ * store and process large sets of integers that may not fit in memory.
+ */
 public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implements Collection<BigInteger>, Closeable {
 	private static final Cleaner CLEANER = Cleaner.create();
 
@@ -96,7 +111,7 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 		this(4096);
 		col.stream().sorted().distinct().forEach(this::add);
 	}
-	
+
 	@Override
 	public void close() {
 		RandomAccessFile loc = raf;
@@ -133,7 +148,7 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 		if (index == buffer.length) {
 			synchronized (raf) {
 				raf.seek(raf.length());
-				raf.write(buffer, 0, index);				
+				raf.write(buffer, 0, index);
 			}
 			index = 0;
 		}
