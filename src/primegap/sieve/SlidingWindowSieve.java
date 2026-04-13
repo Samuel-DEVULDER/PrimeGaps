@@ -31,8 +31,7 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 		super(sieve, adaptSize(size), adaptRange(adaptSize(size) * 64), doubleBuffer);
 		bootstrap();
 	}
-	
-	
+
 	/**
 	 * Adjusts the requested tabLen for safety and wheel alignment. Default
 	 * (wheel2): clamp so that windowRange = tabLen*128 fits in a long.
@@ -106,30 +105,47 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 		}
 	}
 
+	protected void updateSeq64(long[] tab, int from, long to, long step) {
+		if (false && to > Integer.MAX_VALUE) {
+			for (long pos = from; pos < to; pos += step) {
+				updateTab(tab, (int) (pos >>> 6), 1L << (63 & pos));
+			}
+		} else {
+			int i_to = (int) to, i_step = (int) step;
+			for (int pos = from; pos < i_to; pos += i_step) {
+				updateTab(tab, pos >>> 6, 1L << (pos & 63));
+			}
+		}
+	}
+
 	protected void updateSeq(long[] tab, int from, long to, long step) {
-		// Accumulate bits to clear
-		int i = from >>> 6;
-		long mask = 1L << (63 & from);
+		if (step >= 64) {
+			updateSeq64(tab, from, to, step);
+		} else {
+			// Accumulate bits to clear
+			int i = from >>> 6;
+			long mask = 1L << (63 & from);
 
-		// Small prime: multiple odd multiples in window
-		long pos = from + step;// Use long here to avoid overflow in loop
+			// Small prime: multiple odd multiples in window
+			long pos = from + step;// Use long here to avoid overflow in loop
 
-		// first occurrence appear before the first half
-		while (pos < to) {
-			int nextI = (int) (pos >>> 6);
+			// first occurrence appear before the first half
+			while (pos < to) {
+				int nextI = (int) (pos >>> 6);
 
-			// Flush mask when moving to different long
-			if (nextI != i) {
-				updateTab(tab, i, mask);
-				i = nextI;
-				mask = 0;
+				// Flush mask when moving to different long
+				if (nextI != i) {
+					updateTab(tab, i, mask);
+					i = nextI;
+					mask = 0;
+				}
+
+				mask |= (1L << (63 & pos));
+				pos += step;
 			}
 
-			mask |= (1L << (63 & pos));
-			pos += step;
+			// Apply final mask
+			updateTab(tab, i, mask);
 		}
-
-		// Apply final mask
-		updateTab(tab, i, mask);
 	}
 }

@@ -31,8 +31,8 @@ public class ParallelSieveGap3 extends SieveGap {
 
 		protected void markAllMultiples() {
 			concurrent = false;
-			fillTab(tab, 0);
 
+			fillTab(tab, 0);
 			long now = Machine.getCpuTimeNano();
 			primes.stream().takeWhile(p -> p.intValue() <= small_thr).forEach(this::markMultiplesOf);
 			dbg("small=", (Machine.getCpuTimeNano() - now) / 1e6, "ms                                          ");

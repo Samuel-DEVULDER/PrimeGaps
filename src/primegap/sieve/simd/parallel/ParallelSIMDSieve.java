@@ -28,7 +28,7 @@ class ParallelSIMDSieve extends SIMDSlidingWindowSieve {
 
 	@Override
 	protected void updateSeq64(long[] tab, int from, long to, long step) {
-		if (step < 4 * 64) {
+		if (step < 16*64) {
 			super.updateSeq64(tab, from, to, step);
 		} else {
 			Java.rangeWithStep(from, to, step).parallel()

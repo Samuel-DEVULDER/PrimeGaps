@@ -27,7 +27,7 @@ class ParallelSieve extends SlidingWindowSieve {
 
 	@Override
 	protected void updateSeq(long[] tab, int from, long to, long step) {
-		if (step < 64L) {
+		if (step < 4*64L) {
 			super.updateSeq(tab, from, to, step);
 		} else {
 			Java.rangeWithStep(from, to, step).parallel()

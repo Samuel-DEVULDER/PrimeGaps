@@ -32,13 +32,6 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 		return super.newTab(ajusted);
 	}
 
-	protected void updateSeq64(long[] tab, int from, long to, long step) {
-		for (long pos = from; pos < to; pos += step) {
-			int idx = (int) (pos >>> 6);
-			tab[idx] |= 1L << (pos & 63);
-		}
-	}
-
 	@Override
 	protected void updateSeq(long[] tab, int from, long to, long step) {
 		if (step >= 64) {
