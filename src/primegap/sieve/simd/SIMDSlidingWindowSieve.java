@@ -3,8 +3,8 @@ package primegap.sieve.simd;
 import jdk.incubator.vector.LongVector;
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
-import primegap.sieve.SlidingWindowSieve;
 import primegap.sieve.SieveGap;
+import primegap.sieve.SlidingWindowSieve;
 import primegap.util.Java;
 
 /**
