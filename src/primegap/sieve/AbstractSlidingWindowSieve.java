@@ -9,7 +9,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
-import primegap.AbstractPrimeGap;
 import primegap.util.IncreasingBigIntegers;
 import primegap.util.Machine;
 
@@ -180,13 +179,14 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		if (prefetch != null && prefetch.swap()) {
 			return;
 		}
-		doMarkAllMultiples();
+		doMarkAllMultiples(start, tab, primes, limit);
 	}
 
-	protected void doMarkAllMultiples() {
+	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes,
+			BigInteger limit) {
 		fillTab(tab, 0);
 		long now = Machine.getCpuTimeNano();
-		primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).forEach(this::markMultiplesOf);
+		primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).forEach(p -> markMultiplesOf(start, tab, p));
 		SieveGap.dbg("all=", (Machine.getCpuTimeNano() - now) / 1e6, "ms              ");
 	}
 
@@ -337,16 +337,9 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 			return last != null && last.compareTo(limit) >= 0;
 		}
 
-		protected void markMultiplesOf(BigInteger P) {
-			AbstractSlidingWindowSieve.this.markMultiplesOf(nextStart, nextTab, P);
-		}
-
 		@Override
 		public void run() {
-			fillTab(nextTab, 0);
-			long now = Machine.getCpuTimeNano();
-			primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).forEach(this::markMultiplesOf);
-			AbstractPrimeGap.dbg("all(prefetch)=", (Machine.getCpuTimeNano() - now) / 1e6, "ms              ");
+			doMarkAllMultiples(nextStart, nextTab, primes, limit);
 		}
 	}
 }
