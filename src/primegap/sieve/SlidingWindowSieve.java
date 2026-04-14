@@ -99,6 +99,7 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	protected void updateSeq64(long[] tab, int from, long to, long step) {
 		if (false && to > Integer.MAX_VALUE) {
 			for (long pos = from; pos < to; pos += step) {
