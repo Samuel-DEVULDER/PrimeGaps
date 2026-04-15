@@ -258,10 +258,12 @@ public class Java {
 		if (range < 0 || range >= 1L << 30)
 			throw new IllegalArgumentException("range (" + range + "): 1..2^30-1");
 
-		long mask = (range << 2) | 3;
-		mask |= mask >> 4;
-		mask |= mask >> 8;
-		mask |= mask >> 16;
+		long mask =  range<<2;
+		mask |= mask >>> 1;
+		mask |= mask >>> 2;
+		mask |= mask >>> 4;
+		mask |= mask >>> 8;
+		mask |= mask >>> 16;
 
 		long[] perm = new long[(int) range];
 		long n = 1;
@@ -284,10 +286,13 @@ public class Java {
 		if (range < 0 || range >= 1L << 30)
 			throw new IllegalArgumentException("range (" + range + "): 1..2^30-1");
 
-		int mask = (range << 2) | 3;
+		int mask = range;
+		mask |= mask >>> 1;
+		mask |= mask >>> 2;
 		mask |= mask >>> 4;
 		mask |= mask >>> 8;
 		mask |= mask >>> 16;
+		mask = (mask<<2) | 3;
 
 		int[] perm = new int[range];
 		int n = 1;
