@@ -69,6 +69,13 @@ public abstract class AbstractPrimeGap {
 		return nextPrimeImpl(N);
 	}
 
+	/**
+	 * default implementation using BigInteger's nextProbablePrime, which is
+	 * thread-safe.
+	 * 
+	 * @param N a number
+	 * @return the next prime greater than N
+	 */
 	protected BigInteger nextPrimeImpl(BigInteger N) {
 		return N.nextProbablePrime();
 	}

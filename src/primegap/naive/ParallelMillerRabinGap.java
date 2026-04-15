@@ -5,7 +5,7 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
-import primegap.JavaNextProbablePrimeGap;
+import primegap.IterativePrimeGap;
 
 /**
  * This implementation uses a parallelized version of the Miller-Rabin primality
@@ -14,7 +14,15 @@ import primegap.JavaNextProbablePrimeGap;
  * multiple iterations of the test in parallel, we can increase the confidence
  * level of our primality checks while still maintaining good performance.
  */
-public class ParallelMillerRabinGap extends JavaNextProbablePrimeGap {
+public class ParallelMillerRabinGap extends IterativePrimeGap {
+	@Override
+	protected BigInteger nextPrimeImpl(BigInteger N) {
+		BigInteger P = N.add(N.testBit(0) ? TWO : ONE);
+		while (!isPrime(P))
+			P = P.add(TWO);
+		return P;
+	}
+
 	protected boolean isPrime(BigInteger N) {
 		if (N.testBit(0) == false)
 			return N.equals(TWO);
@@ -56,14 +64,6 @@ public class ParallelMillerRabinGap extends JavaNextProbablePrimeGap {
 
 			return true;
 		});
-	}
-
-	@Override
-	protected BigInteger nextPrimeImpl(BigInteger N) {
-		BigInteger P = N.add(N.testBit(0) ? TWO : ONE);
-		while (!isPrime(P))
-			P = P.add(TWO);
-		return P;
 	}
 
 	public static void main(String[] args) throws Exception {

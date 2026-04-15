@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import primegap.JavaNextProbablePrimeGap;
+import primegap.IterativePrimeGap;
 import primegap.util.NullStream;
 
 /**
@@ -19,7 +19,7 @@ import primegap.util.NullStream;
  * The implementation also includes a mechanism to count the gaps between primes
  * and print statistics about the gaps when the program is stopped.
  */
-public class SieveGap extends JavaNextProbablePrimeGap {
+public class SieveGap extends IterativePrimeGap {
 	@Override
 	protected void stopping(Info info) {
 		super.stopping(info);

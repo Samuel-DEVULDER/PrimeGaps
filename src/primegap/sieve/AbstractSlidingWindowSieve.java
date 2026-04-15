@@ -258,13 +258,9 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 			if (k < 0)
 				return lastPrime = v(-k);
 		} else {
-			while ((k = next()) < 0) {
-				// long now = Machine.getCpuTimeNano();
-				// if (pending != EMPTY) {
+			if((k = next()) < 0) {
 				pending = EMPTY;
-				// }
-				slideWindow();
-				// SieveGap.dbg("Slide done (", (Machine.getCpuTimeNano() - now) / 1e9,"s) ");
+				do slideWindow(); while ((k = next()) < 0);
 			}
 		}
 
