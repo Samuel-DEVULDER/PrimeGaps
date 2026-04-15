@@ -3,12 +3,13 @@ package primegap.sieve.parallel;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.math.BigInteger;
-import java.util.Collections;
 
 import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
 import primegap.sieve.SlidingWindowSieve;
 import primegap.util.IncreasingBigIntegers;
+import primegap.util.Java;
+import primegap.util.Machine;
 
 /**
  * This classes mark all prime multiples in parallel thread. Atomicity is
@@ -16,7 +17,7 @@ import primegap.util.IncreasingBigIntegers;
  * Parallelism is only started when the primes are bigger enough so that there
  * is only one bit to update per long int.
  */
-class ParallelSieve2 extends SlidingWindowSieve {
+public class ParallelSieve2 extends SlidingWindowSieve {
 	public ParallelSieve2(SieveGap sieve, int size, boolean doubleBuffer) {
 		super(sieve, size, doubleBuffer);
 	}
@@ -39,15 +40,11 @@ class ParallelSieve2 extends SlidingWindowSieve {
 
 	@Override
 	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes, BigInteger limit) {
-		final int thr = 512;
-		if (primes.size() > thr) {
-			fillTab(tab, 0);
-			var list = primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).toList();
-			Collections.shuffle(list);
-			list.parallelStream().forEach(p -> markMultiplesOf(start, tab, p));
-		} else {
-			super.doMarkAllMultiples(start, tab, primes, limit);
-		}
+		fillTab(tab, 0);
+		long now = Machine.getCpuTimeNano();
+		var array = primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).toArray(BigInteger[]::new);
+		Java.shuffledRange(0, array.length).parallel().forEach(i -> markMultiplesOf(start, tab, array[i]));
+		Machine.dbg("all(parellel)=", (Machine.getCpuTimeNano() - now) / 1e6, "ms              ");
 	}
 
 	public static class Parallel2SieveGap extends SieveGap {
