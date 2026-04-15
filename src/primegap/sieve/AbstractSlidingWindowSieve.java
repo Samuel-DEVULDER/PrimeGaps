@@ -271,7 +271,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		// System.err.println("Candidate bit=" + k + ", num=" + bitposToNum(k) + ",
 		// prime=" + prime + " (rem="
 		// + prime.mod(v(30)) + ")");
-		if(!sieve.isPrime(prime)) {
+		if(Machine.dbg && !sieve.isPrime(prime)) {
 			throw new RuntimeException("Not prime: " + prime);
 		}
 		
