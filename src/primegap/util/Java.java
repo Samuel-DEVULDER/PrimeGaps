@@ -290,7 +290,7 @@ public class Java {
 	 */
 	public static LongStream rangeWithStep(long start, long endExclusive, long step) {
 		long count = (endExclusive - start + step - 1) / step;
-		// return LongStream.range(0, count).map(i -> start + i * step);
-		return shuffledRange(0, count).map(i -> start + i * step);
+		return LongStream.range(0, count).map(i -> start + i * step);
+		//return shuffledRange(0, count).map(i -> start + i * step);
 	}
 }

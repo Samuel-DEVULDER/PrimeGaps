@@ -187,7 +187,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		fillTab(tab, 0);
 		long now = Machine.getCpuTimeNano();
 		primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).forEach(p -> markMultiplesOf(start, tab, p));
-		SieveGap.dbg("all=", (Machine.getCpuTimeNano() - now) / 1e6, "ms              ");
+		Machine.dbg("all=", (Machine.getCpuTimeNano() - now) / 1e6, "ms              ");
 	}
 
 	/**
@@ -280,10 +280,10 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				long now = Machine.getCpuTimeNano();
 				markMultiplesOf(start, tab, prime);
 				last_tab = ~getTab(tab, last >>> last_shift);
-				SieveGap.dbg("Marking multiples of ", prime, " in ", (Machine.getCpuTimeNano() - now) / 1e6, "ms.");
+				Machine.dbg("Marking multiples of ", prime, " in ", (Machine.getCpuTimeNano() - now) / 1e6, "ms.");
 			} else {
 				doMarking = false;
-				SieveGap.dbg("disabled marking for ", start);
+				Machine.dbg("disabled marking for ", start);
 			}
 		}
 

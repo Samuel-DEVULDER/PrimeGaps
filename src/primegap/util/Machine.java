@@ -177,4 +177,26 @@ public class Machine {
 		return System::nanoTime;
 	}
 
+	static final boolean dbg = System.getProperty("dbg") != null;
+
+	@SuppressWarnings("unused")
+	public static void dbg(Object... args) {
+		if (false) {
+			for (Object o : args)
+				System.err.print(o);
+			System.err.println();
+		}
+	}
+
+	@SuppressWarnings("unused")
+	public static void bench(String pfx, Runnable r) {
+		if (false) {
+			long now = Machine.getCpuTimeNano();
+			r.run();
+			dbg(pfx, (getCpuTimeNano() - now) / 1e6, " ms.                           ");
+		} else {
+			r.run();
+		}
+	}
+
 }
