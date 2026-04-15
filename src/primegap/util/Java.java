@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.SequencedMap;
 import java.util.Set;
 import java.util.jar.JarFile;
+import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 import jdk.incubator.vector.VectorOperators;
@@ -251,8 +252,11 @@ public class Java {
 	 */
 	public static LongStream shuffledRange(long from, long to) {
 		long range = Math.subtractExact(to, from); // overflow safe
-		if (range <= 0 || range >= 1L << 30)
-			throw new IllegalArgumentException("range: 1..2^30-1");
+		if (range == 0)
+			return LongStream.empty();
+
+		if (range < 0 || range >= 1L << 30)
+			throw new IllegalArgumentException("range (" + range + "): 1..2^30-1");
 
 		long mask = (range << 2) | 3;
 		mask |= mask >> 4;
@@ -270,6 +274,32 @@ public class Java {
 			}
 		}
 		return LongStream.of(perm);
+	}
+
+	/** same as {@link suffledRange(long,long)} but for int range */
+	public static IntStream shuffledRange(int from, int to) {
+		int range = Math.subtractExact(to, from); // overflow safe
+		if (range == 0)
+			return IntStream.empty();
+		if (range < 0 || range >= 1L << 30)
+			throw new IllegalArgumentException("range (" + range + "): 1..2^30-1");
+
+		int mask = (range << 2) | 3;
+		mask |= mask >>> 4;
+		mask |= mask >>> 8;
+		mask |= mask >>> 16;
+
+		int[] perm = new int[range];
+		int n = 1;
+
+		for (int idx = 0; idx < range;) {
+			n = (n * 5) & mask;
+			int x = (n - 1) >>> 2;
+			if (x < range) {
+				perm[idx++] = from + x;
+			}
+		}
+		return IntStream.of(perm);
 	}
 
 	/**
@@ -291,6 +321,6 @@ public class Java {
 	public static LongStream rangeWithStep(long start, long endExclusive, long step) {
 		long count = (endExclusive - start + step - 1) / step;
 		return LongStream.range(0, count).map(i -> start + i * step);
-		//return shuffledRange(0, count).map(i -> start + i * step);
+		// return shuffledRange(0, count).map(i -> start + i * step);
 	}
 }
