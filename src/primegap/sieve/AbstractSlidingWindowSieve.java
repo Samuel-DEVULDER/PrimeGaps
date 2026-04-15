@@ -156,7 +156,8 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 
 		String s = String.format(Locale.ENGLISH, "start=%s %.1f%% ~%.1f", start, (numPrimes() * 100.0) / primes.limit(),
 				getLastPrime().doubleValue() / sieve.getPrimeCallCount());
-		System.err.print(s + "\b".repeat(s.length()));
+		// System.err.print(s + "\b".repeat(s.length()));
+		System.err.println(s);
 
 		// Sieve limit: sqrt(start + windowRange)
 		limit = start.add(windowRange_bigint).sqrt();
@@ -182,8 +183,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		doMarkAllMultiples(start, tab, primes, limit);
 	}
 
-	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes,
-			BigInteger limit) {
+	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes, BigInteger limit) {
 		fillTab(tab, 0);
 		long now = Machine.getCpuTimeNano();
 		primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).forEach(p -> markMultiplesOf(start, tab, p));
@@ -258,9 +258,11 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 			if (k < 0)
 				return lastPrime = v(-k);
 		} else {
-			if((k = next()) < 0) {
+			if ((k = next()) < 0) {
 				pending = EMPTY;
-				do slideWindow(); while ((k = next()) < 0);
+				do
+					slideWindow();
+				while ((k = next()) < 0);
 			}
 		}
 
@@ -269,6 +271,10 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		// System.err.println("Candidate bit=" + k + ", num=" + bitposToNum(k) + ",
 		// prime=" + prime + " (rem="
 		// + prime.mod(v(30)) + ")");
+		if(!sieve.isPrime(prime)) {
+			throw new RuntimeException("Not prime: " + prime);
+		}
+		
 		primes.add(prime);
 
 		if (doMarking) {

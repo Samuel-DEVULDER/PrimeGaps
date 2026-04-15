@@ -54,7 +54,7 @@ public abstract class AbstractPrimeGap {
 
 	public final int MILLER_RABIN_PASSES = 5;
 
-	protected boolean isPrime(BigInteger N) {
+	public boolean isPrime(BigInteger N) {
 		return N.isProbablePrime(MILLER_RABIN_PASSES);
 	}
 

@@ -23,7 +23,7 @@ public class ParallelMillerRabinGap extends IterativePrimeGap {
 		return P;
 	}
 
-	protected boolean isPrime(BigInteger N) {
+	public boolean isPrime(BigInteger N) {
 		if (N.testBit(0) == false)
 			return N.equals(TWO);
 
