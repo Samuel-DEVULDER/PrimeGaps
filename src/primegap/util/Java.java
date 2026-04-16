@@ -289,13 +289,12 @@ public class Java {
 		if (range < 0 || range >= 1L << 30)
 			throw new IllegalArgumentException("range (" + range + "): 1..2^30-1");
 
-		int mask = range;
+		int mask = range<<2;
 		mask |= mask >>> 1;
 		mask |= mask >>> 2;
 		mask |= mask >>> 4;
 		mask |= mask >>> 8;
 		mask |= mask >>> 16;
-		mask = (mask << 2) | 3;
 
 		int[] perm = new int[range];
 		int n = 1;
@@ -349,7 +348,7 @@ public class Java {
 	public static boolean isTTY = false;
 	static {
 		Console cons = System.console();
-		if (cons != null)
+		if (cons != null) {
 			for (Method m : cons.getClass().getDeclaredMethods()) {
 				String n = m.getName().toLowerCase();
 				if (m.getReturnType() == Boolean.TYPE && (n.contains("tty") || n.contains("terminal"))) {
@@ -360,6 +359,7 @@ public class Java {
 					break;
 				}
 			}
+		}
 	}
 
 	public static boolean dbg(Object... args) {
@@ -381,16 +381,6 @@ public class Java {
 		if (!cr) {
 			System.err.println();
 		}
-		return true;
-	}
-
-	public static void bench(String pfx, Runnable r) {
-		if (dbg) {
-			assert dbgTic();
-			r.run();
-			dbg(pfx, dbgToc(), " ms.                           ");
-		} else {
-			r.run();
-		}
+		return true; // thisw<ay  itsuse  is transparent via  assert
 	}
 }
