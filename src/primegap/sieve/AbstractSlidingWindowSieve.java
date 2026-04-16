@@ -154,22 +154,22 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		// this.start = start.add(ONE);
 		// }
 
-//		String s = String.format(Locale.ENGLISH, "start=%s %.1f%% ~%.1f", start, (numPrimes() * 100.0) / primes.limit(),
-//				getLastPrime().doubleValue() / sieve.getPrimeCallCount());
-		// System.err.print(s + "\b".repeat(s.length()));
-//		System.err.println(s);
+		assert Java.dbg(String.format(Locale.ENGLISH, "start=%s %.1f%% ~%.1f", start,
+				(numPrimes() * 100.0) / primes.limit(), getLastPrime().doubleValue() / sieve.getPrimeCallCount()),
+				Java.CR);
 
 		// Sieve limit: sqrt(start + windowRange)
 		limit = start.add(windowRange_bigint).sqrt();
-		if (primes.isFull())
+		if (primes.isFull()) {
 			if (primes.getLast().compareTo(limit) < 0)
 				throw new RuntimeException(
 						"Primes size limit is too short (" + primes.sizeLong() + "). Please increase!");
+		} else {
+			doMarking = true;
+		}
 		markAllMultiples();
 
 		last_tab = (mask = -1) ^ getTab(tab, last = 0);
-
-		doMarking = true;
 	}
 
 	protected void markMultiplesOf(BigInteger P) {
@@ -185,10 +185,9 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 
 	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes, BigInteger limit) {
 		fillTab(tab, 0);
-		Java.dbgTime(true);
+		assert Java.dbgTic();
 		primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).forEach(p -> markMultiplesOf(start, tab, p));
-		if (Java.dbg)
-			Java.dbg("all=", Java.dbgTime(false), "ms              ");
+		assert Java.dbg("all=", Java.dbgToc(), "ms              ");
 	}
 
 	/**
@@ -197,6 +196,33 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	 * @return bit position of next candidate, or -1 if window is exhausted
 	 */
 	@SuppressWarnings("unused")
+	protected int nextxx() {
+		if (last_shift == 0) {
+			long v = last_tab;
+
+			while (v == 0L) {
+				if (++last == tabLen)
+					return -1;
+				v = ~getTab(tab, last);
+			}
+			int i = Long.numberOfTrailingZeros(v);
+			last_tab = v & (v - 1);
+			return (last << 6) + i;
+		} else {
+			long v = last_tab;
+
+			while (v == 0L) {
+				int i = (last += 64) >>> last_shift;
+				if (i == tabLen)
+					return -1;
+				v = ~getTab(tab, i);
+			}
+			int i = Long.numberOfTrailingZeros(v);
+			last_tab = v & (v - 1);
+			return last + i;
+		}
+	}
+
 	protected int next() {
 		if (last_shift == 0) {
 			long v = last_tab & mask;
@@ -272,21 +298,19 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		// System.err.println("Candidate bit=" + k + ", num=" + bitposToNum(k) + ",
 		// prime=" + prime + " (rem="
 		// + prime.mod(v(30)) + ")");
-		assert prime.isProbablePrime(10);
+		// assert prime.isProbablePrime(10);
 
 		primes.add(prime);
 
 		if (doMarking) {
 			if (prime.compareTo(limit) <= 0) {
-				Java.dbgTime(true);
+				assert Java.dbgTic();
 				markMultiplesOf(start, tab, prime);
-				last_tab = ~getTab(tab, last >>> last_shift);
-				if (Java.dbg)
-					Java.dbg("Marking multiples of ", prime, " in ", Java.dbgTime(false), "ms.");
+				last_tab &= ~getTab(tab, last >>> last_shift);
+				assert Java.dbg("Marking multiples of ", prime, " in ", Java.dbgToc(), "ms.");
 			} else {
 				doMarking = false;
-				if (Java.dbg)
-					Java.dbg("disabled marking for ", start);
+				assert Java.dbg("disabled marking for ", start);
 			}
 		}
 
