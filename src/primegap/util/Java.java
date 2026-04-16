@@ -1,9 +1,12 @@
 package primegap.util;
 
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -331,50 +334,61 @@ public class Java {
 
 	public static final boolean dbg = System.getProperty("dbg") != null;
 
-	public static Object BACK = new Object();
+	public static final Object CR = new Object();
 
-	public static double dbgTime(boolean push) {
-		if (dbg) {
-			if (push) {
-				timeStack.add(Machine.getCpuTimeNano());
-			} else {
-				return (Machine.getCpuTimeNano() - timeStack.getLast()) / 1e6;
-			}
-		}
-		return 0;
+	public static boolean dbgTic() {
+		timeStack.add(Machine.getCpuTimeNano());
+		return true;
+	}
+
+	public static String dbgToc() {
+		return String.format("%.3f", (Machine.getCpuTimeNano() - timeStack.remove(timeStack.size() - 1)) / 1e6);
 	}
 
 	static List<Long> timeStack = new ArrayList<>();
+	public static boolean isTTY = false;
+	static {
+		Console cons = System.console();
+		if (cons != null)
+			for (Method m : cons.getClass().getDeclaredMethods()) {
+				String n = m.getName().toLowerCase();
+				if (m.getReturnType() == Boolean.TYPE && (n.contains("tty") || n.contains("terminal"))) {
+					try {
+						isTTY = Boolean.TRUE.equals(m.invoke(cons));
+					} catch (IllegalAccessException | InvocationTargetException ignored) {
+					}
+					break;
+				}
+			}
+	}
 
 	public static boolean dbg(Object... args) {
-		if (dbg) {
-			int len = 0;
-			boolean backsp = false;
+		int len = 0;
+		boolean cr = true;
 
-			for (Object o : args) {
-				if (o == BACK) {
-					o = "";
-					backsp = true;
-				}
-
-				String s = String.valueOf(o);
-				len += s.length();
-				System.err.print(s);
+		for (Object o : args) {
+			cr = false;
+			if (o == CR) {
+				String s = isTTY ? "\b".repeat(len) : "\n";
+				len = -s.length();
+				cr = true;
+				o = s;
 			}
-			if (backsp) {
-				System.err.print("\b".repeat(len));
-			} else {
-				System.err.println();
-			}
+			String s = String.valueOf(o);
+			System.err.print(s);
+			len += s.length();
+		}
+		if (!cr) {
+			System.err.println();
 		}
 		return true;
 	}
 
 	public static void bench(String pfx, Runnable r) {
 		if (dbg) {
-			long now = Machine.getCpuTimeNano();
+			assert dbgTic();
 			r.run();
-			dbg(pfx, (Machine.getCpuTimeNano() - now) / 1e6, " ms.                           ");
+			dbg(pfx, dbgToc(), " ms.                           ");
 		} else {
 			r.run();
 		}

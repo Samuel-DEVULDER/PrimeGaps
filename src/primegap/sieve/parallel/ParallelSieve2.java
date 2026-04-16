@@ -41,10 +41,10 @@ public class ParallelSieve2 extends SlidingWindowSieve {
 	@Override
 	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes, BigInteger limit) {
 		fillTab(tab, 0);
-		Java.dbgTime(true);
+		assert Java.dbgTic();
 		var array = primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).toArray(BigInteger[]::new);
 		IntStream.range(0, array.length).parallel().forEach(i -> markMultiplesOf(start, tab, array[i]));
-		if(Java.dbg) Java.dbg("all(parellel)=", Java.dbgTime(false), "ms                  ");
+		assert Java.dbg("all(parallel)=", Java.dbgToc(), "ms                  ");
 	}
 
 	public static class Parallel2SieveGap extends SieveGap {

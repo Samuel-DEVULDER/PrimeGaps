@@ -3,6 +3,7 @@ package primegap;
 import java.math.BigInteger;
 import java.util.Locale;
 
+import primegap.util.Java;
 import primegap.util.Machine;
 
 /**
@@ -44,12 +45,6 @@ public abstract class AbstractPrimeGap {
 
 	static protected void printf(String fmt, Object... args) {
 		System.out.printf(Locale.ENGLISH, fmt, args);
-	}
-
-	public static void dbg(Object... objs) {
-//		for (Object o : objs)
-//			System.err.print(o);
-//		System.err.println();
 	}
 
 	public final int MILLER_RABIN_PASSES = 5;
@@ -131,7 +126,7 @@ public abstract class AbstractPrimeGap {
 				total += time;
 				if (P_ == null)
 					break;
-				String blank = "                                       ";
+				String blank = Java.isTTY ? "                                       " : "";
 				printf("found.%s%s\n", blank, "\b".repeat(blank.length()));
 				P = P_;
 
