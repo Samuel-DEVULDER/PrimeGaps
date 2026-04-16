@@ -31,8 +31,7 @@ public class Wheel_30_SieveGap extends AbstractWheelSieveGap {
 		/** bit k -> (k >> 3) * 30 + RESIDUES[k & 7] (shift/mask since bpa=8=2^3) */
 		@Override
 		protected long bitposToNum(int bitpos) {
-			bitpos >>>= 3;
-			return (((bitpos << 4) - bitpos) << 1) + RESIDUES[bitpos & 7];
+			return (bitpos >>> 3) * 30 + RESIDUES[bitpos & 7];
 		}
 
 		protected int numToBitpos(int group, int index) {
