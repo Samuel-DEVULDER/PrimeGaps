@@ -52,4 +52,8 @@ public class Wheel_30_SieveGap extends AbstractWheelSieveGap {
 	public Wheel_30_SieveGap() {
 		super();
 	}
+	
+	public static void main(String[] args) {
+		new Wheel_30_SieveGap().run();
+	}
 }
