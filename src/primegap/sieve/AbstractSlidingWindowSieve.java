@@ -169,7 +169,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		}
 		markAllMultiples();
 
-		last_tab = (mask = -1) ^ getTab(tab, last = 0);
+		last_tab = ~getTab(tab, last = 0);
 	}
 
 	protected void markMultiplesOf(BigInteger P) {
@@ -196,21 +196,19 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	 * @return bit position of next candidate, or -1 if window is exhausted
 	 */
 	@SuppressWarnings("unused")
-	protected int nextxx() {
+	protected int next() {
 		if (last_shift == 0) {
 			long v = last_tab;
-
 			while (v == 0L) {
 				if (++last == tabLen)
 					return -1;
 				v = ~getTab(tab, last);
-			}
+			}			
 			int i = Long.numberOfTrailingZeros(v);
 			last_tab = v & (v - 1);
 			return (last << 6) + i;
 		} else {
 			long v = last_tab;
-
 			while (v == 0L) {
 				int i = (last += 64) >>> last_shift;
 				if (i == tabLen)
@@ -223,36 +221,8 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		}
 	}
 
-	protected int next() {
-		if (last_shift == 0) {
-			long v = last_tab & mask;
-
-			while (v == 0L) {
-				if (++last == tabLen)
-					return -1;
-				last_tab = v = ~getTab(tab, last);
-			}
-			int i = Long.numberOfTrailingZeros(v);
-			mask = -2L << i;
-			return (last << 6) + i;
-		} else {
-			long v = last_tab & mask;
-
-			while (v == 0L) {
-				int i = (last += 64) >>> last_shift;
-				if (i == tabLen)
-					return -1;
-				last_tab = v = ~getTab(tab, i);
-			}
-			int i = Long.numberOfTrailingZeros(v);
-			mask = -2L << i;
-			return last + i;
-		}
-	}
-
 	final int last_shift = 6;
 	protected int last;
-	protected long mask;
 	protected long last_tab;
 
 	protected static PrimitiveIterator.OfInt EMPTY = new PrimitiveIterator.OfInt() {
