@@ -3,13 +3,13 @@ package primegap.sieve.parallel;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.math.BigInteger;
+import java.util.stream.IntStream;
 
 import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
 import primegap.sieve.SlidingWindowSieve;
 import primegap.util.IncreasingBigIntegers;
 import primegap.util.Java;
-import primegap.util.Machine;
 
 /**
  * This classes mark all prime multiples in parallel thread. Atomicity is
@@ -41,10 +41,10 @@ public class ParallelSieve2 extends SlidingWindowSieve {
 	@Override
 	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes, BigInteger limit) {
 		fillTab(tab, 0);
-		long now = Machine.getCpuTimeNano();
+		Java.dbgTime(true);
 		var array = primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).toArray(BigInteger[]::new);
-		Java.shuffledRange(0, array.length).parallel().forEach(i -> markMultiplesOf(start, tab, array[i]));
-		Machine.dbg("all(parellel)=", (Machine.getCpuTimeNano() - now) / 1e6, "ms              ");
+		IntStream.range(0, array.length).parallel().forEach(i -> markMultiplesOf(start, tab, array[i]));
+		if(Java.dbg) Java.dbg("all(parellel)=", Java.dbgTime(false), "ms                  ");
 	}
 
 	public static class Parallel2SieveGap extends SieveGap {

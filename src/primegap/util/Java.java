@@ -258,7 +258,7 @@ public class Java {
 		if (range < 0 || range >= 1L << 30)
 			throw new IllegalArgumentException("range (" + range + "): 1..2^30-1");
 
-		long mask =  range<<2;
+		long mask = range << 2;
 		mask |= mask >>> 1;
 		mask |= mask >>> 2;
 		mask |= mask >>> 4;
@@ -292,7 +292,7 @@ public class Java {
 		mask |= mask >>> 4;
 		mask |= mask >>> 8;
 		mask |= mask >>> 16;
-		mask = (mask<<2) | 3;
+		mask = (mask << 2) | 3;
 
 		int[] perm = new int[range];
 		int n = 1;
@@ -327,5 +327,56 @@ public class Java {
 		long count = (endExclusive - start + step - 1) / step;
 		return LongStream.range(0, count).map(i -> start + i * step);
 		// return shuffledRange(0, count).map(i -> start + i * step);
+	}
+
+	public static final boolean dbg = System.getProperty("dbg") != null;
+
+	public static Object BACK = new Object();
+
+	public static double dbgTime(boolean push) {
+		if (dbg) {
+			if (push) {
+				timeStack.add(Machine.getCpuTimeNano());
+			} else {
+				return (Machine.getCpuTimeNano() - timeStack.getLast()) / 1e6;
+			}
+		}
+		return 0;
+	}
+
+	static List<Long> timeStack = new ArrayList<>();
+
+	public static boolean dbg(Object... args) {
+		if (dbg) {
+			int len = 0;
+			boolean backsp = false;
+
+			for (Object o : args) {
+				if (o == BACK) {
+					o = "";
+					backsp = true;
+				}
+
+				String s = String.valueOf(o);
+				len += s.length();
+				System.err.print(s);
+			}
+			if (backsp) {
+				System.err.print("\b".repeat(len));
+			} else {
+				System.err.println();
+			}
+		}
+		return true;
+	}
+
+	public static void bench(String pfx, Runnable r) {
+		if (dbg) {
+			long now = Machine.getCpuTimeNano();
+			r.run();
+			dbg(pfx, (Machine.getCpuTimeNano() - now) / 1e6, " ms.                           ");
+		} else {
+			r.run();
+		}
 	}
 }

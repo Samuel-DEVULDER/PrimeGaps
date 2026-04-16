@@ -5,6 +5,7 @@ import java.lang.invoke.VarHandle;
 
 import primegap.sieve.SieveGap;
 import primegap.sieve.SlidingWindowSieve;
+import primegap.util.Java;
 import primegap.util.Machine;
 
 public class ParallelSieveGap3 extends SieveGap {
@@ -34,15 +35,15 @@ public class ParallelSieveGap3 extends SieveGap {
 
 			fillTab(tab, 0);
 			long now = Machine.getCpuTimeNano();
-			primes.stream().takeWhile(p -> p.intValue() <= small_thr).forEach(this::markMultiplesOf);
-			dbg("small=", (Machine.getCpuTimeNano() - now) / 1e6, "ms                                          ");
+			primes.stream().takeWhile(p -> p.intValue() <= small_thr).forEach(p -> markMultiplesOf(start, tab, p));
+			Java.dbg("small=", (Machine.getCpuTimeNano() - now) / 1e6, "ms                       ");
 
 			concurrent = true;
 			var big = primes.stream().dropWhile(p -> p.intValue() <= small_thr)//
 					.takeWhile(p -> p.compareTo(limit) <= 0).toList();
-			big.parallelStream().unordered().forEach(this::markMultiplesOf);
+			big.parallelStream().unordered().forEach(p -> markMultiplesOf(start, tab, p));
 			concurrent = false;
-			dbg("large=", (Machine.getCpuTimeNano() - now) / 1e6, "ms");
+			Java.dbg("large=", (Machine.getCpuTimeNano() - now) / 1e6, "ms");
 			// super.markAllMultiples();
 		}
 	}
