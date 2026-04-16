@@ -3,7 +3,6 @@ package primegap.sieve.parallel;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.math.BigInteger;
-import java.util.stream.IntStream;
 
 import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
@@ -43,7 +42,10 @@ public class ParallelSieve2 extends SlidingWindowSieve {
 		fillTab(tab, 0);
 		assert Java.dbgTic();
 		var array = primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).toArray(BigInteger[]::new);
-		IntStream.range(0, array.length).parallel().forEach(i -> markMultiplesOf(start, tab, array[i]));
+		var stream =
+				// IntStream.range(0, array.length)
+				Java.shuffledRange(0, array.length);
+		stream.parallel().forEach(i -> markMultiplesOf(start, tab, array[i]));
 		assert Java.dbg("all(parallel)=", Java.dbgToc(), "ms                  ");
 	}
 
