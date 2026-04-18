@@ -45,14 +45,15 @@ public class ParallelMillerRabinGap extends IterativePrimeGap {
 		BigInteger m_ = thisMinusOne;
 		int a = m_.getLowestSetBit();
 		BigInteger m = m_.shiftRight(a);
+		int bitLength = N.bitLength();
 
 		return IntStream.range(0, iterations).parallel().allMatch(ignored -> {
 			Random rnd = ThreadLocalRandom.current();
 			// Generate a uniform random on (1, this)
 			BigInteger b;
 			do {
-				b = new BigInteger(N.bitLength(), rnd);
-			} while (b.compareTo(ONE) <= 0 || b.compareTo(N) >= 0);
+				b = new BigInteger(bitLength, rnd);
+			} while (b.compareTo(N) >= 0 || b.compareTo(ONE) <= 0);
 
 			int j = 0;
 			BigInteger z = b.modPow(m, N);
