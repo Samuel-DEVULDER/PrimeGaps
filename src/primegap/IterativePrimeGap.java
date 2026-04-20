@@ -21,18 +21,27 @@ import primegap.util.Machine;
  * It uses {@link #nextPrimeImpl(BigInteger)} to find the next prime.
  */
 public abstract class IterativePrimeGap extends AbstractPrimeGap {
+	public IterativePrimeGap() {
+		gapCounts = new long[1024];
+	}
+
 	@Override
 	protected BigInteger find(int gap, BigInteger P) {
+		P = fastForward(P, gap);
 		BigInteger Q = nextPrime(P);
+
 		int delta = 0;
 		while ((delta = Q.subtract(P).intValueExact()) < gap) {
 			if (countGap(delta))
 				return null;
-
-			P = Q;
+			P = fastForward(Q, gap);
 			Q = nextPrime(P);
 		}
 		countGap(delta);
+		return P;
+	}
+
+	protected BigInteger fastForward(BigInteger P, int gap) {
 		return P;
 	}
 
@@ -76,10 +85,12 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 
 	// -------
 
-	public long[] gapCounts = new long[1024];
+	public long[] gapCounts;
 	Info info = null;
 
 	void printGapStats(PrintStream out) {
+		if (gapCounts == null)
+			gapCounts = new long[0];
 		long maxCount = 0;
 		double total = 0;
 		for (long c : gapCounts) {
@@ -128,10 +139,13 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 	private int cnt = timeout;
 
 	private boolean countGap(int gap) {
-		int idx = gap >> 1;
-		if (idx >= gapCounts.length)
-			gapCounts = Arrays.copyOf(gapCounts, idx * 2);
-		++gapCounts[idx];
+		var tab = gapCounts;
+		if (tab != null) {
+			int idx = gap >> 1;
+			if (idx >= tab.length)
+				gapCounts = tab = Arrays.copyOf(tab, idx * 2);
+			++tab[idx];
+		}
 		if (--cnt == 0) {
 			cnt = timeout;
 			return isStopping();

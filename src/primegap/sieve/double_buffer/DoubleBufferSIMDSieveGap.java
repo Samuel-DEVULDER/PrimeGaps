@@ -1,5 +1,7 @@
 package primegap.sieve.double_buffer;
 
+import java.math.BigInteger;
+
 import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.simd.SIMDSieveGap;
 import primegap.sieve.simd.SIMDSlidingWindowSieve;
@@ -20,5 +22,20 @@ public class DoubleBufferSIMDSieveGap extends SIMDSieveGap {
 
 	public static void main(String[] args) {
 		new DoubleBufferSIMDSieveGap().run();
+	}
+	
+	public static class FastForward extends SIMDSieveGap {
+		public FastForward() {
+			gapCounts = null;
+		}
+
+		@Override
+		protected BigInteger fastForward(BigInteger P, int gap) {
+			return supplier.fastForward(P, gap, this::addPrimeCount);
+		}
+
+		public static void main(String[] args) {
+			new FastForward().run();
+		}
 	}
 }

@@ -7,6 +7,7 @@ import java.util.NoSuchElementException;
 import java.util.PrimitiveIterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import primegap.util.IncreasingBigIntegers;
@@ -75,6 +76,8 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	protected final long windowRange;
 	protected final BigInteger windowRange_bigint; // BigInteger version of windowRange for easy calculations
 
+	protected final int primesPerLong; // how many primes in 64bits
+
 	/** BigInteger versions of windowSize and windowRange for easy calculations */
 	static BigInteger v(long l) {
 		return BigInteger.valueOf(l);
@@ -109,6 +112,8 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		this.windowRange_bigint = v(this.windowRange);
 		this.tab = newTab(this.tabLen = size);
 		this.prefetch = doubleBuffer ? new NextWindowRunnable(this.tabLen) : null;
+
+		this.primesPerLong = windowRange_bigint.shiftLeft(6).divide(windowSize_bigint).intValueExact();
 	}
 
 	// -------------------------------------------------------------------
@@ -155,7 +160,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		// }
 
 		assert Java.dbg(String.format(Locale.ENGLISH, "start=%s %.1f%% ~%.1f", start,
-				(numPrimes() * 100.0) / primes.limit(), getLastPrime().doubleValue() / sieve.getPrimeCallCount()),
+				(numPrimes() * 100.0) / primes.limit(), getLastPrime().doubleValue() / sieve.getPrimesCount()),
 				Java.CR);
 
 		// Sieve limit: sqrt(start + windowRange)
@@ -203,7 +208,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				if (++last == tabLen)
 					return -1;
 				v = ~getTab(tab, last);
-			}			
+			}
 			int i = Long.numberOfTrailingZeros(v);
 			last_tab = v & (v - 1);
 			return (last << 6) + i;
@@ -221,7 +226,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		}
 	}
 
-	final int last_shift = 6;
+	final int last_shift = 6 * 0;
 	protected int last;
 	protected long last_tab;
 
@@ -254,13 +259,11 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 			k = pending.nextInt();
 			if (k < 0)
 				return lastPrime = v(-k);
-		} else {
-			if ((k = next()) < 0) {
-				pending = EMPTY;
-				do
-					slideWindow();
-				while ((k = next()) < 0);
-			}
+		} else if ((k = next()) < 0) {
+			pending = EMPTY;
+			do
+				slideWindow();
+			while ((k = next()) < 0);
 		}
 
 		// Convert bit position to actual odd number: start + 2*k
@@ -270,9 +273,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		// + prime.mod(v(30)) + ")");
 		// assert prime.isProbablePrime(10);
 
-		primes.add(prime);
-
-		if (doMarking) {
+		if (primes.add(prime) && doMarking) {
 			if (prime.compareTo(limit) <= 0) {
 				assert Java.dbgTic();
 				markMultiplesOf(start, tab, prime);
@@ -338,5 +339,25 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		public void run() {
 			doMarkAllMultiples(nextStart, nextTab, primes, limit);
 		}
+	}
+
+	public BigInteger fastForward(BigInteger P, int gap, Consumer<Integer> count) {
+		int last = this.last + 1;
+		if (gap >= 2 * primesPerLong && primes.isFull() && last < tabLen && tab[last] != -1L) {
+			final int max = tabLen;
+			long val = last_tab, tab[] = this.tab;
+			int n = 0;
+			do {
+				n += Long.bitCount(val);
+				val = ~getTab(tab, last++);
+			} while (last < max && tab[last] != -1L);
+			this.last = last - 1;
+			this.last_tab = Long.highestOneBit(val);
+			lastPrime = P = get();
+
+			n += Long.bitCount(val) - 1;
+			count.accept(n);			
+		}
+		return P;
 	}
 }

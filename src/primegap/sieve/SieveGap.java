@@ -10,8 +10,8 @@ import primegap.IterativePrimeGap;
 import primegap.util.NullStream;
 
 /**
- * This implementation uses a sliding window sieve to find the next prime after a
- * given number N. The sieve is implemented as an AbstractSlidingWindowSieve,
+ * This implementation uses a sliding window sieve to find the next prime after
+ * a given number N. The sieve is implemented as an AbstractSlidingWindowSieve,
  * which maintains a window of numbers and marks the multiples of known primes
  * within that window. The next prime is found by advancing the window until a
  * prime is found that is greater than N.
@@ -42,19 +42,22 @@ public class SieveGap extends IterativePrimeGap {
 
 	public static int defaultWindowSize = 262144;
 	// Machine.probeCache(System.out);
-	AbstractSlidingWindowSieve supplier = newSlidingWindowSieve(defaultWindowSize);
+	protected AbstractSlidingWindowSieve supplier = newSlidingWindowSieve(defaultWindowSize);
 
 	@Override
 	protected String name() {
+		if (name == null) {
+			name = super.name() + supplier.name();
+		}
 		return name;
 	}
 
-	private String name = SieveGap.class.getSimpleName() + supplier.name();
+	private String name = null;
 
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 		return newSlidingWindowSieve(size, false);
 	}
-	
+
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doublBuffer) {
 		return new SlidingWindowSieve(this, size, doublBuffer);
 	}
@@ -155,5 +158,20 @@ public class SieveGap extends IterativePrimeGap {
 
 		out.printf("%n=> Optimal tabLen : %d longs (%d KB)%n%n", bestSize, bestSize * 8 / 1024);
 		return bestSize;
+	}
+
+	static class FastForward extends SieveGap {
+		public FastForward() {
+			gapCounts = null;
+		}
+
+		@Override
+		protected BigInteger fastForward(BigInteger P, int gap) {
+			return supplier.fastForward(P, gap, this::addPrimeCount);
+		}
+
+		public static void main(String[] args) {
+			new FastForward().run();
+		}
 	}
 }

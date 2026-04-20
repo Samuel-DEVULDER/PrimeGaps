@@ -60,8 +60,9 @@ public abstract class AbstractPrimeGap {
 	 * @return
 	 */
 	protected final BigInteger nextPrime(BigInteger N) {
-		++primeCallCount;
-		return nextPrimeImpl(N);
+		BigInteger P = nextPrimeImpl(N);
+		addPrimeCount(1);
+		return P;
 	}
 
 	/**
@@ -94,10 +95,14 @@ public abstract class AbstractPrimeGap {
 	protected abstract BigInteger find(int gap, BigInteger after);
 
 	// --- Prime discovery rate tracking ---
-	private long primeCallCount = 0;
+	private long primesCount = 0;
 
-	public long getPrimeCallCount() {
-		return primeCallCount;
+	protected void addPrimeCount(int num) {
+		primesCount += num;
+	}
+
+	public long getPrimesCount() {
+		return primesCount;
 	}
 
 	protected record Info(long time, BigInteger lastP, double best_merit, BigInteger best_P) {
@@ -107,8 +112,13 @@ public abstract class AbstractPrimeGap {
 	}
 
 	protected String name() {
-		return this.getClass().getSimpleName();
+		if (name == null) {
+			name = this.getClass().getName().replaceFirst(".*[\\.]", "").replace('$', '.');
+		}
+		return name;
 	}
+
+	private String name;
 
 	protected void searchGaps() {
 		BigInteger P = v(2), best_P = P;
@@ -142,8 +152,8 @@ public abstract class AbstractPrimeGap {
 				}
 
 				// Compute average prime discovery rate
-				String rateStr = String.format(Locale.ENGLISH, "%,.0f", (getPrimeCallCount() * 1e9) / total)
-						.replace(',', ' ');
+				String rateStr = String.format(Locale.ENGLISH, "%,.0f", (getPrimesCount() * 1e9) / total).replace(',',
+						' ');
 
 				printf(">> %d\n + %s\n = %s\n", gap, P, Q);
 				printf("%.3fs (tot=%.3fs), %d bits, %d digits, " + "x%.2g prev, %s%.2f merit, ~%g, %s p/s.\n",

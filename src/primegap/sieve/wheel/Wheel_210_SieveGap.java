@@ -1,5 +1,7 @@
 package primegap.sieve.wheel;
 
+import java.math.BigInteger;
+
 import primegap.sieve.AbstractSlidingWindowSieve;
 
 /**
@@ -25,4 +27,20 @@ public class Wheel_210_SieveGap extends AbstractWheelSieveGap {
 	public Wheel_210_SieveGap() {
 		super();
 	}
+	
+	public static class FastForward extends Wheel_210_SieveGap {
+		public FastForward() {
+			gapCounts = null;
+		}
+
+		@Override
+		protected BigInteger fastForward(BigInteger P, int gap) {
+			return supplier.fastForward(P, gap, this::addPrimeCount);
+		}
+
+		public static void main(String[] args) {
+			new FastForward().run();
+		}
+	}
+
 }
