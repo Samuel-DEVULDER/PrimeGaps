@@ -54,12 +54,6 @@ public abstract class AbstractPrimeGap {
 		return N.isProbablePrime(MILLER_RABIN_PASSES);
 	}
 
-	/**
-	 * Threa-safe
-	 * 
-	 * @param N
-	 * @return
-	 */
 	protected final BigInteger nextPrime(BigInteger N) {
 		BigInteger P = nextPrimeImpl(N);
 		addPrimeCount(1);
