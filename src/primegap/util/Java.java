@@ -46,6 +46,23 @@ public class Java {
 	 *         parent class
 	 */
 	public static <E> Class<? extends E>[] findSubclasses(Class<E> parent) {
+		class Internal {
+			static <E> void tryLoad(String className, Class<E> parent, List<Class<? extends E>> result) {
+				if (!className.startsWith("attic.")) {
+					try {
+						Class<?> cls = Class.forName(className);
+						if (parent.isAssignableFrom(cls) && !Modifier.isAbstract(cls.getModifiers())) {
+							result.add(cls.asSubclass(parent));
+						}
+					} catch (Throwable ignored) {
+						// ignore any error loading the class (NoClassDefFoundError, etc.)
+						// as we only want to find classes that can be loaded successfully
+						// ignored.printStackTrace();
+					}
+				}
+			}
+		}
+	
 		String cp = System.getProperty("java.class.path");
 		List<Class<? extends E>> result = new ArrayList<>();
 		try {
@@ -56,7 +73,7 @@ public class Java {
 						stream.filter(p -> p.toString().endsWith(".class")).forEach(p -> {
 							String className = path.relativize(p).toString().replace(File.separatorChar, '.')
 									.replace(".class", "");
-							tryLoad(className, parent, result);
+							Internal.tryLoad(className, parent, result);
 						});
 					}
 				} else if (entry.endsWith(".jar")) {
@@ -64,7 +81,7 @@ public class Java {
 						jar.entries().asIterator().forEachRemaining(entry2 -> {
 							String name = entry2.getName();
 							if (name.endsWith(".class")) {
-								tryLoad(name.replace('/', '.').replace(".class", ""), parent, result);
+								Internal.tryLoad(name.replace('/', '.').replace(".class", ""), parent, result);
 							}
 						});
 					}
@@ -80,20 +97,6 @@ public class Java {
 		return classes;
 	}
 
-	static <E> void tryLoad(String className, Class<E> parent, List<Class<? extends E>> result) {
-		if (!className.startsWith("attic.")) {
-			try {
-				Class<?> cls = Class.forName(className);
-				if (parent.isAssignableFrom(cls) && !Modifier.isAbstract(cls.getModifiers())) {
-					result.add(cls.asSubclass(parent));
-				}
-			} catch (Throwable ignored) {
-				// ignore any error loading the class (NoClassDefFoundError, etc.)
-				// as we only want to find classes that can be loaded successfully
-				// ignored.printStackTrace();
-			}
-		}
-	}
 
 	/**
 	 * Builds a map representing the class hierarchy of subclasses of the given root
@@ -133,7 +136,7 @@ public class Java {
 			SequencedMap<Class<? extends T>, String> print(Class<? extends T> node,
 					Map<Class<? extends T>, Set<Class<? extends T>>> children, String prefix1, String prefix2) {
 				res.put(node, String.format(Modifier.isAbstract(node.getModifiers()) ? "%s<%s>" : "%s%s", prefix1,
-						node.getSimpleName()));
+						getSimpleName(node)));
 				Set<Class<? extends T>> kids = children.getOrDefault(node, Collections.emptySet());
 				int idx = kids.size();
 				for (Class<? extends T> kid : kids) {
@@ -143,6 +146,10 @@ public class Java {
 				return res;
 			}
 		}.print(root, children, "", "");
+	}
+	
+	public static String getSimpleName(Class <?> cls) {
+		return cls.getName().replaceFirst(".*[\\.]", "").replace('$','.');
 	}
 
 	/**
