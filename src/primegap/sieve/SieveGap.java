@@ -172,7 +172,7 @@ public class SieveGap extends IterativePrimeGap {
 	 * This is actually the algorithm that performs best in practice, even compared
 	 * to the more complex ones.
 	 */
-	static public class DoubleBuffer extends SieveGap {
+	public static class DoubleBuffer extends SieveGap {
 		@Override
 		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 			return newSlidingWindowSieve(size, true);
