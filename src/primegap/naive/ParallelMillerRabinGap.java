@@ -9,10 +9,11 @@ import primegap.IterativePrimeGap;
 
 /**
  * This implementation uses a parallelized version of the Miller-Rabin primality
- * test to check for primality. The Miller-Rabin test is a probabilistic test that
- * can quickly determine if a number is composite or probably prime. By running
- * multiple iterations of the test in parallel, we can increase the confidence
- * level of our primality checks while still maintaining good performance.
+ * test to check for primality. The Miller-Rabin test is a probabilistic test
+ * that can quickly determine if a number is composite or probably prime. By
+ * running multiple iterations of the test in parallel, we can increase the
+ * confidence level of our primality checks while still maintaining good
+ * performance.
  */
 public class ParallelMillerRabinGap extends IterativePrimeGap {
 	@Override
@@ -26,15 +27,20 @@ public class ParallelMillerRabinGap extends IterativePrimeGap {
 		cache[1] = P;
 		return P;
 	}
+
 	private BigInteger cache[] = new BigInteger[2];
 
 	public boolean isPrime(BigInteger N) {
 		if (N.testBit(0) == false)
 			return N.equals(TWO);
 
-		return IntStream.range(0, 1).parallel().allMatch(i -> i == 0 //
+		var ok = IntStream.range(0, 2).parallel().allMatch(i -> i == 0 //
 				? N.isProbablePrime(1) // <= also contains Miller-Rabin.
 				: passesParallelMillerRabin(N, MILLER_RABIN_PASSES - 1));
+
+		assert ok == N.isProbablePrime(100);
+
+		return ok;
 	}
 
 	/**
@@ -52,7 +58,7 @@ public class ParallelMillerRabinGap extends IterativePrimeGap {
 		BigInteger m = m_.shiftRight(a);
 		int bitLength = N.bitLength();
 
-		return IntStream.range(0, iterations).parallel().allMatch(ignored -> {
+		var ok = IntStream.range(0, iterations).parallel().allMatch(ignored -> {
 			Random rnd = ThreadLocalRandom.current();
 			// Generate a uniform random on (1, this)
 			BigInteger b;
@@ -70,6 +76,12 @@ public class ParallelMillerRabinGap extends IterativePrimeGap {
 
 			return true;
 		});
+
+		if (N.equals(v(89))) {
+			System.out.println("ParallelMillerRabinGap.passesParallelMillerRabin()");
+		}
+
+		return ok;
 	}
 
 	public static void main(String[] args) throws Exception {
