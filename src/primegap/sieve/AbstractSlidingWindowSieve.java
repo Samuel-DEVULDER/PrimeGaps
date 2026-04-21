@@ -342,7 +342,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	}
 
 	public BigInteger fastForward(BigInteger P, int gap, Consumer<Integer> count) {
-		int last = this.last + 1;
+		int last = (this.last>>>last_shift) + 1;
 		if (gap >= 2 * primesPerLong && primes.isFull() && last < tabLen && tab[last] != -1L) {
 			final int max = tabLen;
 			long val = last_tab, tab[] = this.tab;
@@ -351,7 +351,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				n += Long.bitCount(val);
 				val = ~getTab(tab, last++);
 			} while (last < max && tab[last] != -1L);
-			this.last = last - 1;
+			this.last = (last - 1)<<last_shift;
 			this.last_tab = Long.highestOneBit(val);
 			lastPrime = P = get();
 
