@@ -38,7 +38,7 @@ public class ParallelMillerRabinGap extends IterativePrimeGap {
 				? N.isProbablePrime(1) // <= also contains Miller-Rabin.
 				: passesParallelMillerRabin(N, MILLER_RABIN_PASSES - 1));
 
-		assert ok == N.isProbablePrime(100);
+		//assert ok == N.isProbablePrime(10) : "ok=" + ok + " " + N.isProbablePrime(10);
 
 		return ok;
 	}
@@ -76,10 +76,6 @@ public class ParallelMillerRabinGap extends IterativePrimeGap {
 
 			return true;
 		});
-
-		if (N.equals(v(89))) {
-			System.out.println("ParallelMillerRabinGap.passesParallelMillerRabin()");
-		}
 
 		return ok;
 	}

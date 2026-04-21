@@ -54,6 +54,12 @@ public abstract class AbstractPrimeGap {
 		return N.isProbablePrime(MILLER_RABIN_PASSES);
 	}
 
+	/**
+	 * Threa-safe
+	 * 
+	 * @return
+	 * @param N
+	 */
 	protected final BigInteger nextPrime(BigInteger N) {
 		BigInteger P = nextPrimeImpl(N);
 		addPrimeCount(1);
@@ -136,13 +142,14 @@ public abstract class AbstractPrimeGap {
 				if (P_ == null)
 					break;
 
-				BigInteger Q = nextPrimeImpl(P = P_);
-				int gap2 = Q.subtract(P).intValueExact();
-				foundGap(gap2, P, Q);
+				BigInteger Q = nextPrimeImpl(P_);
+				int gap2 = Q.subtract(P_).intValueExact();
+				foundGap(gap2, P_, Q);
 
-				assert isValid(P, gap) : "P=" + P + " found-gap=" + gap2 + " searched-gap=" + gap;
+				assert isValid(P_, gap2)
+						: "P=" + P_ + " found-gap=" + gap2 + " searched-gap=" + gap + " gapPrimes=" + gapPrimes;
 
-				double p = P.doubleValue();
+				double p = (P=P_).doubleValue();
 				double merit = gap2 / Math.log(p);
 				String merit_pfx = "";
 				if (merit > best_merit) {
