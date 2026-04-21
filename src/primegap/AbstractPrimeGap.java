@@ -2,6 +2,7 @@ package primegap;
 
 import java.math.BigInteger;
 import java.util.Locale;
+import java.util.TreeMap;
 
 import primegap.util.Java;
 import primegap.util.Machine;
@@ -113,7 +114,11 @@ public abstract class AbstractPrimeGap {
 
 	protected String name() {
 		if (name == null) {
-			name = this.getClass().getName().replaceFirst(".*[\\.]", "").replace('$', '.');
+			Class<?> cls = this.getClass();
+			while (cls.getEnclosingClass() != null)
+				cls = cls.getEnclosingClass();
+
+			name = cls.getSimpleName();
 		}
 		return name;
 	}
@@ -136,12 +141,13 @@ public abstract class AbstractPrimeGap {
 				total += time;
 				if (P_ == null)
 					break;
-				String blank = Java.isTTY ? "                                       " : "";
-				printf("found.%s%s\n", blank, "\b".repeat(blank.length()));
-				P = P_;
 
-				BigInteger Q = nextPrime(P);
+				BigInteger Q = nextPrimeImpl(P = P_);
 				gap = Q.subtract(P).intValueExact();
+				foundGap(gap, P, Q);
+
+				assert isValid(P, gap) : "P=" + P + " gap=" + gap;
+
 				double p = P.doubleValue();
 				double merit = gap / Math.log(p);
 				String merit_pfx = "";
@@ -155,16 +161,33 @@ public abstract class AbstractPrimeGap {
 				String rateStr = String.format(Locale.ENGLISH, "%,.0f", (getPrimesCount() * 1e9) / total).replace(',',
 						' ');
 
-				printf(">> %d\n + %s\n = %s\n", gap, P, Q);
 				printf("%.3fs (tot=%.3fs), %d bits, %d digits, " + "x%.2g prev, %s%.2f merit, ~%g, %s p/s.\n",
 						time / 1e9, total / 1e9, P.bitLength(), P.toString().length(), p / prev, merit_pfx, merit, p,
 						rateStr);
+
 				prev = p;
 				P = Q;
 			}
 		} finally {
 			stopping(new Info(total, P, best_merit, best_P));
 		}
+	}
+
+	protected void foundGap(int gap, BigInteger p, BigInteger q) {
+		String blank = Java.isTTY ? "                                       " : "";
+		printf("found.%s%s\n", blank, "\b".repeat(blank.length()));
+		printf(">> %d\n + %s\n = %s\n", gap, p, q);
+	}
+
+	protected boolean isValid(BigInteger p, int gap) {
+		Integer old = gapPrimes.put(p, gap);
+		boolean ok = old == null ? p == gapPrimes.lastKey() : old.equals(gap);
+		return ok;
+	}
+
+	static TreeMap<BigInteger, Integer> gapPrimes = new TreeMap<>();
+	static {
+		gapPrimes.put(TWO, 1);
 	}
 
 	protected void run() {

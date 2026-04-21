@@ -8,6 +8,8 @@ import java.util.stream.IntStream;
 import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
 import primegap.sieve.SlidingWindowSieve;
+import primegap.sieve.SieveGap.FastForward;
+import primegap.sieve.SieveGap.FastForward.DoubleBuffer;
 import primegap.util.IncreasingBigIntegers;
 import primegap.util.Java;
 
@@ -17,15 +19,15 @@ import primegap.util.Java;
  * Parallelism is only started when the primes are bigger enough so that there
  * is only one bit to update per long int.
  */
-public class ParallelSieve2 extends SlidingWindowSieve {
-	public ParallelSieve2(SieveGap sieve, int size, boolean doubleBuffer) {
+public class Parallel2Sieve extends SlidingWindowSieve {
+	public Parallel2Sieve(SieveGap sieve, int size, boolean doubleBuffer) {
 		super(sieve, size, doubleBuffer);
 	}
 
 	@Override
 	protected String name() {
 		if (name == null)
-			name = super.name() + "/Parallel2";
+			name = super.name() + "/ParallelPrimes";
 		return name;
 	}
 
@@ -73,25 +75,5 @@ public class ParallelSieve2 extends SlidingWindowSieve {
 		assert Java.dbg("all(parallel)=", Java.dbgToc(), "ms                  ");
 	}
 
-	public static class Parallel2SieveGap extends SieveGap {
-		@Override
-		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doubleBuffer) {
-			return new ParallelSieve2(this, size, doubleBuffer);
-		}
-
-		public static void main(String[] args) {
-			new Parallel2SieveGap().run();
-		}
-	}
-
-	public static class DoubleBufferedParallel2SieveGap extends Parallel2SieveGap {
-		@Override
-		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
-			return newSlidingWindowSieve(size, true);
-		}
-
-		public static void main(String[] args) {
-			new DoubleBufferedParallel2SieveGap().run();
-		}
-	}
+	
 }

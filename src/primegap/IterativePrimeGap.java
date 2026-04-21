@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.management.remote.SubjectDelegationPermission;
+
 import primegap.util.Java;
 import primegap.util.Machine;
 
@@ -24,6 +26,20 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 	public IterativePrimeGap() {
 		gapCounts = new long[1024];
 	}
+	
+
+	protected boolean usesFastForward() {
+		return gapCounts==null;
+	}
+	
+	protected String name() {
+		if (name == null) {
+			name = super.name() + (usesFastForward() ? "/FastFoward" : "");
+		}
+		return name;
+	}
+
+	private String name;
 
 	@Override
 	protected BigInteger find(int gap, BigInteger P) {

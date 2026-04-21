@@ -160,7 +160,30 @@ public class SieveGap extends IterativePrimeGap {
 		return bestSize;
 	}
 
-	static class FastForward extends SieveGap {
+	/**
+	 * SieveGap implementation using a double-buffered sliding window sieve.
+	 * <p>
+	 * This implementation uses a single sliding window sieve that is
+	 * double-buffered, meaning it maintains two buffers that it alternates between
+	 * for sieving. This allows it to start sieving the next window while the
+	 * current window is still being processed, which can improve performance by
+	 * overlapping computation and memory access.
+	 * 
+	 * This is actually the algorithm that performs best in practice, even compared
+	 * to the more complex ones.
+	 */
+	static public class DoubleBuffer extends SieveGap {
+		@Override
+		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
+			return newSlidingWindowSieve(size, true);
+		}
+
+		public static void main(String[] args) {
+			new DoubleBuffer().run();
+		}
+	}
+	
+	public static class FastForward extends SieveGap {
 		public FastForward() {
 			gapCounts = null;
 		}
@@ -172,6 +195,17 @@ public class SieveGap extends IterativePrimeGap {
 
 		public static void main(String[] args) {
 			new FastForward().run();
+		}
+		
+		static public class DoubleBuffer extends FastForward {
+			@Override
+			protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
+				return newSlidingWindowSieve(size, true);
+			}
+
+			public static void main(String[] args) {
+				new DoubleBuffer().run();
+			}
 		}
 	}
 }

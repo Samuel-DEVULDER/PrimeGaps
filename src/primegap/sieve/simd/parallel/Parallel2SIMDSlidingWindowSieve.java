@@ -1,11 +1,11 @@
-package primegap.sieve.simd;
+package primegap.sieve.simd.parallel;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.math.BigInteger;
 
-import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
+import primegap.sieve.simd.SIMDSlidingWindowSieve;
 import primegap.util.IncreasingBigIntegers;
 
 /**
@@ -45,28 +45,6 @@ class Parallel2SIMDSlidingWindowSieve extends SIMDSlidingWindowSieve {
 			list.subList(thr, list.size()).parallelStream().forEach(p -> markMultiplesOf(start, tab, p));
 		} else {
 			super.doMarkAllMultiples(start, tab, primes, limit);
-		}
-	}
-
-	public static class Parallel2SIMDSlidingWindowSieveGap extends SieveGap {
-		@Override
-		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doubleBuffer) {
-			return new Parallel2SIMDSlidingWindowSieve(this, size, doubleBuffer);
-		}
-
-		public static void main(String[] args) {
-			new Parallel2SIMDSlidingWindowSieveGap().run();
-		}
-	}
-
-	public static class DoubleBufferedParallel2SIMDSlidingWindowSieveGap extends Parallel2SIMDSlidingWindowSieveGap {
-		@Override
-		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
-			return newSlidingWindowSieve(size, true);
-		}
-
-		public static void main(String[] args) {
-			new DoubleBufferedParallel2SIMDSlidingWindowSieveGap().run();
 		}
 	}
 }

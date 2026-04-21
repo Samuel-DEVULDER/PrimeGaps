@@ -68,8 +68,7 @@ public class Benchmark {
 					throw new RuntimeException(ex);
 				}
 			});
-			System.out.printf("%d/%d Testing %s (%s)...", ++i, classes.length, impl.getClass().getSimpleName(),
-					impl.name());
+			System.out.printf("%d/%d Testing %s (%s)...", ++i, classes.length, Java.getSimpleName(cls), impl.name());
 
 			Thread stopWatch = new Thread() {
 				public void run() {
@@ -80,7 +79,7 @@ public class Benchmark {
 					}
 				};
 			};
-
+			stopWatch.setDaemon(true);
 			stopWatch.start();
 			long start = System.nanoTime();
 			try {
@@ -94,7 +93,7 @@ public class Benchmark {
 
 			duration /= 1e9; // sec
 			long numPrimes = impl.getPrimesCount();
-			
+
 			Thread.sleep(PAUSE);
 			System.out.printf(Locale.ENGLISH, "%,d primes in %.1f secs%n", numPrimes, duration);
 			col.add(new Algo(impl.name(), numPrimes / duration));

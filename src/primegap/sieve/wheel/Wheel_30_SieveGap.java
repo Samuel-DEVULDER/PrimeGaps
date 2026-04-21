@@ -1,5 +1,7 @@
 package primegap.sieve.wheel;
 
+import java.math.BigInteger;
+
 import primegap.sieve.AbstractSlidingWindowSieve;
 
 /**
@@ -56,4 +58,42 @@ public class Wheel_30_SieveGap extends AbstractWheelSieveGap {
 	public static void main(String[] args) {
 		new Wheel_30_SieveGap().run();
 	}
+	
+	static public class DoubleBuffer extends Wheel_30_SieveGap {
+		@Override
+		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
+			return newSlidingWindowSieve(size, true);
+		}
+
+		public static void main(String[] args) {
+			new DoubleBuffer().run();
+		}
+	}
+	
+	public static class FastForward extends Wheel_30_SieveGap {
+		public FastForward() {
+			gapCounts = null;
+		}
+
+		@Override
+		protected BigInteger fastForward(BigInteger P, int gap) {
+			return supplier.fastForward(P, gap, this::addPrimeCount);
+		}
+
+		public static void main(String[] args) {
+			new FastForward().run();
+		}
+		
+		static public class DoubleBuffer extends FastForward {
+			@Override
+			protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
+				return newSlidingWindowSieve(size, true);
+			}
+
+			public static void main(String[] args) {
+				new DoubleBuffer().run();
+			}
+		}
+	}
+
 }

@@ -3,6 +3,10 @@ package primegap.sieve.wheel;
 import java.math.BigInteger;
 
 import primegap.sieve.AbstractSlidingWindowSieve;
+import primegap.sieve.SieveGap;
+import primegap.sieve.simd.parallel.ParallelSIMDSieveGap;
+import primegap.sieve.simd.parallel.ParallelSIMDSieveGap.FastForward;
+import primegap.sieve.simd.parallel.ParallelSIMDSieveGap.FastForward.DoubleBuffer;
 
 /**
  * SieveGap implementation using a wheel of size 210.
@@ -27,6 +31,17 @@ public class Wheel_210_SieveGap extends AbstractWheelSieveGap {
 	public Wheel_210_SieveGap() {
 		super();
 	}
+
+	static public class DoubleBuffer extends Wheel_210_SieveGap {
+		@Override
+		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
+			return newSlidingWindowSieve(size, true);
+		}
+
+		public static void main(String[] args) {
+			new DoubleBuffer().run();
+		}
+	}
 	
 	public static class FastForward extends Wheel_210_SieveGap {
 		public FastForward() {
@@ -41,6 +56,16 @@ public class Wheel_210_SieveGap extends AbstractWheelSieveGap {
 		public static void main(String[] args) {
 			new FastForward().run();
 		}
-	}
+		
+		static public class DoubleBuffer extends FastForward {
+			@Override
+			protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
+				return newSlidingWindowSieve(size, true);
+			}
 
+			public static void main(String[] args) {
+				new DoubleBuffer().run();
+			}
+		}
+	}
 }

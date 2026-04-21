@@ -226,7 +226,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		}
 	}
 
-	final int last_shift = 6 * 0;
+	final int last_shift = 6;
 	protected int last;
 	protected long last_tab;
 
