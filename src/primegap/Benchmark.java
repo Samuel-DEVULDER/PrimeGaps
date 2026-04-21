@@ -93,10 +93,8 @@ public class Benchmark {
 			double duration = System.nanoTime() - start;
 
 			duration /= 1e9; // sec
-			long numPrimes = 0;
-			for (long c : impl.gapCounts)
-				numPrimes += c;
-
+			long numPrimes = impl.getPrimesCount();
+			
 			Thread.sleep(PAUSE);
 			System.out.printf(Locale.ENGLISH, "%,d primes in %.1f secs%n", numPrimes, duration);
 			col.add(new Algo(impl.name(), numPrimes / duration));
