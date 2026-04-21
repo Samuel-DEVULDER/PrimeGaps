@@ -3,9 +3,6 @@ package primegap.sieve.simd.parallel;
 import java.math.BigInteger;
 
 import primegap.sieve.AbstractSlidingWindowSieve;
-import primegap.sieve.parallel.ParallelSieveGap;
-import primegap.sieve.parallel.ParallelSieveGap.FastForward;
-import primegap.sieve.parallel.ParallelSieveGap.FastForward.DoubleBuffer;
 import primegap.sieve.simd.SIMDSieveGap;
 import primegap.util.Java;
 

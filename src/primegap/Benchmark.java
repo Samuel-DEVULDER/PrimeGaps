@@ -119,6 +119,8 @@ public class Benchmark {
 			new Benchmark().run(classes);
 		} catch (Exception e) {
 			e.printStackTrace();
+		} catch(AssertionError e) {
+			e.printStackTrace();
 		} finally {
 			System.setErr(NullStream.instance);
 			System.setOut(NullStream.instance);

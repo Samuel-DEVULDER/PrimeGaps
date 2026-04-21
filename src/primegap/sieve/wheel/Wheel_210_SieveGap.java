@@ -3,10 +3,6 @@ package primegap.sieve.wheel;
 import java.math.BigInteger;
 
 import primegap.sieve.AbstractSlidingWindowSieve;
-import primegap.sieve.SieveGap;
-import primegap.sieve.simd.parallel.ParallelSIMDSieveGap;
-import primegap.sieve.simd.parallel.ParallelSIMDSieveGap.FastForward;
-import primegap.sieve.simd.parallel.ParallelSIMDSieveGap.FastForward.DoubleBuffer;
 
 /**
  * SieveGap implementation using a wheel of size 210.

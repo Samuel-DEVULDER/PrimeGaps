@@ -5,11 +5,8 @@ import java.lang.invoke.VarHandle;
 import java.math.BigInteger;
 import java.util.stream.IntStream;
 
-import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
 import primegap.sieve.SlidingWindowSieve;
-import primegap.sieve.SieveGap.FastForward;
-import primegap.sieve.SieveGap.FastForward.DoubleBuffer;
 import primegap.util.IncreasingBigIntegers;
 import primegap.util.Java;
 

@@ -143,13 +143,13 @@ public abstract class AbstractPrimeGap {
 					break;
 
 				BigInteger Q = nextPrimeImpl(P = P_);
-				gap = Q.subtract(P).intValueExact();
-				foundGap(gap, P, Q);
+				int gap2 = Q.subtract(P).intValueExact();
+				foundGap(gap2, P, Q);
 
-				assert isValid(P, gap) : "P=" + P + " gap=" + gap;
+				assert isValid(P, gap) : "P=" + P + " found-gap=" + gap2 + " searched-gap=" + gap;
 
 				double p = P.doubleValue();
-				double merit = gap / Math.log(p);
+				double merit = gap2 / Math.log(p);
 				String merit_pfx = "";
 				if (merit > best_merit) {
 					best_merit = merit;
@@ -165,6 +165,7 @@ public abstract class AbstractPrimeGap {
 						time / 1e9, total / 1e9, P.bitLength(), P.toString().length(), p / prev, merit_pfx, merit, p,
 						rateStr);
 
+				gap = gap2;
 				prev = p;
 				P = Q;
 			}

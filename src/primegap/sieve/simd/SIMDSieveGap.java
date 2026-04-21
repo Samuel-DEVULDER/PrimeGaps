@@ -4,8 +4,6 @@ import java.math.BigInteger;
 
 import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
-import primegap.sieve.SieveGap.FastForward;
-import primegap.sieve.SieveGap.FastForward.DoubleBuffer;
 import primegap.util.Java;
 
 /**
