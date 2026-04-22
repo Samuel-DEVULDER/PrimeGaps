@@ -22,7 +22,7 @@ class Parallel2SIMDSlidingWindowSieve extends SIMDSlidingWindowSieve {
 	@Override
 	protected String name() {
 		if (name == null)
-			name = super.name() + "/Parallel2";
+			name = super.name() + "/ParallelPrimes";
 		return name;
 	}
 
