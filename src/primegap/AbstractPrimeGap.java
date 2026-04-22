@@ -136,7 +136,6 @@ public abstract class AbstractPrimeGap {
 	protected void searchGaps() {
 		ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-
 		BigInteger P = v(2), best_P = P;
 		long total = 0;
 		double prev = 1;
@@ -171,7 +170,7 @@ public abstract class AbstractPrimeGap {
 				}
 
 				// Compute average prime discovery rate
-				String rateStr = Java.toString((long)((getPrimesCount() * 1e9) / total));
+				String rateStr = Java.toString((long) ((getPrimesCount() * 1e9) / total));
 
 				printf("%.3fs (tot=%.3fs), %d bits, %d digits, " + "x%.2g prev, %s%.2f merit, ~%g, %s p/s.\n",
 						time / 1e9, total / 1e9, P.bitLength(), P.toString().length(), p / prev, merit_pfx, merit, p,
@@ -181,8 +180,11 @@ public abstract class AbstractPrimeGap {
 				prev = p;
 				P = Q;
 			}
-		} catch(RuntimeException ex) {
-			if(!(ex.getCause() instanceof IOException))
+		} catch (RuntimeException ex) {
+			boolean fromIO = false;
+			for (Throwable x = ex; !fromIO && x != null; x = x.getCause())
+				fromIO = x instanceof IOException;
+			if (!fromIO)
 				throw ex;
 		} finally {
 			stopping(new Info(total, P, best_merit, best_P));
