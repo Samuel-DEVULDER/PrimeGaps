@@ -129,7 +129,7 @@ public abstract class AbstractPrimeGap {
 	private String name;
 
 	/** callback */
-	protected void onEveryMinute() {
+	protected void onEvery20Secs() {
 
 	}
 
@@ -142,7 +142,7 @@ public abstract class AbstractPrimeGap {
 		double best_merit = 0;
 
 		try {
-			scheduler.scheduleAtFixedRate(this::onEveryMinute, 1L, 1L, TimeUnit.MINUTES);
+			scheduler.scheduleAtFixedRate(this::onEvery20Secs, 1L, 20L, TimeUnit.SECONDS);
 			for (int gap = 2; running(gap); gap += 2) {
 				printf("%s: Searching gap >= %s...", name(), gap);
 

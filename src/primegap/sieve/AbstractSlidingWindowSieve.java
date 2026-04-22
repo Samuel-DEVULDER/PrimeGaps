@@ -182,7 +182,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				long elapsed = time_ms - onEveryMinute_time;
 				onEveryMinute_timeout = time_ms + (Java.isTTY ? 0 : elapsed / 10);
 				long primeCount = sieve.getPrimesCount();
-				var txt = String.format(Locale.ENGLISH, " %s, %s ~%.1f, %s/s%s", //
+				var txt = String.format(Locale.ENGLISH, " %s, %s, ~%.1f, %s/s%s", //
 						AbstractPrimeGap.wdhm(elapsed / 1000), //
 						Java.toString(start), //
 						lastPrime.doubleValue() / primeCount, //
@@ -361,21 +361,21 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	}
 
 	public BigInteger fastForward(BigInteger P, int gap, Consumer<Integer> count) {
-		int last = (this.last >>> last_shift) + 1;
-		if (gap >= 2 * primesPerLong && primes.isFull() && last < tabLen && tab[last] != -1L) {
-			final int max = tabLen;
-			long val = last_tab, tab[] = this.tab;
-			int n = 0;
+		int last;
+		if (gap >= 2 * primesPerLong && primes.isFull() && //
+				(last = (this.last >>> last_shift) + 1) < tabLen && //
+				tab[last] != -1L) {
+			long val = last_tab; // , tab[] = this.tab;
+			int n = Long.bitCount(val);
 			do {
-				n += Long.bitCount(val);
-				val = ~getTab(tab, last++);
-			} while (last < max && tab[last] != -1L);
+				n += Long.bitCount(val = ~tab[last++]);
+			} while (last < tabLen && tab[last] != -1L);
+			
+			count.accept(n - 1);
+
 			this.last = (last - 1) << last_shift;
 			this.last_tab = Long.highestOneBit(val);
-			lastPrime = P = get();
-
-			n += Long.bitCount(val) - 1;
-			count.accept(n);
+			this.lastPrime = P = get();
 		}
 		return P;
 	}

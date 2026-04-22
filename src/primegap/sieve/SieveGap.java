@@ -55,7 +55,7 @@ public class SieveGap extends IterativePrimeGap {
 	private String name = null;
 	
 	@Override
-	protected void onEveryMinute() {
+	protected void onEvery20Secs() {
 		supplier.onEveryMinute();
 	}
 

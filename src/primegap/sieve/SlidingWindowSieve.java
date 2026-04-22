@@ -99,20 +99,6 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 		}
 	}
 
-	@SuppressWarnings("unused")
-	protected void updateSeq64(long[] tab, int from, long to, long step) {
-		if (false && to > Integer.MAX_VALUE) {
-			for (long pos = from; pos < to; pos += step) {
-				updateTab(tab, (int) (pos >>> 6), 1L << (63 & pos));
-			}
-		} else {
-			int i_to = (int) to, i_step = (int) step;
-			for (int pos = from; pos < i_to; pos += i_step) {
-				updateTab(tab, pos >>> 6, 1L << (pos & 63));
-			}
-		}
-	}
-
 	protected void updateSeq(long[] tab, int from, long to, long step) {
 		if (step >= 64) {
 			updateSeq64(tab, from, to, step);
@@ -135,12 +121,26 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 					mask = 0;
 				}
 
-				mask |= (1L << (63 & pos));
+				mask |= (1L << (63 & (int)pos));
 				pos += step;
 			}
 
 			// Apply final mask
 			updateTab(tab, i, mask);
+		}
+	}
+	
+	@SuppressWarnings("unused")
+	protected void updateSeq64(long[] tab, int from, long to, long step) {
+		if (false && to > Integer.MAX_VALUE) {
+			for (long pos = from; pos < to; pos += step) {
+				updateTab(tab, (int) (pos >>> 6), 1L << (63 & pos));
+			}
+		} else {
+			int i_to = (int) to, i_step = (int) step;
+			for (int pos = from; pos < i_to; pos += i_step) {
+				updateTab(tab, pos >>> 6, 1L << (pos & 63));
+			}
 		}
 	}
 }
