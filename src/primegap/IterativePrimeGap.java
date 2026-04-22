@@ -46,15 +46,16 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 
 		int delta = 0;
 		while ((delta = Q.subtract(P).intValueExact()) < gap) {
-			if (countGap(delta))
+			if (countGap(delta)) {
 				return null;
+			}
 			P = fastForward(Q, gap);
 			Q = nextPrime(P);
 		}
 		countGap(delta);
 		return P;
 	}
-
+	
 	protected BigInteger fastForward(BigInteger P, int gap) {
 		return P;
 	}

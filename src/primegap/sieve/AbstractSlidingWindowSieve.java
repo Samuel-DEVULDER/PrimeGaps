@@ -152,16 +152,12 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	 * @param start the starting position (will be adjusted to next odd if even)
 	 */
 	// Ensure start is odd
-	public void setStart(BigInteger start) {
+	synchronized public void setStart(BigInteger start) {
 		// if (start.testBit(0)) {
 		this.start = start;
 		// } else {
 		// this.start = start.add(ONE);
 		// }
-
-		assert Java.dbg(String.format(Locale.ENGLISH, "start=%s %.1f%% ~%.1f", start,
-				(numPrimes() * 100.0) / primes.limit(), getLastPrime().doubleValue() / sieve.getPrimesCount()),
-				Java.CR);
 
 		// Sieve limit: sqrt(start + windowRange)
 		limit = start.add(windowRange_bigint).sqrt();
@@ -176,6 +172,21 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 
 		last_tab = ~getTab(tab, last = 0);
 	}
+
+	synchronized protected void onEveryMinute() {
+		if (onEveryMinute_start != start) {
+			onEveryMinute_start = start;
+			long primeCount = sieve.getPrimesCount();
+			Java.dbg(String.format(Locale.ENGLISH, "start=%s full=%.1f%% merit=~%.1f p/s=%,.0f", start, //
+					(primes.sizeLong() * 100.0) / primes.limit(), //
+					lastPrime.doubleValue() / primeCount, //
+					(primeCount * 1e3) / (System.currentTimeMillis() - onEveryMinute_time)), //
+					Java.CR);
+		}
+	}
+
+	private long onEveryMinute_time = System.currentTimeMillis();
+	private BigInteger onEveryMinute_start = null;
 
 	protected void markMultiplesOf(BigInteger P) {
 		markMultiplesOf(start, tab, P);
@@ -342,7 +353,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	}
 
 	public BigInteger fastForward(BigInteger P, int gap, Consumer<Integer> count) {
-		int last = (this.last>>>last_shift) + 1;
+		int last = (this.last >>> last_shift) + 1;
 		if (gap >= 2 * primesPerLong && primes.isFull() && last < tabLen && tab[last] != -1L) {
 			final int max = tabLen;
 			long val = last_tab, tab[] = this.tab;
@@ -351,12 +362,12 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				n += Long.bitCount(val);
 				val = ~getTab(tab, last++);
 			} while (last < max && tab[last] != -1L);
-			this.last = (last - 1)<<last_shift;
+			this.last = (last - 1) << last_shift;
 			this.last_tab = Long.highestOneBit(val);
 			lastPrime = P = get();
 
 			n += Long.bitCount(val) - 1;
-			count.accept(n);			
+			count.accept(n);
 		}
 		return P;
 	}

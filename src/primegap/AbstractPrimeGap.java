@@ -3,6 +3,9 @@ package primegap;
 import java.math.BigInteger;
 import java.util.Locale;
 import java.util.TreeMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import primegap.util.Java;
 import primegap.util.Machine;
@@ -125,19 +128,28 @@ public abstract class AbstractPrimeGap {
 
 	private String name;
 
+	/** callback */
+	protected void onEveryMinute() {
+
+	}
+
 	protected void searchGaps() {
+		ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+
 		BigInteger P = v(2), best_P = P;
 		long total = 0;
 		double prev = 1;
 		double best_merit = 0;
 
 		try {
+			scheduler.scheduleAtFixedRate(this::onEveryMinute, 1L, 1L, TimeUnit.MINUTES);
 			for (int gap = 2; running(gap); gap += 2) {
 				printf("%s: Searching gap >= %s...", name(), gap);
 
-				long time = Machine.getCpuTimeNano();
+				long time = System.nanoTime();
 				BigInteger P_ = find(gap, P);
-				time = Machine.getCpuTimeNano() - time;
+				time = System.nanoTime() - time;
 				total += time;
 				if (P_ == null)
 					break;
@@ -149,7 +161,7 @@ public abstract class AbstractPrimeGap {
 				assert isValid(P_, gap2)
 						: "P=" + P_ + " found-gap=" + gap2 + " searched-gap=" + gap + " gapPrimes=" + gapPrimes;
 
-				double p = (P=P_).doubleValue();
+				double p = (P = P_).doubleValue();
 				double merit = gap2 / Math.log(p);
 				String merit_pfx = "";
 				if (merit > best_merit) {
@@ -172,6 +184,7 @@ public abstract class AbstractPrimeGap {
 			}
 		} finally {
 			stopping(new Info(total, P, best_merit, best_P));
+			scheduler.shutdown();
 		}
 	}
 

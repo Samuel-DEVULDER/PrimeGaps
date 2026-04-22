@@ -53,6 +53,11 @@ public class SieveGap extends IterativePrimeGap {
 	}
 
 	private String name = null;
+	
+	@Override
+	protected void onEveryMinute() {
+		supplier.onEveryMinute();
+	}
 
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 		return newSlidingWindowSieve(size, false);
