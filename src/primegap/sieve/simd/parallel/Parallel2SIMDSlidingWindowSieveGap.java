@@ -4,8 +4,11 @@ import java.math.BigInteger;
 
 import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
+import primegap.util.Java;
 
 public class Parallel2SIMDSlidingWindowSieveGap extends SieveGap {
+	static boolean enabled = Java.SIMD.enable();
+	
 	@Override
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doubleBuffer) {
 		return new Parallel2SIMDSlidingWindowSieve(this, size, doubleBuffer);
