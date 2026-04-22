@@ -96,7 +96,7 @@ public class Benchmark {
 
 			Thread.sleep(PAUSE);
 			System.out.printf(Locale.ENGLISH, "%,d primes in %.1f secs%n", numPrimes, duration);
-			col.add(new Algo(impl.name(), numPrimes / duration));
+			col.add(new Algo(impl.getClass().getName(), numPrimes / duration));
 			System.gc();
 		}
 
@@ -106,7 +106,7 @@ public class Benchmark {
 	static void printResult(Collection<Algo> col) {
 		Machine.printMachineInfo(System.out);
 		for (Algo alg : col) {
-			System.out.printf(Locale.ENGLISH, "%-60s %,.1f p/s%n", alg.name, alg.speed);
+			System.out.printf(Locale.ENGLISH, "%-80s %,.1f p/s%n", alg.name, alg.speed);
 		}
 	}
 
@@ -119,7 +119,7 @@ public class Benchmark {
 			new Benchmark().run(classes);
 		} catch (Exception e) {
 			e.printStackTrace();
-		} catch(AssertionError e) {
+		} catch (AssertionError e) {
 			e.printStackTrace();
 		} finally {
 			System.setErr(NullStream.instance);
