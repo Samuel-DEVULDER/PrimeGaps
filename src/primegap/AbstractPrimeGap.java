@@ -191,9 +191,9 @@ public abstract class AbstractPrimeGap {
 	}
 
 	protected void foundGap(int gap, BigInteger p, BigInteger q) {
-		String blank = Java.isTTY ? "                                       " : "";
-		printf("found.%s%s\n", blank, "\b".repeat(blank.length()));
-		printf(">> %d\n + %s\n = %s\n", gap, Java.toString(p), Java.toString(q));
+		String blank = Java.isTTY ? "                                             " : "";
+		printf("found.%s%s%n", blank, "\b".repeat(blank.length()));
+		printf(">> %d%n + %s%n = %s%n", gap, Java.toString(p), Java.toString(q));
 	}
 
 	protected boolean isValid(BigInteger p, int gap) {
