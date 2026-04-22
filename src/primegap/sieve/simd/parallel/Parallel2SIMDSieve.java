@@ -14,8 +14,8 @@ import primegap.util.IncreasingBigIntegers;
  * Parallelism is only started when the primes are bigger enough so that there
  * is only one bit to update per long int.
  */
-class Parallel2SIMDSlidingWindowSieve extends SIMDSlidingWindowSieve {
-	public Parallel2SIMDSlidingWindowSieve(SieveGap sieve, int size, boolean doubleBuffer) {
+class Parallel2SIMDSieve extends SIMDSlidingWindowSieve {
+	public Parallel2SIMDSieve(SieveGap sieve, int size, boolean doubleBuffer) {
 		super(sieve, size, doubleBuffer);
 	}
 
