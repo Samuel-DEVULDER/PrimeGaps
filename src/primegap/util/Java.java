@@ -354,7 +354,7 @@ public class Java {
 
 	public static boolean dbg(Object... args) {
 		int len = 0;
-		boolean cr = Stream.of(args).anyMatch(o -> o == CR);
+		boolean cr = true;
 		for (Object o : args) {
 			cr = false;
 			if (o == CR) {
@@ -367,7 +367,7 @@ public class Java {
 			System.err.print(s);
 			len += s.length();
 		}
-		if (!cr || !isTTY) {
+		if (!cr && !isTTY) {
 			System.err.println();
 		}
 		return true; // useful for assert

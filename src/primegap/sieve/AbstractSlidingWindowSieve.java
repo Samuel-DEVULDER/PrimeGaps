@@ -182,13 +182,13 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				long elapsed = time_ms - onEveryMinute_time;
 				onEveryMinute_timeout = time_ms + (Java.isTTY ? 0 : elapsed / 60);
 				long primeCount = sieve.getPrimesCount();
-				Java.dbg(String.format(Locale.ENGLISH, "%s %s %s ~%.1f p/s=%s", //
+				var txt = String.format(Locale.ENGLISH, "%s, %s, ~%.1f, %s/s%s", //
 						AbstractPrimeGap.wdhm(elapsed / 1000), //
 						Java.toString(start), //
-						primes.isFull() ? "" : String.format("%.1f%%", (primes.sizeLong() * 100.0) / primes.limit())), //
 						lastPrime.doubleValue() / primeCount, //
-						Java.toString((primeCount * 1e3) / (time_ms - onEveryMinute_time)), //
-						Java.CR);
+						Java.toString((long) (primeCount * 1e3) / (time_ms - onEveryMinute_time)), //
+						primes.isFull() ? "" : String.format(", %.1f%%", (primes.sizeLong() * 100.0) / primes.limit()));
+				Java.dbg(txt, Java.CR);
 			}
 		}
 	}
