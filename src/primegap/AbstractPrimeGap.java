@@ -171,8 +171,7 @@ public abstract class AbstractPrimeGap {
 				}
 
 				// Compute average prime discovery rate
-				String rateStr = String.format(Locale.ENGLISH, "%,.0f", (getPrimesCount() * 1e9) / total).replace(',',
-						' ');
+				String rateStr = Java.toString((long)((getPrimesCount() * 1e9) / total));
 
 				printf("%.3fs (tot=%.3fs), %d bits, %d digits, " + "x%.2g prev, %s%.2f merit, ~%g, %s p/s.\n",
 						time / 1e9, total / 1e9, P.bitLength(), P.toString().length(), p / prev, merit_pfx, merit, p,
@@ -194,7 +193,7 @@ public abstract class AbstractPrimeGap {
 	protected void foundGap(int gap, BigInteger p, BigInteger q) {
 		String blank = Java.isTTY ? "                                       " : "";
 		printf("found.%s%s\n", blank, "\b".repeat(blank.length()));
-		printf(">> %d\n + %s\n = %s\n", gap, p, q);
+		printf(">> %d\n + %s\n = %s\n", gap, Java.toString(p), Java.toString(q));
 	}
 
 	protected boolean isValid(BigInteger p, int gap) {

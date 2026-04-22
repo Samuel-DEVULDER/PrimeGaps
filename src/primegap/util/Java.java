@@ -1,12 +1,9 @@
 package primegap.util;
 
-import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +14,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SequencedMap;
@@ -24,6 +22,7 @@ import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorOperators.Comparison;
@@ -62,7 +61,7 @@ public class Java {
 				}
 			}
 		}
-	
+
 		String cp = System.getProperty("java.class.path");
 		List<Class<? extends E>> result = new ArrayList<>();
 		try {
@@ -96,7 +95,6 @@ public class Java {
 
 		return classes;
 	}
-
 
 	/**
 	 * Builds a map representing the class hierarchy of subclasses of the given root
@@ -147,9 +145,9 @@ public class Java {
 			}
 		}.print(root, children, "", "");
 	}
-	
-	public static String getSimpleName(Class <?> cls) {
-		return cls.getName().replaceFirst(".*[\\.]", "").replace('$','.');
+
+	public static String getSimpleName(Class<?> cls) {
+		return cls.getName().replaceFirst(".*[\\.]", "").replace('$', '.');
 	}
 
 	/**
@@ -296,7 +294,7 @@ public class Java {
 		if (range < 0 || range >= 1L << 30)
 			throw new IllegalArgumentException("range (" + range + "): 1..2^30-1");
 
-		int mask = range<<2;
+		int mask = range << 2;
 		mask |= mask >>> 1;
 		mask |= mask >>> 2;
 		mask |= mask >>> 4;
@@ -352,27 +350,11 @@ public class Java {
 	}
 
 	static List<Long> timeStack = new ArrayList<>();
-	public static boolean isTTY = false;
-	static {
-		Console cons = System.console();
-		if (cons != null) {
-			for (Method m : cons.getClass().getDeclaredMethods()) {
-				String n = m.getName().toLowerCase();
-				if (m.getReturnType() == Boolean.TYPE && (n.contains("tty") || n.contains("terminal"))) {
-					try {
-						isTTY = Boolean.TRUE.equals(m.invoke(cons));
-					} catch (IllegalAccessException | InvocationTargetException ignored) {
-					}
-					break;
-				}
-			}
-		}
-	}
+	public static boolean isTTY = System.console() != null;
 
 	public static boolean dbg(Object... args) {
 		int len = 0;
-		boolean cr = true;
-
+		boolean cr = Stream.of(args).anyMatch(o -> o == CR);
 		for (Object o : args) {
 			cr = false;
 			if (o == CR) {
@@ -385,9 +367,21 @@ public class Java {
 			System.err.print(s);
 			len += s.length();
 		}
-		if (!cr) {
+		if (!cr || !isTTY) {
 			System.err.println();
 		}
-		return true; // thisw<ay  itsuse  is transparent via  assert
+		return true; // useful for assert
+	}
+
+	public static String toString(Number N) {
+		return toString(N, " "); // Locale.getDefault() == Locale.FRANCE ? " " : "_");
+	}
+
+	public static String toString(Number N, String thousandsSep) {
+		String str = N.toString();
+		int i = str.indexOf('.');
+		if (i < 0)
+			i = str.length();
+		return str.substring(0, i).replaceAll("\\B(?=(\\d{3})+(?!\\d))", thousandsSep) + str.substring(i);
 	}
 }
