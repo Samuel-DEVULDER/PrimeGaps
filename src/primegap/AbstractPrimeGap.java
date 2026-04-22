@@ -180,7 +180,7 @@ public abstract class AbstractPrimeGap {
 				prev = p;
 				P = Q;
 			}
-		} catch (RuntimeException ex) {
+		} catch (Throwable ex) {
 			boolean fromIO = false;
 			for (Throwable x = ex; !fromIO && x != null; x = x.getCause())
 				fromIO = x instanceof IOException;

@@ -34,7 +34,7 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 	@Override
 	protected String name() {
 		if (name == null)
-			name = super.name() + "/SIMD_" + SPECIES.length() * Long.SIZE;
+			name = "/SIMD_" + SPECIES.length() * Long.SIZE + super.name();
 		return name;
 	}
 
