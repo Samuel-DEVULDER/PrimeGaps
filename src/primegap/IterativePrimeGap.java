@@ -24,12 +24,11 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 	public IterativePrimeGap() {
 		gapCounts = new long[1024];
 	}
-	
 
 	protected boolean usesFastForward() {
-		return gapCounts==null;
+		return gapCounts == null;
 	}
-	
+
 	protected String name() {
 		if (name == null) {
 			name = super.name() + (usesFastForward() ? "/FastFoward" : "");
@@ -55,7 +54,7 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 		countGap(delta);
 		return P;
 	}
-	
+
 	protected BigInteger fastForward(BigInteger P, int gap) {
 		return P;
 	}
@@ -107,10 +106,9 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 		if (gapCounts == null)
 			gapCounts = new long[0];
 		long maxCount = 0;
-		double total = 0;
+		double total = getPrimesCount();
 		for (long c : gapCounts) {
 			maxCount = Math.max(maxCount, c);
-			total += c;
 		}
 
 		// out.printf("Total gaps counted: %,.0f %d%n", total, primeCallCount);
@@ -132,22 +130,24 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 			out.printf(align + "%s (~%,.4g)%n", "Biggest prime", info.lastP(), info.lastP().doubleValue());
 			out.printf(align + "%s (%.1f)%n", "Best prime (merit)", info.best_P(), info.best_merit());
 		}
-		out.printf("%n");
-		out.printf("%-8s  %" + countWidth + "s  %s%n", "gap", "count", "histogram");
-		String line = "-".repeat(8 + 2 + countWidth + 2 + BAR_WIDTH);
-		out.printf("%s%n", line);
-		String colors = " .:-=+*#%@";
-		for (int i = 1; i < gapCounts.length; i++) {
-			if (gapCounts[i] == 0)
-				continue;
-			int gap = i << 1;
-			long count = gapCounts[i];
-			int bar = (int) (count * BAR_WIDTH / maxCount);
-			int col = (int) ((colors.length() * count) / (1 + maxCount));
-			String c = colors.substring(col, col + 1);
-			out.printf("%-8d  %" + countWidth + "d  %s%n", gap, count, c.repeat(bar));
+		if (maxCount > 0) {
+			out.printf("%n");
+			out.printf("%-8s  %" + countWidth + "s  %s%n", "gap", "count", "histogram");
+			String line = "-".repeat(8 + 2 + countWidth + 2 + BAR_WIDTH);
+			out.printf("%s%n", line);
+			String colors = " .:-=+*#%@";
+			for (int i = 1; i < gapCounts.length; i++) {
+				if (gapCounts[i] == 0)
+					continue;
+				int gap = i << 1;
+				long count = gapCounts[i];
+				int bar = (int) (count * BAR_WIDTH / maxCount);
+				int col = (int) ((colors.length() * count) / (1 + maxCount));
+				String c = colors.substring(col, col + 1);
+				out.printf("%-8d  %" + countWidth + "d  %s%n", gap, count, c.repeat(bar));
+			}
+			out.printf("%s%n", line);
 		}
-		out.printf("%s%n", line);
 	}
 
 	private final int timeout = 1_000_000;

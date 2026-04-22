@@ -8,7 +8,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import primegap.util.Java;
-import primegap.util.Machine;
 
 /**
  * Base class for prime gap search implementations. It provides common utilities
@@ -101,11 +100,11 @@ public abstract class AbstractPrimeGap {
 	// --- Prime discovery rate tracking ---
 	private long primesCount = 0;
 
-	protected void addPrimeCount(int num) {
+	synchronized protected void addPrimeCount(int num) {
 		primesCount += num;
 	}
 
-	public long getPrimesCount() {
+	synchronized public long getPrimesCount() {
 		return primesCount;
 	}
 

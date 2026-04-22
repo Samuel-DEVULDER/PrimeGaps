@@ -176,16 +176,20 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	synchronized protected void onEveryMinute() {
 		if (onEveryMinute_start != start) {
 			onEveryMinute_start = start;
-			long primeCount = sieve.getPrimesCount();
-			Java.dbg(String.format(Locale.ENGLISH, "start=%s full=%.1f%% merit=~%.1f p/s=%,.0f", start, //
-					(primes.sizeLong() * 100.0) / primes.limit(), //
-					lastPrime.doubleValue() / primeCount, //
-					(primeCount * 1e3) / (System.currentTimeMillis() - onEveryMinute_time)), //
-					Java.CR);
+			long time_ms = System.currentTimeMillis();
+			if (time_ms > onEveryMinute_timeout) {
+				onEveryMinute_timeout = time_ms + (time_ms -  onEveryMinute_time)/128;
+				long primeCount = sieve.getPrimesCount();
+				Java.dbg(String.format(Locale.ENGLISH, "start=%s full=%.1f%% merit=~%.1f p/s=%,.0f", start, //
+						(primes.sizeLong() * 100.0) / primes.limit(), //
+						lastPrime.doubleValue() / primeCount, //
+						(primeCount * 1e3) / (time_ms - onEveryMinute_time)), //
+						Java.CR);
+			}
 		}
 	}
 
-	private long onEveryMinute_time = System.currentTimeMillis();
+	private long onEveryMinute_time = System.currentTimeMillis(), onEveryMinute_timeout = onEveryMinute_time;
 	private BigInteger onEveryMinute_start = null;
 
 	protected void markMultiplesOf(BigInteger P) {
