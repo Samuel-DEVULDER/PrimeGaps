@@ -180,9 +180,9 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 			long time_ms = System.currentTimeMillis();
 			if (time_ms >= onEveryMinute_timeout) {
 				long elapsed = time_ms - onEveryMinute_time;
-				onEveryMinute_timeout = time_ms + (Java.isTTY ? 0 : elapsed / 60);
+				onEveryMinute_timeout = time_ms + (Java.isTTY ? 0 : elapsed / 10);
 				long primeCount = sieve.getPrimesCount();
-				var txt = String.format(Locale.ENGLISH, "%s, %s, ~%.1f, %s/s%s", //
+				var txt = String.format(Locale.ENGLISH, " %s, %s ~%.1f, %s/s%s", //
 						AbstractPrimeGap.wdhm(elapsed / 1000), //
 						Java.toString(start), //
 						lastPrime.doubleValue() / primeCount, //
