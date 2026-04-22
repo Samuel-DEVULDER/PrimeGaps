@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import primegap.AbstractPrimeGap;
 import primegap.util.IncreasingBigIntegers;
 import primegap.util.Java;
 
@@ -178,9 +179,12 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 			onEveryMinute_start = start;
 			long time_ms = System.currentTimeMillis();
 			if (time_ms > onEveryMinute_timeout) {
-				onEveryMinute_timeout = time_ms + (time_ms -  onEveryMinute_time)/128;
+				long elapsed = time_ms - onEveryMinute_time;
+				onEveryMinute_timeout = time_ms + elapsed / 128;
 				long primeCount = sieve.getPrimesCount();
-				Java.dbg(String.format(Locale.ENGLISH, "start=%s full=%.1f%% merit=~%.1f p/s=%,.0f", start, //
+				Java.dbg(String.format(Locale.ENGLISH, "time=%s start=%s full=%.1f%% merit=~%.1f p/s=%,.0f", //
+						AbstractPrimeGap.wdhm(elapsed / 1000), //
+						start, //
 						(primes.sizeLong() * 100.0) / primes.limit(), //
 						lastPrime.doubleValue() / primeCount, //
 						(primeCount * 1e3) / (time_ms - onEveryMinute_time)), //

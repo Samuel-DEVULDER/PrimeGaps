@@ -1,5 +1,6 @@
 package primegap;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Locale;
 import java.util.TreeMap;
@@ -181,6 +182,9 @@ public abstract class AbstractPrimeGap {
 				prev = p;
 				P = Q;
 			}
+		} catch(RuntimeException ex) {
+			if(!(ex.getCause() instanceof IOException))
+				throw ex;
 		} finally {
 			stopping(new Info(total, P, best_merit, best_P));
 			scheduler.shutdown();
