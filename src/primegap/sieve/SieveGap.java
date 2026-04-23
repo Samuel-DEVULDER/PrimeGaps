@@ -53,7 +53,7 @@ public class SieveGap extends IterativePrimeGap {
 	}
 
 	private String name = null;
-	
+
 	@Override
 	protected void periodicHook() {
 		supplier.periodicHook();
@@ -70,7 +70,7 @@ public class SieveGap extends IterativePrimeGap {
 	@Override
 	protected BigInteger nextPrimeImpl(BigInteger N) {
 		BigInteger Q = supplier.getLastPrime();
-		while (Q == null || Q.compareTo(N) <= 0) {
+		while (Q == null || Q == N || Q.compareTo(N) <= 0) {
 			Q = supplier.get();
 		}
 		return Q;
@@ -187,7 +187,7 @@ public class SieveGap extends IterativePrimeGap {
 			new DoubleBuffer().run();
 		}
 	}
-	
+
 	public static class FastForward extends SieveGap {
 		public FastForward() {
 			gapCounts = null;
@@ -201,7 +201,7 @@ public class SieveGap extends IterativePrimeGap {
 		public static void main(String[] args) {
 			new FastForward().run();
 		}
-		
+
 		static public class DoubleBuffer extends FastForward {
 			@Override
 			protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {

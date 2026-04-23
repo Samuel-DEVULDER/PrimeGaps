@@ -278,7 +278,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 			if (k < 0)
 				return lastPrime = v(-k);
 		} else if ((k = next()) < 0) {
-			pending = EMPTY;
+			if(pending!=EMPTY) pending = EMPTY;
 			do
 				slideWindow();
 			while ((k = next()) < 0);
