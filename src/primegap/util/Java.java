@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SequencedMap;
@@ -22,7 +21,6 @@ import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
-import java.util.stream.Stream;
 
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorOperators.Comparison;
