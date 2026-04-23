@@ -50,7 +50,7 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 		if (step >= 64) {
 			// No SIMD benefit for steps >= 64: only one bit set per long, so no
 			// vectorization possible.
-			updateSeq64(tab, from, to, step);
+			updateSeqBigSteps(tab, from, to, step);
 		} else {
 			// SIMD dispatch: fast hard-coded 256-bit path, generic fallback otherwise
 			switch (SPECIES.length()) {

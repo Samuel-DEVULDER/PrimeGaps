@@ -101,7 +101,7 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 
 	protected void updateSeq(long[] tab, int from, long to, long step) {
 		if (step >= 64) {
-			updateSeq64(tab, from, to, step);
+			updateSeqBigSteps(tab, from, to, step);
 		} else {
 			// Accumulate bits to clear
 			int i = from >>> 6;
@@ -131,7 +131,7 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 	}
 	
 	@SuppressWarnings("unused")
-	protected void updateSeq64(long[] tab, int from, long to, long step) {
+	protected void updateSeqBigSteps(long[] tab, int from, long to, long step) {
 		if (false && to > Integer.MAX_VALUE) {
 			for (long pos = from; pos < to; pos += step) {
 				updateTab(tab, (int) (pos >>> 6), 1L << (63 & pos));
