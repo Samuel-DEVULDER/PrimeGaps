@@ -23,7 +23,7 @@ public class SieveGap extends IterativePrimeGap {
 	@Override
 	protected void stopping(Info info) {
 		super.stopping(info);
-		supplier.primes.close();
+		supplier.dispose();
 		supplier = null;
 	}
 
@@ -141,7 +141,7 @@ public class SieveGap extends IterativePrimeGap {
 					sw.slideWindow();
 				}
 				long dt = System.nanoTime() - t0;
-				sw.primes.close();
+				sw.primes.dispose();
 
 				long covered = (long) SLIDES * tabLen * 128L; // nombres couverts
 				samples[r] = (double) covered / dt * 1e9; // nombres/s

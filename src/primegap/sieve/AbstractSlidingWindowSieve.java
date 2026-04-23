@@ -326,6 +326,16 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		NextWindowRunnable(int size) {
 			nextTab = newTab(size);
 		}
+		
+		void dispose() {
+			if(nextWindowFuture!=null) {
+				nextWindowFuture.cancel(true);
+				try {
+					nextWindowFuture.get();
+				} catch (InterruptedException | ExecutionException ignored) {
+				}
+			}
+		}
 
 		boolean swap() {
 			boolean ret = false;
@@ -437,5 +447,12 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		}
 
 		return P;
+	}
+	
+	protected void dispose() {
+		if(prefetch!=null) {
+			prefetch.dispose();
+		}
+		primes.dispose();
 	}
 }

@@ -1,6 +1,5 @@
 package primegap.util;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -18,14 +17,14 @@ import java.util.Iterator;
  * integers in order.
  * 
  * The implementation uses a cleaner to ensure that the temporary file is
- * deleted when the collection is no longer in use, and also provides a close()
+ * deleted when the collection is no longer in use, and also provides a dispose()
  * method for manual cleanup.
  * 
  * The collection is designed to handle a large number of integers without
  * consuming a lot of memory, making it suitable for applications that need to
  * store and process large sets of integers that may not fit in memory.
  */
-public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implements Collection<BigInteger>, Closeable {
+public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implements Collection<BigInteger> {
 	private static final Cleaner CLEANER = Cleaner.create();
 
 	private static class CleanupState implements Runnable {
@@ -112,8 +111,7 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 		col.stream().sorted().distinct().forEach(this::add);
 	}
 
-	@Override
-	public void close() {
+	public void dispose() {
 		RandomAccessFile loc = raf;
 		if (loc != null) {
 			try {
