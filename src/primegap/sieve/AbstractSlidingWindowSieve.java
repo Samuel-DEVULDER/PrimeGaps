@@ -361,37 +361,63 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	}
 
 	public BigInteger fastForward(BigInteger P, int gap, Consumer<Integer> count) {
-		int last;
-		if (gap >= 3 * primesPerLong && primes.isFull() && //
-				1+(last = (this.last >>> last_shift) + 1) < tabLen && //
-				tab[last] != -1L) {
-			long val = last_tab; // , tab[] = this.tab;
-			int n = Long.bitCount(val);
+		if (!primes.isFull() || last_tab == 0L)
+			return P;
+
+		int last = (this.last >>> last_shift), step, stop;
+		long a, b, c;
+		
+		if (gap >= ((step = 3) + 1) * primesPerLong //
+				&& last < (stop = tabLen - step) //
+				&& ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3])) != -1L) {
+			int n = Long.bitCount(last_tab);
 			do {
-				n += Long.bitCount(val = ~tab[last++]);
-			} while (last+1 < tabLen && (tab[last] & tab[last+1]) != -1L);
+				n += Long.bitCount(~a);
+				n += Long.bitCount(~b);
+				n += Long.bitCount(~c);
+				last += step;
+			} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3])) != -1L);
+
+			this.last_tab = Long.highestOneBit(~tab[last]);
+			this.last = last<<last_shift;
+			this.lastPrime = P = get();
 			
 			count.accept(n - 1);
-
-			this.last = (last - 1) << last_shift;
-			this.last_tab = Long.highestOneBit(val);
-			this.lastPrime = P = get();
 		}
-		if (gap >= 2 * primesPerLong && primes.isFull() && //
-				(last = (this.last >>> last_shift) + 1) < tabLen && //
-				tab[last] != -1L) {
-			long val = last_tab; // , tab[] = this.tab;
-			int n = Long.bitCount(val);
+		
+		if (gap >= ((step = 2) + 1) * primesPerLong //
+				&& last < (stop = tabLen - step) //
+				&& ((a = tab[last + 1]) & (b = tab[last + 2])) != -1L) {
+			int n = Long.bitCount(last_tab);
 			do {
-				n += Long.bitCount(val = ~tab[last++]);
-			} while (last < tabLen && tab[last] != -1L);
-			
-			count.accept(n - 1);
+				n += Long.bitCount(~a);
+				n += Long.bitCount(~b);
+				last += step;
+			} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2])) != -1L);
 
-			this.last = (last - 1) << last_shift;
-			this.last_tab = Long.highestOneBit(val);
+			this.last_tab = Long.highestOneBit(~tab[last]);
+			this.last = last<<last_shift;
 			this.lastPrime = P = get();
+
+			count.accept(n - 1);
 		}
+		
+		if (gap >= ((step = 1) + 1) * primesPerLong //
+				&& last < (stop = tabLen - step) //
+				&& (a = tab[last + 1]) != -1L) {
+			int n = Long.bitCount(last_tab);
+			do {
+				n += Long.bitCount(~a);
+				last += step;
+			} while (last < stop && (a = tab[last + 1]) != -1L);
+
+			this.last_tab = Long.highestOneBit(~tab[last]);
+			this.last = last<<last_shift;
+			this.lastPrime = P = get();
+
+			count.accept(n - 1);
+		}
+
 		return P;
 	}
 }
