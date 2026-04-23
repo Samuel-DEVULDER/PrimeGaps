@@ -187,7 +187,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 						lastPrime.doubleValue() / primeCount, //
 						Java.toString((long) (primeCount * 1e3) / (time_ms - onEveryMinute_time)), //
 						primes.isFull() ? "" : String.format(", %.1f%%", (primes.sizeLong() * 100.0) / primes.limit()));
-				Java.dbg(txt, Java.CR);
+				Java.dbg(txt, "   ", Java.CR);
 			}
 		}
 	}
