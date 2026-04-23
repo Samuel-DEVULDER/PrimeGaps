@@ -202,7 +202,7 @@ public class SIMDWheelGap extends ParallelMillerRabinGap {
 				long t = System.currentTimeMillis();
 				if (t > timeout) {
 					timeout = t + 5 * 60_000;
-					System.err.println("tim=" + wdhm((t - start) / 1_000) + " cnt=" + cnt + " avg=" + avg + " avg2="
+					System.err.println("tim=" + wdhms((t - start) / 1_000) + " cnt=" + cnt + " avg=" + avg + " avg2="
 							+ avg2 + " P=" + P + " " + P.isProbablePrime(100));
 				}
 			}

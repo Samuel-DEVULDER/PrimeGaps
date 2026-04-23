@@ -24,11 +24,12 @@ public abstract class AbstractPrimeGap {
 		return BigInteger.valueOf(l);
 	}
 
-	public static String wdhm(long secs) {
+	public static String wdhms(long secs) {
+		String r = (secs % 60) + "s";
 		long t = secs / 60;
 		long s = t % 60;
+		r = s + "m " + r;
 		t = t / 60;
-		String r = s + "m";
 		if (t > 0) {
 			s = t % 24;
 			t /= 24;
