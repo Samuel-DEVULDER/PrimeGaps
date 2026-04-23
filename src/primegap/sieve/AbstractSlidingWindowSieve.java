@@ -362,6 +362,21 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 
 	public BigInteger fastForward(BigInteger P, int gap, Consumer<Integer> count) {
 		int last;
+		if (gap >= 3 * primesPerLong && primes.isFull() && //
+				1+(last = (this.last >>> last_shift) + 1) < tabLen && //
+				tab[last] != -1L) {
+			long val = last_tab; // , tab[] = this.tab;
+			int n = Long.bitCount(val);
+			do {
+				n += Long.bitCount(val = ~tab[last++]);
+			} while (last+1 < tabLen && (tab[last] & tab[last+1]) != -1L);
+			
+			count.accept(n - 1);
+
+			this.last = (last - 1) << last_shift;
+			this.last_tab = Long.highestOneBit(val);
+			this.lastPrime = P = get();
+		}
 		if (gap >= 2 * primesPerLong && primes.isFull() && //
 				(last = (this.last >>> last_shift) + 1) < tabLen && //
 				tab[last] != -1L) {
