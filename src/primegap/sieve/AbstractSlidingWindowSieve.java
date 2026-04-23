@@ -244,7 +244,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		}
 	}
 
-	final int last_shift = 6;
+	protected final int last_shift = 6;
 	protected int last;
 	protected long last_tab;
 
@@ -278,7 +278,8 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 			if (k < 0)
 				return lastPrime = v(-k);
 		} else if ((k = next()) < 0) {
-			if(pending!=EMPTY) pending = EMPTY;
+			if (pending != EMPTY)
+				pending = EMPTY;
 			do
 				slideWindow();
 			while ((k = next()) < 0);
@@ -370,82 +371,63 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	}
 
 	public BigInteger fastForward(BigInteger P, int gap, Consumer<Integer> count) {
-		if (!primes.isFull() || last_tab == 0L || lastPrime.compareTo(P)!=0)
-			return P;
+		if (primes.isFull() && last_tab != 0L) {
+			int last = (this.last >>> last_shift), step, stop;
+			long a, b, c, d;
 
-		int last = (this.last >>> last_shift), step, stop;
-		long a, b, c, d;
+			if (gap >= ((step = 4) + 1) * primesPerLong //
+					&& last < (stop = tabLen - step) //
+					&& ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3]) & (d = tab[last + 4])) != -1L) {
+				int n = Long.bitCount(last_tab);
+				do {
+					n += Long.bitCount(~a) + Long.bitCount(~b) + Long.bitCount(~c) + Long.bitCount(~d);
+					last += step;
+				} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3])
+						& (d = tab[last + 4])) != -1L);
 
-		if (gap >= ((step = 4) + 1) * primesPerLong //
-				&& last < (stop = tabLen - step) //
-				&& ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3]) & (d = tab[last + 4])) != -1L) {
-			int n = Long.bitCount(last_tab);
-			do {
-				n += Long.bitCount(~a) + Long.bitCount(~b) + Long.bitCount(~c) + Long.bitCount(~d);
-				last += step;
-			} while (last < stop
-					&& ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3]) & (d = tab[last + 4])) != -1L);
+				count.accept(n - 1);
 
-			count.accept(n - 1);
+				while (tab[last] == -1L)
+					--last;
+				this.last_tab = Long.highestOneBit(~tab[last]);
+				this.last = last << last_shift;
+				this.lastPrime = P = get();
+			}
 
-			while(tab[last]==-1L) --last;
-			this.last_tab = Long.highestOneBit(~tab[last]);
-			this.last = last << last_shift;
-			this.lastPrime = P = get();
+			if (gap >= ((step = 2) + 1) * primesPerLong //
+					&& last < (stop = tabLen - step) //
+					&& ((a = tab[last + 1]) & (b = tab[last + 2])) != -1L) {
+				int n = Long.bitCount(last_tab);
+				do {
+					n += Long.bitCount(~a) + Long.bitCount(~b);
+					last += step;
+				} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2])) != -1L);
+
+				count.accept(n - 1);
+
+				while (tab[last] == -1L)
+					--last;
+				this.last_tab = Long.highestOneBit(~tab[last]);
+				this.last = last << last_shift;
+				this.lastPrime = P = get();
+			}
+
+			if (gap >= ((step = 1) + 1) * primesPerLong //
+					&& last < (stop = tabLen - step) //
+					&& (a = tab[last + 1]) != -1L) {
+				int n = Long.bitCount(last_tab);
+				do {
+					n += Long.bitCount(~a);
+					last += step;
+				} while (last < stop && (a = tab[last + 1]) != -1L);
+
+				this.last_tab = Long.highestOneBit(~tab[last]);
+				this.last = last << last_shift;
+				this.lastPrime = P = get();
+
+				count.accept(n - 1);
+			}
 		}
-
-		if (false && gap >= ((step = 3) + 1) * primesPerLong //
-				&& last < (stop = tabLen - step) //
-				&& ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3])) != -1L) {
-			int n = Long.bitCount(last_tab);
-			do {
-				n += Long.bitCount(~a);
-				n += Long.bitCount(~b);
-				n += Long.bitCount(~c);
-				last += step;
-			} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3])) != -1L);
-
-			while(tab[last]==-1L) --last;
-			this.last_tab = Long.highestOneBit(~tab[last]);
-			this.last = last << last_shift;
-			this.lastPrime = P = get();
-
-			count.accept(n - 1);
-		}
-
-		if (gap >= ((step = 2) + 1) * primesPerLong //
-				&& last < (stop = tabLen - step) //
-				&& ((a = tab[last + 1]) & (b = tab[last + 2])) != -1L) {
-			int n = Long.bitCount(last_tab);
-			do {
-				n += Long.bitCount(~a) + Long.bitCount(~b);
-				last += step;
-			} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2])) != -1L);
-			
-			count.accept(n - 1);
-
-			while(tab[last]==-1L) --last;
-			this.last_tab = Long.highestOneBit(~tab[last]);
-			this.last = last << last_shift;
-			this.lastPrime = P = get();
-		}
-
-		if (gap >= ((step = 1) + 1) * primesPerLong //
-				&& last < (stop = tabLen - step) //
-				&& (a = tab[last + 1]) != -1L) {
-			int n = Long.bitCount(last_tab);
-			do {
-				n += Long.bitCount(~a);
-				last += step;
-			} while (last < stop && (a = tab[last + 1]) != -1L);
-
-			this.last_tab = Long.highestOneBit(~tab[last]);
-			this.last = last << last_shift;
-			this.lastPrime = P = get();
-
-			count.accept(n - 1);
-		}
-
 		return P;
 	}
 

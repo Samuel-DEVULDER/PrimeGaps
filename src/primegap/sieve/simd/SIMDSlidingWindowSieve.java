@@ -1,5 +1,8 @@
 package primegap.sieve.simd;
 
+import java.math.BigInteger;
+import java.util.function.Consumer;
+
 import jdk.incubator.vector.LongVector;
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
@@ -263,4 +266,70 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 		buf[3] = 1L << (int) (p3 & 63);
 		return LongVector.fromArray(LongVector.SPECIES_256, buf, 0);
 	}
+	
+	public BigInteger fastForward(BigInteger P, int gap, Consumer<Integer> count) {
+		if (primes.isFull() && last_tab != 0L) {
+			int last = (this.last >>> last_shift), step, stop;  
+			LongVector v;
+
+			VectorSpecies<Long> SPECIES = LongVector.SPECIES_256; // 4 longs par vecteur
+			if (gap >= ((step = SPECIES.length()) + 1) * primesPerLong //
+					&& last < (stop = tabLen - step) //
+					&& (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L).allTrue()) {
+				int n = Long.bitCount(last_tab);
+				do {
+					v = v.not();
+					n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1)) + Long.bitCount(v.lane(2)) + Long.bitCount(v.lane(3));
+					last += step;
+				} while (last < stop && (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L).allTrue());
+
+				count.accept(n - 1);
+
+				while (tab[last] == -1L)
+					--last;
+				this.last_tab = Long.highestOneBit(~tab[last]);
+				this.last = last << last_shift;
+				this.lastPrime = P = get();
+			}
+
+			SPECIES = LongVector.SPECIES_128; // 2 longs par vecteur
+			if (gap >= ((step = SPECIES.length()) + 1) * primesPerLong //
+					&& last < (stop = tabLen - step) //
+					&& (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L).allTrue()) {
+				int n = Long.bitCount(last_tab);
+				do {
+					v = v.not();
+					n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1));
+					last += step;
+				} while (last < stop && (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L).allTrue());
+
+				count.accept(n - 1);
+
+				while (tab[last] == -1L)
+					--last;
+				this.last_tab = Long.highestOneBit(~tab[last]);
+				this.last = last << last_shift;
+				this.lastPrime = P = get();
+			}
+
+			long a;
+			if (gap >= ((step = 1) + 1) * primesPerLong //
+					&& last < (stop = tabLen - step) //
+					&& (a = tab[last + 1]) != -1L) {
+				int n = Long.bitCount(last_tab);
+				do {
+					n += Long.bitCount(~a);
+					last += step;
+				} while (last < stop && (a = tab[last + 1]) != -1L);
+
+				this.last_tab = Long.highestOneBit(~tab[last]);
+				this.last = last << last_shift;
+				this.lastPrime = P = get();
+
+				count.accept(n - 1);
+			}
+		}
+		return P;
+	}
+
 };
