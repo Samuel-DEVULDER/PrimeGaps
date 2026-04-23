@@ -382,4 +382,32 @@ public class Java {
 			i = str.length();
 		return str.substring(0, i).replaceAll("\\B(?=(\\d{3})+(?!\\d))", thousandsSep) + str.substring(i);
 	}
+
+	/** prints time (in second) as weeks, days, hours, minutes and seconds. */
+	public static String toWDHMS(long secs) {
+		long s = secs;
+		long t = s;
+		s = t % 60;
+		t /= 60;
+		String r = s + "s";
+		if (t > 0) {
+			s = t % 60;
+			t /= 60;
+			r = s + "m " + r;
+			if (t > 0) {
+				s = t % 24;
+				t /= 24;
+				r = s + "h " + r;
+				if (t > 0) {
+					s = t % 7;
+					t /= 7;
+					r = s + "d " + r;
+					if (t > 0) {
+						r = t + "w " + r;
+					}
+				}
+			}
+		}
+		return r;
+	}
 }

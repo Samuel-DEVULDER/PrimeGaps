@@ -24,28 +24,6 @@ public abstract class AbstractPrimeGap {
 		return BigInteger.valueOf(l);
 	}
 
-	public static String wdhms(long secs) {
-		String r = (secs % 60) + "s";
-		long t = secs / 60;
-		long s = t % 60;
-		r = s + "m " + r;
-		t = t / 60;
-		if (t > 0) {
-			s = t % 24;
-			t /= 24;
-			r = s + "h " + r;
-			if (t > 0) {
-				s = t % 7;
-				t /= 7;
-				r = s + "d " + r;
-				if (t > 0) {
-					r = t + "w " + r;
-				}
-			}
-		}
-		return r;
-	}
-
 	static protected BigInteger TWO = v(2), ONE = v(1), ZERO = v(0);
 
 	static protected void printf(String fmt, Object... args) {

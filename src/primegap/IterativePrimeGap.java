@@ -125,7 +125,7 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 		out.printf(align + "%,.0f%n", "#Primes", total);
 		if (info != null) {
 			double secs = info.time() / 1e9;
-			out.printf(align + "%,.1f secs (%s)%n", "Time", secs, wdhms((long) secs));
+			out.printf(align + "%,.1f secs (%s)%n", "Time", secs, Java.toWDHMS((long) secs));
 			out.printf(align + "%,.1f primes/sec%n", "Speed", (total * 1e9) / info.time());
 			out.printf(align + "%s (~%,.4g)%n", "Biggest prime", info.lastP(), info.lastP().doubleValue());
 			out.printf(align + "%s (%.1f)%n", "Best prime (merit)", info.best_P(), info.best_merit());
