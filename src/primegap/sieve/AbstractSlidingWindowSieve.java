@@ -326,9 +326,9 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		NextWindowRunnable(int size) {
 			nextTab = newTab(size);
 		}
-		
+
 		void dispose() {
-			if(nextWindowFuture!=null) {
+			if (nextWindowFuture != null) {
 				nextWindowFuture.cancel(true);
 				try {
 					nextWindowFuture.get();
@@ -370,29 +370,28 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	}
 
 	public BigInteger fastForward(BigInteger P, int gap, Consumer<Integer> count) {
-		if (!primes.isFull() || last_tab == 0L)
+		if (!primes.isFull() || last_tab == 0L || lastPrime.compareTo(P)!=0)
 			return P;
 
 		int last = (this.last >>> last_shift), step, stop;
 		long a, b, c, d;
-		
+
 		if (gap >= ((step = 4) + 1) * primesPerLong //
 				&& last < (stop = tabLen - step) //
-				&& ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3]) & (d=tab[last+4])) != -1L) {
+				&& ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3]) & (d = tab[last + 4])) != -1L) {
 			int n = Long.bitCount(last_tab);
 			do {
-				n += Long.bitCount(~a);
-				n += Long.bitCount(~b);
-				n += Long.bitCount(~c);
-				n += Long.bitCount(~d);
+				n += Long.bitCount(~a) + Long.bitCount(~b) + Long.bitCount(~c) + Long.bitCount(~d);
 				last += step;
-			} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3]) & (d=tab[last+4])) != -1L);
+			} while (last < stop
+					&& ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3]) & (d = tab[last + 4])) != -1L);
 
-			this.last_tab = Long.highestOneBit(~tab[last]);
-			this.last = last<<last_shift;
-			this.lastPrime = P = get();
-			
 			count.accept(n - 1);
+
+			while(tab[last]==-1L) --last;
+			this.last_tab = Long.highestOneBit(~tab[last]);
+			this.last = last << last_shift;
+			this.lastPrime = P = get();
 		}
 
 		if (false && gap >= ((step = 3) + 1) * primesPerLong //
@@ -406,30 +405,31 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				last += step;
 			} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3])) != -1L);
 
+			while(tab[last]==-1L) --last;
 			this.last_tab = Long.highestOneBit(~tab[last]);
-			this.last = last<<last_shift;
+			this.last = last << last_shift;
 			this.lastPrime = P = get();
-			
+
 			count.accept(n - 1);
 		}
-		
+
 		if (gap >= ((step = 2) + 1) * primesPerLong //
 				&& last < (stop = tabLen - step) //
 				&& ((a = tab[last + 1]) & (b = tab[last + 2])) != -1L) {
 			int n = Long.bitCount(last_tab);
 			do {
-				n += Long.bitCount(~a);
-				n += Long.bitCount(~b);
+				n += Long.bitCount(~a) + Long.bitCount(~b);
 				last += step;
 			} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2])) != -1L);
-
-			this.last_tab = Long.highestOneBit(~tab[last]);
-			this.last = last<<last_shift;
-			this.lastPrime = P = get();
-
+			
 			count.accept(n - 1);
+
+			while(tab[last]==-1L) --last;
+			this.last_tab = Long.highestOneBit(~tab[last]);
+			this.last = last << last_shift;
+			this.lastPrime = P = get();
 		}
-		
+
 		if (gap >= ((step = 1) + 1) * primesPerLong //
 				&& last < (stop = tabLen - step) //
 				&& (a = tab[last + 1]) != -1L) {
@@ -440,7 +440,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 			} while (last < stop && (a = tab[last + 1]) != -1L);
 
 			this.last_tab = Long.highestOneBit(~tab[last]);
-			this.last = last<<last_shift;
+			this.last = last << last_shift;
 			this.lastPrime = P = get();
 
 			count.accept(n - 1);
@@ -448,9 +448,9 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 
 		return P;
 	}
-	
+
 	protected void dispose() {
-		if(prefetch!=null) {
+		if (prefetch != null) {
 			prefetch.dispose();
 		}
 		primes.dispose();
