@@ -173,7 +173,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		last_tab = ~getTab(tab, last = 0);
 	}
 
-	synchronized protected void onEveryMinute() {
+	synchronized protected void periodicHook() {
 		if (onEveryMinute_start != start) {
 			onEveryMinute_start = start;
 			long time_ms = System.currentTimeMillis();

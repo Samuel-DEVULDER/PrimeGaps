@@ -55,8 +55,8 @@ public class SieveGap extends IterativePrimeGap {
 	private String name = null;
 	
 	@Override
-	protected void onEvery20Secs() {
-		supplier.onEveryMinute();
+	protected void periodicHook() {
+		supplier.periodicHook();
 	}
 
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
