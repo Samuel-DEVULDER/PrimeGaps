@@ -365,9 +365,28 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 			return P;
 
 		int last = (this.last >>> last_shift), step, stop;
-		long a, b, c;
+		long a, b, c, d;
 		
-		if (gap >= ((step = 3) + 1) * primesPerLong //
+		if (gap >= ((step = 4) + 1) * primesPerLong //
+				&& last < (stop = tabLen - step) //
+				&& ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3]) & (d=tab[last+4])) != -1L) {
+			int n = Long.bitCount(last_tab);
+			do {
+				n += Long.bitCount(~a);
+				n += Long.bitCount(~b);
+				n += Long.bitCount(~c);
+				n += Long.bitCount(~d);
+				last += step;
+			} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3]) & (d=tab[last+4])) != -1L);
+
+			this.last_tab = Long.highestOneBit(~tab[last]);
+			this.last = last<<last_shift;
+			this.lastPrime = P = get();
+			
+			count.accept(n - 1);
+		}
+
+		if (false && gap >= ((step = 3) + 1) * primesPerLong //
 				&& last < (stop = tabLen - step) //
 				&& ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3])) != -1L) {
 			int n = Long.bitCount(last_tab);
