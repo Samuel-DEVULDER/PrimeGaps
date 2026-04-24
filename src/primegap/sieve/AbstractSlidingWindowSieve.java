@@ -177,22 +177,22 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		if (onEveryMinute_start != start) {
 			onEveryMinute_start = start;
 			long time_ms = System.currentTimeMillis();
-			if (time_ms >= onEveryMinute_timeout) {
-				long elapsed = time_ms - onEveryMinute_time;
-				onEveryMinute_timeout = time_ms + (Java.isTTY ? 0 : elapsed / 10);
+			if (time_ms >= periodicHook_timeout) {
+				long elapsed = time_ms - periodicHook_time;
+				periodicHook_timeout = time_ms + (Java.isTTY ? 0 : elapsed / 10);
 				long primeCount = sieve.getPrimesCount();
 				var txt = String.format(Locale.ENGLISH, " %s, %s, ~%.1f, %s/s%s", //
 						Java.toWDHMS(elapsed / 1000), //
 						Java.toString(start), //
 						lastPrime.doubleValue() / primeCount, //
-						Java.toString((long) (primeCount * 1e3) / (time_ms - onEveryMinute_time)), //
+						Java.toString((long) (primeCount * 1e3) / (time_ms - periodicHook_time)), //
 						primes.isFull() ? "" : String.format(", %.1f%%", (primes.sizeLong() * 100.0) / primes.limit()));
 				Java.dbg(txt, "   ", Java.CR);
 			}
 		}
 	}
 
-	private long onEveryMinute_time = System.currentTimeMillis(), onEveryMinute_timeout = onEveryMinute_time;
+	private long periodicHook_time = System.currentTimeMillis(), periodicHook_timeout = periodicHook_time;
 	private BigInteger onEveryMinute_start = null;
 
 	protected void markMultiplesOf(BigInteger P) {
@@ -330,7 +330,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 
 		void dispose() {
 			if (nextWindowFuture != null) {
-				nextWindowFuture.cancel(true);
+				nextWindowFuture.cancel(false);
 				try {
 					nextWindowFuture.get();
 				} catch (InterruptedException | ExecutionException ignored) {
