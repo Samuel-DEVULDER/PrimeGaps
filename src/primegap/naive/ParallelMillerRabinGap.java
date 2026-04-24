@@ -57,7 +57,7 @@ public class ParallelMillerRabinGap extends IterativePrimeGap {
 		int bitLength = N.bitLength();
 
 		var ok = IntStream.range(0, iterations).parallel().allMatch(i -> {
-			if(i==0) return N.isProbablePrime(1);
+			if(i==0) return N.isProbablePrime(1); // <= contains miller rabbin as well + lucas-lerhmer for big primes
 			Random rnd = ThreadLocalRandom.current();
 			// Generate a uniform random on (1, this)
 			BigInteger b;
