@@ -23,8 +23,17 @@ public class SieveGap extends IterativePrimeGap {
 	@Override
 	protected void stopping(Info info) {
 		super.stopping(info);
-		supplier.dispose();
-		supplier = null;
+		PrintStream out = System.out, err = System.err;
+		try {
+			PrintStream ps = NullStream.instance;
+			System.setOut(ps);
+			System.setErr(ps);
+			supplier.dispose();
+		} finally {
+			supplier = null;
+			System.setOut(out);
+			System.setErr(err);
+		}
 	}
 
 	// 128 -> 5,232,179.3
