@@ -34,9 +34,7 @@ public class ParallelMillerRabinGap extends IterativePrimeGap {
 		if (N.testBit(0) == false)
 			return N.equals(TWO);
 
-		var ok = IntStream.range(0, 2).parallel().allMatch(i -> i == 0 //
-				? N.isProbablePrime(1) // <= also contains Miller-Rabin.
-				: passesParallelMillerRabin(N, MILLER_RABIN_PASSES - 1));
+		var ok = passesParallelMillerRabin(N, MILLER_RABIN_PASSES);
 
 		//assert ok == N.isProbablePrime(10) : "ok=" + ok + " " + N.isProbablePrime(10);
 
@@ -58,7 +56,8 @@ public class ParallelMillerRabinGap extends IterativePrimeGap {
 		BigInteger m = m_.shiftRight(a);
 		int bitLength = N.bitLength();
 
-		var ok = IntStream.range(0, iterations).parallel().allMatch(ignored -> {
+		var ok = IntStream.range(0, iterations).parallel().allMatch(i -> {
+			if(i==0) return N.isProbablePrime(1);
 			Random rnd = ThreadLocalRandom.current();
 			// Generate a uniform random on (1, this)
 			BigInteger b;
