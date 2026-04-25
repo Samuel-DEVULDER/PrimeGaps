@@ -2,6 +2,7 @@ package primegap.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Modifier;
@@ -239,9 +240,45 @@ public class Java {
 	 * @param action the Runnable action to execute on JVM shutdown
 	 */
 	public static void atexit(Runnable action) {
-		Thread hook = new Thread(action);
-		Runtime.getRuntime().addShutdownHook(hook);
+		if (hook == null) {
+			hook = new Thread() {
+				@Override
+				public void run() {
+					PrintStream err = System.err, out = System.out;
+					for (Runnable r : new ArrayList<>(hooks)) {
+						try {
+							System.setErr(NullStream.instance);
+							System.setOut(NullStream.instance);
+							r.run();
+						} catch (Throwable e) {
+							System.setErr(err);
+							System.setOut(out);
+							boolean ok = false;
+							assert ok = true;
+							if (ok) {
+								e.printStackTrace();
+							}
+						} finally {
+							System.setErr(err);
+							System.setOut(out);
+						}
+					}
+				}
+			};
+			Runtime.getRuntime().addShutdownHook(hook);
+		}
+		if (hooks.remove(action)) {
+			if (hooks.isEmpty()) {
+				Runtime.getRuntime().removeShutdownHook(hook);
+				hook = null;
+			}
+		} else {
+			hooks.add(action);
+		}
 	}
+
+	static Thread hook;
+	static List<Runnable> hooks = new ArrayList<>();
 
 	/**
 	 * Generates a LongStream of long values in the range [from, to) in a shuffled

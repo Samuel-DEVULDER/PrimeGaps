@@ -2,6 +2,12 @@ package primegap.util;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
+import java.lang.foreign.SymbolLookup;
+import java.lang.foreign.ValueLayout;
+import java.lang.invoke.MethodHandle;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
@@ -170,10 +176,93 @@ public class Machine {
 		ThreadMXBean tmx = ManagementFactory.getThreadMXBean();
 		if (tmx.isThreadCpuTimeSupported()) {
 			tmx.setThreadCpuTimeEnabled(true);
-			System.err.println("[timer] using thread CPU time");
+			assert Java.dbg("[timer] using thread CPU time");
 			return tmx::getCurrentThreadCpuTime;
 		}
-		System.err.println("[timer] fallback to nanoTime");
+		assert Java.dbg("[timer] fallback to nanoTime");
 		return System::nanoTime;
 	}
+
+	private static class StayAwake {
+		boolean installed = false, noSleep = false;
+
+		private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
+
+		private static final boolean IS_LINUX = System.getProperty("os.name").toLowerCase().contains("linux");
+
+		// --- Windows (FFM) ---
+		private MethodHandle winHandle;
+
+		private static final int ES_CONTINUOUS = 0x80000000;
+		private static final int ES_SYSTEM_REQUIRED = 0x00000001;
+
+		private void initWindows() throws Exception {
+			if (winHandle != null)
+				return;
+
+			Linker linker = Linker.nativeLinker();
+			SymbolLookup kernel32 = SymbolLookup.libraryLookup("kernel32", Arena.global());
+
+			winHandle = linker.downcallHandle(kernel32.find("SetThreadExecutionState").get(),
+					FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
+		}
+
+		// --- Linux ---
+		private Process inhibitor;
+
+		// --- API publique ---
+		public void preventSleep() {
+			if (noSleep)
+				return;
+			try {
+				if (IS_WINDOWS) {
+					initWindows();
+					winHandle.invokeExact(ES_CONTINUOUS | ES_SYSTEM_REQUIRED);
+
+				} else if (IS_LINUX) {
+					if (inhibitor == null) {
+						inhibitor = new ProcessBuilder("systemd-inhibit", "--why=Java running", "sleep", "infinity")
+								.start();
+					}
+				}
+				noSleep = true;
+			} catch (Throwable e) {
+				assert Java.dbg(e);
+			}
+			if (!installed && noSleep) {
+				installed = true;
+				Java.atexit(atExitCallback); // add
+			}
+		}
+
+		Runnable atExitCallback = () -> allowSleep();
+
+		public void allowSleep() {
+			if (noSleep) {
+				try {
+					if (IS_WINDOWS && winHandle != null) {
+						winHandle.invokeExact(ES_CONTINUOUS);
+					} else if (IS_LINUX && inhibitor != null) {
+						inhibitor.destroy();
+						inhibitor = null;
+					}
+					noSleep = false;
+					Java.atexit(atExitCallback); // remove
+				} catch (Throwable e) {
+					assert Java.dbg(e);
+				}
+			}
+		}
+	}
+
+	static StayAwake awake = new StayAwake();
+
+	static public void preventSleep() {
+		awake.preventSleep();
+	}
+
+	static public void allowSleep() {
+		awake.allowSleep();
+	}
+
 }
