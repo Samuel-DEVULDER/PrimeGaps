@@ -17,7 +17,7 @@ import primegap.util.NullStream;
  * the number of primes found per second.
  */
 public class Benchmark {
-	final Duration RUNTIME = Duration.ofSeconds(90);
+	final Duration RUNTIME = Duration.ofSeconds(180);
 	final Duration PAUSE = Duration.ofSeconds(10);
 
 	record Algo(String name, double speed) implements Comparable<Algo> {
