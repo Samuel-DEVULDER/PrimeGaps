@@ -13,6 +13,11 @@ public class NullStream extends PrintStream {
 	NullStream(Runnable writeRunnable) {
 		super(new OutputStream() {
 			@Override
+			public void flush() throws IOException {
+				super.flush();
+				writeRunnable.run();
+			}
+			@Override
 			public void write(int b) throws IOException {
 				writeRunnable.run();
 			}

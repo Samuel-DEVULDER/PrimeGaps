@@ -138,7 +138,7 @@ public class MillerRabin {
 		int bitLength = N.bitLength();
 
 		var stream = IntStream.range(0, iterations);
-		if (iterations > 5 && allowParallel)
+		if (iterations >= 5 && allowParallel)
 			stream = stream.parallel();
 
 		var ok = stream.allMatch(i -> {

@@ -178,6 +178,7 @@ public class Java {
 
 				// Inject the missing module flag first
 				cmd.add("--add-modules=jdk.incubator.vector");
+				cmd.add("--enable-native-access=ALL-UNNAMED");
 
 				// Forward all existing JVM flags (-Xmx, -Xms, -D... etc.)
 				cmd.addAll(jvmMeta.getInputArguments());

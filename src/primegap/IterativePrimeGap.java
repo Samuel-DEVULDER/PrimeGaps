@@ -163,6 +163,7 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 		}
 		if (--cnt == 0) {
 			cnt = timeout;
+			System.err.flush();
 			return isStopping();
 		} else {
 			return false;
