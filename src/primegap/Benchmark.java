@@ -112,6 +112,7 @@ public class Benchmark {
 
 	public static void main(String[] args) {
 		try {
+			Machine.preventSleep();
 			Class<? extends IterativePrimeGap> root = IterativePrimeGap.class;
 			var classes = silentRun(null, () -> Java.findSubclasses(root));
 			Java.gettHierarchy(AbstractPrimeGap.class).forEach((k, v) -> System.err.println(v));
@@ -124,6 +125,7 @@ public class Benchmark {
 		} finally {
 			System.setErr(NullStream.instance);
 			System.setOut(NullStream.instance);
+			Machine.allowSleep();
 		}
 	}
 }

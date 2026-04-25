@@ -184,7 +184,8 @@ public class Machine {
 	}
 
 	private static class StayAwake {
-		boolean installed = false, noSleep = false;
+		boolean installed = false;
+		int noSleep = 0;
 
 		private static final boolean IS_WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
 
@@ -212,7 +213,7 @@ public class Machine {
 
 		// --- API publique ---
 		public void preventSleep() {
-			if (noSleep)
+			if (noSleep++ > 0)
 				return;
 			try {
 				if (IS_WINDOWS) {
@@ -225,11 +226,10 @@ public class Machine {
 								.start();
 					}
 				}
-				noSleep = true;
 			} catch (Throwable e) {
 				assert Java.dbg(e);
 			}
-			if (!installed && noSleep) {
+			if (!installed) {
 				installed = true;
 				Java.atexit(atExitCallback); // add
 			}
@@ -238,7 +238,7 @@ public class Machine {
 		Runnable atExitCallback = () -> allowSleep();
 
 		public void allowSleep() {
-			if (noSleep) {
+			if (0 == --noSleep) {
 				try {
 					if (IS_WINDOWS && winHandle != null) {
 						winHandle.invokeExact(ES_CONTINUOUS);
@@ -246,7 +246,6 @@ public class Machine {
 						inhibitor.destroy();
 						inhibitor = null;
 					}
-					noSleep = false;
 					Java.atexit(atExitCallback); // remove
 				} catch (Throwable e) {
 					assert Java.dbg(e);
