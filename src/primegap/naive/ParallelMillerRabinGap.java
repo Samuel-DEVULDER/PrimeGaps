@@ -1,11 +1,9 @@
 package primegap.naive;
 
 import java.math.BigInteger;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.IntStream;
 
 import primegap.IterativePrimeGap;
+import primegap.util.MillerRabin;
 
 /**
  * This implementation uses a parallelized version of the Miller-Rabin primality
@@ -31,50 +29,10 @@ public class ParallelMillerRabinGap extends IterativePrimeGap {
 	private BigInteger cache[] = new BigInteger[2];
 
 	public boolean isPrime(BigInteger N) {
-		if (N.testBit(0) == false)
-			return N.equals(TWO);
+		var ok = MillerRabin.instance.isPrime(N, MILLER_RABIN_PASSES, true);
 
-		var ok = passesParallelMillerRabin(N, MILLER_RABIN_PASSES);
-
-		//assert ok == N.isProbablePrime(10) : "ok=" + ok + " " + N.isProbablePrime(10);
-
-		return ok;
-	}
-
-	/**
-	 * Returns true iff this BigInteger passes the specified number of Miller-Rabin
-	 * tests. This test is taken from the DSA spec (NIST FIPS 186-2).
-	 *
-	 * The following assumptions are made: This BigInteger is a positive, odd number
-	 * greater than 2. iterations<=50.
-	 */
-	static protected boolean passesParallelMillerRabin(BigInteger N, int iterations) {
-		// Find a and m such that m is odd and this == 1 + 2**a * m
-		BigInteger thisMinusOne = N.subtract(ONE);
-		BigInteger m_ = thisMinusOne;
-		int a = m_.getLowestSetBit();
-		BigInteger m = m_.shiftRight(a);
-		int bitLength = N.bitLength();
-
-		var ok = IntStream.range(0, iterations).parallel().allMatch(i -> {
-			if(i==0) return N.isProbablePrime(1); // <= contains miller rabbin as well + lucas-lerhmer for big primes
-			Random rnd = ThreadLocalRandom.current();
-			// Generate a uniform random on (1, this)
-			BigInteger b;
-			do {
-				b = new BigInteger(bitLength, rnd);
-			} while (b.compareTo(N) >= 0 || b.compareTo(ONE) <= 0);
-
-			int j = 0;
-			BigInteger z = b.modPow(m, N);
-			while (!((j == 0 && z.equals(ONE)) || z.equals(thisMinusOne))) {
-				if (j > 0 && z.equals(ONE) || ++j == a)
-					return false;
-				z = z.modPow(TWO, N);
-			}
-
-			return true;
-		});
+		// assert ok == N.isProbablePrime(10) : "ok=" + ok + " " +
+		// N.isProbablePrime(10);
 
 		return ok;
 	}

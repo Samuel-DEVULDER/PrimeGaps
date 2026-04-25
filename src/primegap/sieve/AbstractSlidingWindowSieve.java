@@ -5,9 +5,7 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.PrimitiveIterator;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
