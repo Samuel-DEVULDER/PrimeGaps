@@ -334,7 +334,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				nextWindowFuture.cancel(false);
 				try {
 					nextWindowFuture.get();
-				} catch (InterruptedException | ExecutionException | CancellationException ignored) {
+				} catch (Throwable ignored) {
 				}
 			}
 		}
@@ -348,8 +348,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 					nextTab = tab;
 					tab = t;
 					ret = true;
-				} catch (InterruptedException | ExecutionException e) {
-					e.printStackTrace();
+				} catch (Throwable ignored) {
 				}
 			nextWindowFuture = ready(start) ? CompletableFuture.runAsync(this) : null;
 			return ret;
