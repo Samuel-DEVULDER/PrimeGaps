@@ -9,6 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import primegap.util.Java;
+import primegap.util.Machine;
 
 /**
  * Base class for prime gap search implementations. It provides common utilities
@@ -121,6 +122,8 @@ public abstract class AbstractPrimeGap {
 		double best_merit = 0;
 
 		try {
+			Machine.preventSleep();
+			
 			scheduler.scheduleAtFixedRate(this::periodicHook, 10L, 10L, TimeUnit.SECONDS);
 			for (int gap = 2; running(gap); gap += 2) {
 				printf("%s: Searching gap >= %s...", name(), gap);
@@ -168,6 +171,7 @@ public abstract class AbstractPrimeGap {
 		} finally {
 			stopping(new Info(total, P, best_merit, best_P));
 			scheduler.shutdown();
+			Machine.allowSleep();
 		}
 	}
 
