@@ -17,8 +17,8 @@ import java.util.Iterator;
  * integers in order.
  * 
  * The implementation uses a cleaner to ensure that the temporary file is
- * deleted when the collection is no longer in use, and also provides a dispose()
- * method for manual cleanup.
+ * deleted when the collection is no longer in use, and also provides a
+ * dispose() method for manual cleanup.
  * 
  * The collection is designed to handle a large number of integers without
  * consuming a lot of memory, making it suitable for applications that need to
@@ -30,27 +30,16 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 	private static class CleanupState implements Runnable {
 		private File f;
 		private RandomAccessFile raf;
-		private Thread hook;
 
 		CleanupState(File f, RandomAccessFile raf) {
 			this.raf = raf;
 			this.f = f;
-			this.hook = new Thread(this) {
-				@Override
-				public void run() {
-					hook = null;
-					super.run();
-				}
-			};
-			Runtime.getRuntime().addShutdownHook(this.hook);
+			Java.atexit(this); // add
 		}
 
 		@Override
 		public void run() {
-			Thread hk = hook;
-			if (hk != null && Runtime.getRuntime().removeShutdownHook(hk)) {
-				hook = null;
-			}
+			Java.atexit(this); // remove
 			RandomAccessFile loc = raf;
 			if (loc != null) {
 				try {
@@ -61,7 +50,7 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 			}
 			File loc2 = f;
 			if (loc2 != null && loc2.delete()) {
-				System.out.println("Temp file cleaned up: " + loc2);
+				assert Java.dbg("Temp file cleaned up: ", loc2);
 				f = null;
 			}
 		}
@@ -89,7 +78,7 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 		try {
 			dbFile = File.createTempFile("gap", ".primes");
 			dbFile.deleteOnExit();
-			System.err.println(dbFile);
+			assert Java.dbg(dbFile);
 			raf = new RandomAccessFile(dbFile, "rw");
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
@@ -122,7 +111,7 @@ public class IncreasingBigIntegers extends AbstractCollection<BigInteger> implem
 		File loc2 = dbFile;
 		if (loc2 != null && loc2.delete()) {
 			loc2.delete();
-			System.out.println("Temp file cleaned up: " + loc2);
+			assert Java.dbg("Temp file deleted: " + loc2);
 		}
 	}
 
