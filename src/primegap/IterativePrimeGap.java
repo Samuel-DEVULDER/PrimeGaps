@@ -67,6 +67,8 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 		return P;
 	}
 
+	public boolean doStat = true;
+
 	private AtomicInteger stopping = new AtomicInteger(0);
 	{
 		Java.atexit(() -> {
@@ -75,15 +77,17 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 				while (stopping.get() != 3)
 					Thread.onSpinWait();
 
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				Locale bak = Locale.getDefault();
-				try {
-					Locale.setDefault(Locale.ENGLISH);
-					printGapStats(new PrintStream(baos));
-				} finally {
-					Locale.setDefault(bak);
+				if (doStat) {
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					Locale bak = Locale.getDefault();
+					try {
+						Locale.setDefault(Locale.ENGLISH);
+						printGapStats(new PrintStream(baos));
+					} finally {
+						Locale.setDefault(bak);
+					}
+					System.out.println(baos.toString());
 				}
-				System.out.println(baos.toString());
 			}
 		});
 	}

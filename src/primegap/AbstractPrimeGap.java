@@ -163,9 +163,9 @@ public abstract class AbstractPrimeGap {
 				P = Q;
 			}
 		} finally {
-			stopping(new Info(total, P, best_merit, best_P));
 			scheduler.shutdown();
 			Machine.allowSleep();
+			stopping(new Info(total, P, best_merit, best_P));
 		}
 	}
 

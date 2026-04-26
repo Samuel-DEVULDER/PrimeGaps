@@ -29,7 +29,6 @@ public class Benchmark {
 
 	static class TimeoutException extends RuntimeException {
 		private static final long serialVersionUID = 1L;
-
 	}
 
 	static <T> T silentRun(IterativePrimeGap impl, Supplier<T> sup) {
@@ -68,6 +67,7 @@ public class Benchmark {
 					throw new RuntimeException(ex);
 				}
 			});
+			impl.doStat = false;
 			System.out.printf("%d/%d Testing %s (%s)...", ++i, classes.length, Java.getSimpleName(cls), impl.name());
 
 			Thread stopWatch = new Thread() {
