@@ -1,6 +1,7 @@
 package primegap;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -23,6 +24,7 @@ import primegap.util.Machine;
 public abstract class IterativePrimeGap extends AbstractPrimeGap {
 	public IterativePrimeGap() {
 		gapCounts = new long[1024];
+		gapPrimes = new BigInteger[gapCounts.length];
 	}
 
 	protected boolean usesFastForward() {
@@ -40,19 +42,25 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 
 	@Override
 	protected BigInteger find(int gap, BigInteger P) {
-		P = fastForward(P, gap);
-		BigInteger Q = nextPrime(P);
+		try {
+			P = fastForward(P, gap);
+			BigInteger Q = nextPrime(P);
 
-		int delta = 0;
-		while ((delta = Q.subtract(P).intValueExact()) < gap) {
-			if (countGap(delta)) {
-				return null;
+			int delta = 0;
+			while ((delta = Q.subtract(P).intValueExact()) < gap) {
+				if (countGap(P, delta)) {
+					return null;
+				}
+				P = fastForward(Q, gap);
+				Q = nextPrime(P);
 			}
-			P = fastForward(Q, gap);
-			Q = nextPrime(P);
+			countGap(P, delta);
+			return P;
+		} catch (RuntimeException ex) {
+			if (ex.getCause() instanceof IOException)
+				return null;
+			throw ex;
 		}
-		countGap(delta);
-		return P;
 	}
 
 	protected BigInteger fastForward(BigInteger P, int gap) {
@@ -100,11 +108,14 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 	// -------
 
 	public long[] gapCounts;
+	public BigInteger[] gapPrimes;
 	Info info = null;
 
 	void printGapStats(PrintStream out) {
-		if (gapCounts == null)
+		if (gapCounts == null) {
 			gapCounts = new long[0];
+			gapPrimes = new BigInteger[0];
+		}
 		long maxCount = 0;
 		double total = getPrimesCount();
 		for (long c : gapCounts) {
@@ -112,9 +123,6 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 		}
 
 		// out.printf("Total gaps counted: %,.0f %d%n", total, primeCallCount);
-
-		int countWidth = Math.max(5, Long.toString(maxCount).length());
-		int BAR_WIDTH = 60;
 
 		out.printf("%n%n");
 
@@ -131,43 +139,95 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 			out.printf(align + "%s (%.1f)%n", "Best prime (merit)", info.best_P(), info.best_merit());
 		}
 		if (maxCount > 0) {
-			out.printf("%n");
-			out.printf("%-8s  %" + countWidth + "s  %s%n", "gap", "count", "histogram");
-			String line = "-".repeat(8 + 2 + countWidth + 2 + BAR_WIDTH);
-			out.printf("%s%n", line);
-			String colors = " .:-=+*#%@";
-			for (int i = 1; i < gapCounts.length; i++) {
-				if (gapCounts[i] == 0)
-					continue;
-				int gap = i << 1;
-				long count = gapCounts[i];
-				int bar = (int) (count * BAR_WIDTH / maxCount);
-				int col = (int) ((colors.length() * count) / (1 + maxCount));
-				String c = colors.substring(col, col + 1);
-				out.printf("%-8d  %" + countWidth + "d  %s%n", gap, count, c.repeat(bar));
-			}
-			out.printf("%s%n", line);
+			printHistogram(out, maxCount);
+			printTable(out);
 		}
 	}
 
-	private final int timeout = 1_000_000;
-	private int cnt = timeout;
+	private void printHistogram(PrintStream out, long maxCount) {
+		int countWidth = Math.max(5, Long.toString(maxCount).length());
+		int BAR_WIDTH = 60;
 
-	private boolean countGap(int gap) {
+		out.printf("%n");
+		out.printf("%-8s  %" + countWidth + "s  %s%n", "gap", "count", "histogram");
+		String line = "-".repeat(8 + 2 + countWidth + 2 + BAR_WIDTH);
+		out.printf("%s%n", line);
+		String colors = " .:-=+*#%@";
+		for (int i = 1; i < gapCounts.length; i++) {
+			if (gapCounts[i] == 0)
+				continue;
+			int gap = i << 1;
+			long count = gapCounts[i];
+			int bar = (int) (count * BAR_WIDTH / maxCount);
+			int col = (int) ((colors.length() * count) / (1 + maxCount));
+			String c = colors.substring(col, col + 1);
+			out.printf("%-8d  %" + countWidth + "d  %s%n", gap, count, c.repeat(bar));
+		}
+		out.printf("%s%n", line);
+	}
+
+	private void printTable(PrintStream out) {
+		// https://pzktupel.de/RecordGaps/GAP01FO.php
+
+		BigInteger last = gapPrimes[1];
+		for (int i = gapPrimes.length; --i >= 0 && (last = gapPrimes[i]) == null; --i) {
+		}
+
+		int countWidth = Math.max(5, Java.toString(last).length());
+
+		out.printf("%n");
+		out.printf("%-4s  %" + countWidth + "s  %6s %6s%n", "gap", "prime", "digits", "merit");
+		String line = "-".repeat(6 + countWidth + 2 + 6 + 1 + 6);
+		out.printf("%s%n", line);
+		BigInteger prev = TWO;
+		int max = gapPrimes.length;
+		while (--max >= 0 && gapPrimes[max] == null) {
+		}
+		for (int i = 1; i <= max; i++) {
+			BigInteger p = gapPrimes[i];
+			boolean rec = false;
+			if (p != null) {
+				rec = p.compareTo(prev) < 0;
+				prev = p;
+			}
+
+			out.printf("%-4d  %" + countWidth + "s%c %6d %6.1f%n", i * 2, //
+					p == null ? "" : Java.toString(p), //
+					rec ? '*' : ' ', //
+					p == null ? 0 : p.toString().length(), //
+					p == null ? Double.NaN : i / Math.log(p.doubleValue()));
+		}
+		out.printf("%s%n", line);
+	}
+
+	private boolean chkTimeout = true;
+
+	private boolean countGap(BigInteger prime, int gap) {
 		var tab = gapCounts;
 		if (tab != null) {
 			int idx = gap >> 1;
-			if (idx >= tab.length)
+			if (idx >= tab.length) {
 				gapCounts = tab = Arrays.copyOf(tab, idx * 2);
+				gapPrimes = Arrays.copyOf(gapPrimes, tab.length);
+			}
+			if (gapPrimes[idx] == null)
+				gapPrimes[idx] = prime;
 			++tab[idx];
 		}
-		if (--cnt == 0) {
-			cnt = timeout;
+
+		if (chkTimeout) {
+			chkTimeout = false;
 			System.err.flush();
 			return isStopping();
 		} else {
 			return false;
 		}
+	}
+
+	@Override
+	protected void periodicHook() {
+		super.periodicHook();
+		chkTimeout = true;
 	}
 
 	abstract protected BigInteger nextPrimeImpl(BigInteger after);
