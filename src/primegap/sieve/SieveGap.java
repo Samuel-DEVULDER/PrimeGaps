@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.management.RuntimeErrorException;
+
 import primegap.IterativePrimeGap;
 import primegap.util.NullStream;
 
@@ -22,18 +24,18 @@ import primegap.util.NullStream;
 public class SieveGap extends IterativePrimeGap {
 	@Override
 	protected void stopping(Info info) {
-		super.stopping(info);
 		PrintStream out = System.out, err = System.err;
 		try {
 			PrintStream ps = NullStream.instance;
 			System.setOut(ps);
-			System.setErr(ps);
+			System.setErr(ps);			
 			supplier.dispose();
 		} finally {
 			supplier = null;
 			System.setOut(out);
 			System.setErr(err);
 		}
+		super.stopping(info);
 	}
 
 	// 128 -> 5,232,179.3
@@ -65,6 +67,7 @@ public class SieveGap extends IterativePrimeGap {
 
 	@Override
 	protected void periodicHook() {
+		super.periodicHook();
 		supplier.periodicHook();
 	}
 
@@ -78,6 +81,7 @@ public class SieveGap extends IterativePrimeGap {
 
 	@Override
 	protected BigInteger nextPrimeImpl(BigInteger N) {
+		if(supplier==null) return null;
 		BigInteger Q = supplier.getLastPrime();
 		while (Q == null || Q == N || Q.compareTo(N) <= 0) {
 			Q = supplier.get();
