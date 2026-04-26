@@ -1,7 +1,9 @@
 package primegap.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Modifier;
@@ -389,6 +391,11 @@ public class Java {
 				len = -s.length();
 				cr = true;
 				o = s;
+			}
+			if (o instanceof Throwable thr) {
+				var bos = new ByteArrayOutputStream();
+				thr.printStackTrace(new PrintStream(bos));
+				o = bos.toString();
 			}
 			String s = String.valueOf(o);
 			System.err.print(s);
