@@ -169,7 +169,7 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 	private void printTable(PrintStream out) {
 		// https://pzktupel.de/RecordGaps/GAP01FO.php
 
-		BigInteger last = gapPrimes[1];
+		BigInteger last = BigInteger.ONE;
 		for (int i = gapPrimes.length; --i >= 0 && (last = gapPrimes[i]) == null; --i) {
 		}
 
