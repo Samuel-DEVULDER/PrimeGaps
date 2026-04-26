@@ -205,7 +205,7 @@ public class Machine {
 			SymbolLookup kernel32 = SymbolLookup.libraryLookup("kernel32", Arena.global());
 
 			winHandle = linker.downcallHandle(kernel32.find("SetThreadExecutionState").get(),
-					FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
+					FunctionDescriptor.of(ValueLayout.JAVA_INT_UNALIGNED, ValueLayout.JAVA_INT));
 		}
 
 		// --- Linux ---
@@ -219,7 +219,6 @@ public class Machine {
 				if (IS_WINDOWS) {
 					initWindows();
 					winHandle.invokeExact(ES_CONTINUOUS | ES_SYSTEM_REQUIRED);
-
 				} else if (IS_LINUX) {
 					if (inhibitor == null) {
 						inhibitor = new ProcessBuilder("systemd-inhibit", "--why=Java running", "sleep", "infinity")
