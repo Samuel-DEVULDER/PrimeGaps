@@ -394,7 +394,7 @@ public class Java {
 			System.err.print(s);
 			len += s.length();
 		}
-		if (!cr && !isTTY) {
+		if (!cr) {
 			System.err.println();
 		}
 		return true; // useful for assert
