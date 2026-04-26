@@ -140,7 +140,7 @@ public abstract class AbstractPrimeGap {
 				foundGap(gap2, P_, Q);
 
 				assert isValid(P_, gap2)
-						: "P=" + P_ + " found-gap=" + gap2 + " searched-gap=" + gap + " gapPrimes=" + gapPrimes;
+						: "P=" + P_ + " found-gap=" + gap2 + " searched-gap=" + gap + " gapPrimes=" + prime2Gap;
 
 				double p = (P = P_).doubleValue();
 				double merit = gap2 / Math.log(p);
@@ -176,14 +176,14 @@ public abstract class AbstractPrimeGap {
 	}
 
 	protected boolean isValid(BigInteger p, int gap) {
-		Integer old = gapPrimes.put(p, gap);
-		boolean ok = old == null ? p == gapPrimes.lastKey() : old.equals(gap);
+		Integer old = prime2Gap.put(p, gap);
+		boolean ok = old == null ? p == prime2Gap.lastKey() : old.equals(gap);
 		return ok;
 	}
 
-	static TreeMap<BigInteger, Integer> gapPrimes = new TreeMap<>();
+	static TreeMap<BigInteger, Integer> prime2Gap = new TreeMap<>();
 	static {
-		gapPrimes.put(TWO, 1);
+		prime2Gap.put(TWO, 1);
 	}
 
 	protected void run() {
