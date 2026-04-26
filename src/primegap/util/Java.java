@@ -245,23 +245,15 @@ public class Java {
 			hook = new Thread() {
 				@Override
 				public void run() {
-					PrintStream err = System.err, out = System.out;
-					for (Runnable r : new ArrayList<>(hooks)) {
+					for (Runnable r : new ArrayList<>(hooks).reversed()) {
 						try {
-							System.setErr(NullStream.instance);
-							System.setOut(NullStream.instance);
 							r.run();
 						} catch (Throwable e) {
-							System.setErr(err);
-							System.setOut(out);
 							boolean ok = false;
 							assert ok = true;
 							if (ok) {
 								e.printStackTrace();
 							}
-						} finally {
-							System.setErr(err);
-							System.setOut(out);
 						}
 					}
 				}
