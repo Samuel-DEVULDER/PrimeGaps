@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.management.RuntimeErrorException;
-
 import primegap.IterativePrimeGap;
 import primegap.util.NullStream;
 

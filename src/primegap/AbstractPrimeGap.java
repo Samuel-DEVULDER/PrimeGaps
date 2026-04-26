@@ -1,6 +1,5 @@
 package primegap;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Locale;
 import java.util.TreeMap;

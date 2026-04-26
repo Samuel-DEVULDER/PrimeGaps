@@ -2,7 +2,6 @@ package primegap.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Modifier;
