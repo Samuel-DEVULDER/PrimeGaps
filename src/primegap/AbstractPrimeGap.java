@@ -18,6 +18,7 @@ import primegap.util.Machine;
  */
 public abstract class AbstractPrimeGap {
 	protected boolean running(int gap) {
+		
 		return gap <= 464 * 2; // 464;
 	}
 
@@ -162,12 +163,6 @@ public abstract class AbstractPrimeGap {
 				prev = p;
 				P = Q;
 			}
-		} catch (Throwable ex) {
-			boolean fromIO = false;
-			for (Throwable x = ex; !fromIO && x != null; x = x.getCause())
-				fromIO = x instanceof IOException;
-			if (!fromIO)
-				throw ex;
 		} finally {
 			stopping(new Info(total, P, best_merit, best_P));
 			scheduler.shutdown();
@@ -195,16 +190,4 @@ public abstract class AbstractPrimeGap {
 	protected void run() {
 		searchGaps();
 	}
-
-	void run_() {
-		Thread t = new Thread(this::searchGaps);
-		t.setPriority(Thread.MIN_PRIORITY);
-		t.start();
-		try {
-			t.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-
 }
