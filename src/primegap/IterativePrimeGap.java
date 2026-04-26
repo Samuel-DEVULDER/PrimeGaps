@@ -112,20 +112,9 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 	Info info = null;
 
 	void printGapStats(PrintStream out) {
-		if (gapCounts == null) {
-			gapCounts = new long[0];
-			gapPrimes = new BigInteger[0];
-		}
-		long maxCount = 0;
 		double total = getPrimesCount();
-		for (long c : gapCounts) {
-			maxCount = Math.max(maxCount, c);
-		}
-
-		// out.printf("Total gaps counted: %,.0f %d%n", total, primeCallCount);
 
 		out.printf("%n%n");
-
 		Machine.printMachineInfo(out);
 
 		String align = "%-20s : ";
@@ -138,13 +127,19 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 			out.printf(align + "%s (~%,.4g)%n", "Biggest prime", info.lastP(), info.lastP().doubleValue());
 			out.printf(align + "%s (%.1f)%n", "Best prime (merit)", info.best_P(), info.best_merit());
 		}
-		if (maxCount > 0) {
-			printHistogram(out, maxCount);
-			printTable(out);
-		}
+		printHistogram(out);
+		printTable(out);
 	}
 
-	private void printHistogram(PrintStream out, long maxCount) {
+	private void printHistogram(PrintStream out) {
+		if (gapCounts == null)
+			return;
+
+		long maxCount = 0;
+		for (long c : gapCounts) {
+			maxCount = Math.max(maxCount, c);
+		}
+
 		int countWidth = Math.max(5, Long.toString(maxCount).length());
 		int BAR_WIDTH = 60;
 
@@ -167,6 +162,8 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 	}
 
 	private void printTable(PrintStream out) {
+		if (gapPrimes == null)
+			return;
 		// https://pzktupel.de/RecordGaps/GAP01FO.php
 
 		BigInteger last = BigInteger.ONE;
@@ -203,16 +200,23 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 	private boolean chkTimeout = true;
 
 	private boolean countGap(BigInteger prime, int gap) {
+		int idx = gap >> 1;
+
 		var tab = gapCounts;
 		if (tab != null) {
-			int idx = gap >> 1;
 			if (idx >= tab.length) {
 				gapCounts = tab = Arrays.copyOf(tab, idx * 2);
-				gapPrimes = Arrays.copyOf(gapPrimes, tab.length);
 			}
-			if (gapPrimes[idx] == null)
-				gapPrimes[idx] = prime;
 			++tab[idx];
+		}
+
+		var tab2 = gapPrimes;
+		if (tab2 != null) {
+			if (idx >= tab2.length) {
+				gapPrimes = tab2 = Arrays.copyOf(tab2, idx * 2);
+			}
+			if (tab2[idx] == null)
+				tab2[idx] = prime;
 		}
 
 		if (chkTimeout) {
