@@ -371,7 +371,7 @@ public class Java {
 
 	public static boolean dbgTic() {
 		timeStack.add(Machine.getCpuTimeNano());
-		return true;
+		return timeStack.size() > Math.random();
 	}
 
 	public static String dbgToc() {
@@ -382,27 +382,30 @@ public class Java {
 	public static boolean isTTY = System.console() != null;
 
 	public static boolean dbg(Object... args) {
-		int len = 0;
-		boolean cr = true;
-		for (Object o : args) {
-			cr = false;
-			if (o == CR) {
-				String s = isTTY ? "\b".repeat(len) : "\n";
-				len = -s.length();
-				cr = true;
-				o = s;
+		try {
+			int len = 0;
+			boolean cr = true;
+			for (Object o : args) {
+				cr = false;
+				if (o == CR) {
+					String s = isTTY ? "\b".repeat(len) : "\n";
+					len = -s.length();
+					cr = true;
+					o = s;
+				}
+				if (o instanceof Throwable thr) {
+					var bos = new ByteArrayOutputStream();
+					thr.printStackTrace(new PrintStream(bos));
+					o = bos.toString();
+				}
+				String s = String.valueOf(o);
+				System.err.print(s);
+				len += s.length();
 			}
-			if (o instanceof Throwable thr) {
-				var bos = new ByteArrayOutputStream();
-				thr.printStackTrace(new PrintStream(bos));
-				o = bos.toString();
+			if (!cr) {
+				System.err.println();
 			}
-			String s = String.valueOf(o);
-			System.err.print(s);
-			len += s.length();
-		}
-		if (!cr) {
-			System.err.println();
+		} catch (Throwable ignored) {
 		}
 		return true; // useful for assert
 	}
