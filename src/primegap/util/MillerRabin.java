@@ -7,6 +7,7 @@ import java.util.stream.IntStream;
 
 public class MillerRabin {
 	public static MillerRabin instance = new MillerRabin();
+	public static final int PARALLEL_THRESHOLD = 6;
 
 	/** Deterministic Miller-Rabin for 0 < N < 2^63, N odd >= 3. */
 	public boolean isPrime(long N, boolean allowParallel) {
@@ -24,7 +25,7 @@ public class MillerRabin {
 		long[] witnesses = witnessesFor(N);
 
 		IntStream stream = IntStream.range(0, witnesses.length);
-		if (witnesses.length >= 5 && allowParallel)
+		if (witnesses.length >= PARALLEL_THRESHOLD && allowParallel)
 			stream = stream.parallel();
 		return stream.allMatch(i -> witnesses[i] >= N || witness(witnesses[i], m, a, N));
 	}
@@ -138,7 +139,7 @@ public class MillerRabin {
 		int bitLength = N.bitLength();
 
 		var stream = IntStream.range(0, iterations);
-		if (iterations >= 5 && allowParallel)
+		if (iterations >= PARALLEL_THRESHOLD && allowParallel)
 			stream = stream.parallel();
 
 		var ok = stream.allMatch(i -> {
