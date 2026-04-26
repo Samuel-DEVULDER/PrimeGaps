@@ -24,7 +24,7 @@ public class MillerRabin {
 		long[] witnesses = witnessesFor(N);
 
 		IntStream stream = IntStream.range(0, witnesses.length);
-		if (witnesses.length >= 6 && allowParallel)
+		if (witnesses.length >= 5 && allowParallel)
 			stream = stream.parallel();
 		return stream.allMatch(i -> witnesses[i] >= N || witness(witnesses[i], m, a, N));
 	}
