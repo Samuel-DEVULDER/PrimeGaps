@@ -17,8 +17,29 @@ import primegap.util.NullStream;
  * the number of primes found per second.
  */
 public class Benchmark {
-	final Duration RUNTIME = Duration.ofSeconds(180);
+	final Duration RUNTIME;
 	final Duration PAUSE = Duration.ofSeconds(10);
+
+	Benchmark() {
+		this("90");
+	}
+
+	Benchmark(Duration duration) {
+		RUNTIME = duration.abs();
+	}
+
+	Benchmark(String duration) {
+		this(parseDuration(duration));
+	}
+
+	static Duration parseDuration(String duration) {
+		duration = duration.trim();
+		if (duration.matches("^[0-9]+$"))
+			duration = duration + "S";
+		if (!duration.startsWith("PT"))
+			duration = "PT" + duration;
+		return Duration.parse(duration);
+	}
 
 	record Algo(String name, double speed) implements Comparable<Algo> {
 		@Override
@@ -117,7 +138,7 @@ public class Benchmark {
 			var classes = silentRun(null, () -> Java.findSubclasses(root));
 			Java.gettHierarchy(AbstractPrimeGap.class).forEach((k, v) -> System.err.println(v));
 //			new Benchmark().run(SIMDSieveGap.class, SieveGap.class);
-			new Benchmark().run(classes);
+			new Benchmark(args.length == 0 ? "90" : args[0]).run(classes);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} catch (AssertionError e) {
