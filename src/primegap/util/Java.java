@@ -169,6 +169,8 @@ public class Java {
 			boolean enabled = ModuleLayer.boot().findModule("jdk.incubator.vector").isPresent();
 			// Check if the Vector API incubator module is already loaded
 			if (!enabled) {
+				Java.dbg("Relaunching with --add-modules=jdk.incubator.vector");
+				
 				// Resolve the current java executable path
 				String javaExe = ProcessHandle.current().info().command().orElse("java");
 
