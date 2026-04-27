@@ -38,14 +38,18 @@ public class PreviousPrimesGap extends SIMDWheelGap {
 			if (last.multiply(last).compareTo(N) < 0) {
 				for (var p : primes) {
 					if (p.compareTo(last) <= 0) {
-						// skip						
+						// skip
 					} else {
 						testList.add(p);
-						if (p.multiply(p).compareTo(N) > 0) break;
+						if (p.multiply(p).compareTo(N) > 0)
+							break;
 					}
 				}
 			}
-			var ok = !testList.parallelStream().anyMatch(p -> isDivisibleBy(N, p));
+			var stream = testList.stream();
+			if (testList.size() > 2048)
+				stream = stream.parallel();
+			var ok = !stream.anyMatch(p -> isDivisibleBy(N, p));
 			if (ok && N.compareTo(primes.getLast()) > 0)
 				primes.add(N);
 			return ok;
