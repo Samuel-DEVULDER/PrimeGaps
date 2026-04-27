@@ -196,7 +196,7 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 					p == null ? "" : Java.toString(p), //
 					rec ? '*' : ' ', //
 					p == null ? 0 : p.toString().length(), //
-					p == null ? Double.NaN : i / Math.log(p.doubleValue()));
+					p == null ? Double.NaN : i*2.0 / Math.log(p.doubleValue()));
 		}
 		out.printf("%s%n", line);
 	}
