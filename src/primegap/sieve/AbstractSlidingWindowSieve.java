@@ -329,9 +329,9 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 
 		void dispose() {
 			if (nextWindowFuture != null) {
-				nextWindowFuture.cancel(false);
 				try {
-					nextWindowFuture.get();
+					nextWindowFuture.cancel(true);
+					nextWindowFuture.join();
 				} catch (Throwable ignored) {
 				}
 			}
@@ -371,6 +371,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	public BigInteger fastForward(BigInteger P, int gap, Consumer<Integer> count) {
 		if (primes.isFull() && last_tab != 0L) {
 			int last = (this.last >>> last_shift), step, stop;
+			final long tab[] = this.tab;
 			long a, b, c, d;
 
 			if (gap >= ((step = 4) + 1) * primesPerLong //
@@ -379,7 +380,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				int n = Long.bitCount(last_tab);
 				do {
 					n += Long.bitCount(~a) + Long.bitCount(~b) + Long.bitCount(~c) + Long.bitCount(~d);
-					last += step;
+					last += 4;
 				} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3])
 						& (d = tab[last + 4])) != -1L);
 
@@ -398,7 +399,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				int n = Long.bitCount(last_tab);
 				do {
 					n += Long.bitCount(~a) + Long.bitCount(~b);
-					last += step;
+					last += 2;
 				} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2])) != -1L);
 
 				count.accept(n - 1);
