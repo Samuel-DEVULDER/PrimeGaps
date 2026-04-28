@@ -205,7 +205,7 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 	private BigInteger lastPrime = TWO;
 	private int lastGap = 1;
 
-	private boolean countGap(BigInteger prime, int gap) {
+	synchronized private boolean countGap(BigInteger prime, int gap) {
 		lastPrime = prime;
 		lastGap = gap;
 
@@ -227,7 +227,6 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 			if (tab2[idx] == null)
 				tab2[idx] = prime;
 		}
-
 		if (chkTimeout) {
 			chkTimeout = false;
 			System.err.flush();
@@ -244,9 +243,12 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 	}
 
 	@Override
-	protected void periodicInfo() {
-		Java.dbg("time=", Java.toWDHMS((runtimeMillis() + 500) / 1000), ", prime=", Java.toString(lastPrime), ", gap=",
-				lastGap, "             ", Java.CR);
+	synchronized protected void periodicInfo() {
+		long secs = (runtimeMillis() + 500) / 1000;
+		Java.dbg("time=", Java.toWDHMS(secs), //
+				", prime=", Java.toString(lastPrime), //
+				", gap=", lastGap, //
+				", ", Java.toString(getPrimesCount() / secs), " p/s.             ", Java.CR);
 	}
 
 	abstract protected BigInteger nextPrimeImpl(BigInteger after);

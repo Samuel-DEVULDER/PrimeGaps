@@ -112,14 +112,16 @@ public abstract class AbstractPrimeGap {
 	protected void periodicHook() {
 		periodicInfo();
 	}
-	
-	protected void periodicInfo()  {
-		Java.dbg("time=", runtimeMillis()/1000,"   ",Java.CR);
+
+	protected void periodicInfo() {
+		long secs = runtimeMillis() / 1000;
+		Java.dbg("time=", Java.toString(secs), "s, ", Java.toString(getPrimesCount() / secs), "p/s          ", Java.CR);
 	}
-	
+
 	long startTime;
+
 	public long runtimeMillis() {
-		return System.currentTimeMillis()-startTime;
+		return System.currentTimeMillis() - startTime;
 	}
 
 	protected void searchGaps() {
@@ -142,6 +144,7 @@ public abstract class AbstractPrimeGap {
 				long time = System.nanoTime();
 				BigInteger P_ = find(gap, P);
 				time = System.nanoTime() - time;
+
 				total += time;
 				if (P_ == null)
 					break;
