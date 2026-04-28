@@ -17,7 +17,7 @@ import primegap.util.Machine;
  */
 public abstract class AbstractPrimeGap {
 	protected boolean running(int gap) {
-		
+
 		return gap <= 464 * 2; // 464;
 	}
 
@@ -123,8 +123,9 @@ public abstract class AbstractPrimeGap {
 
 		try {
 			Machine.preventSleep();
-			
-			scheduler.scheduleAtFixedRate(this::periodicHook, 10L, 10L, TimeUnit.SECONDS);
+
+			long period = Java.isTTY ? 30L : 3L;
+			scheduler.scheduleAtFixedRate(this::periodicHook, period, period, TimeUnit.SECONDS);
 			for (int gap = 2; running(gap); gap += 2) {
 				printf("%s: Searching gap >= %s...", name(), gap);
 
