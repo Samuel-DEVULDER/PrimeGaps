@@ -165,8 +165,6 @@ public class SIMDWheelGap extends ParallelMillerRabinGap {
 
 			if (delta != 0)
 				updateVectors(delta);
-			else
-				System.err.println();
 		}
 
 		// ================= ABSTRACT ADVANCE =================
