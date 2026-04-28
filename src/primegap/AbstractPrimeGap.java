@@ -110,7 +110,16 @@ public abstract class AbstractPrimeGap {
 
 	/** callback */
 	protected void periodicHook() {
-
+		periodicInfo();
+	}
+	
+	protected void periodicInfo()  {
+		Java.dbg("time=", runtimeMillis()/1000,"   ",Java.CR);
+	}
+	
+	long startTime;
+	public long runtimeMillis() {
+		return System.currentTimeMillis()-startTime;
 	}
 
 	protected void searchGaps() {
@@ -120,6 +129,7 @@ public abstract class AbstractPrimeGap {
 		long total = 0;
 		double prev = 1;
 		double best_merit = 0;
+		startTime = runtimeMillis();
 
 		try {
 			Machine.preventSleep();

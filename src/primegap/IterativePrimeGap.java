@@ -192,18 +192,23 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 				prev = p;
 			}
 
-			out.printf("%-4d  %" + countWidth + "s%c %6d %6.1f%n", i * 2, //
+			out.printf("%-4d  %" + countWidth + "s%c %6d %6.2f%n", i * 2, //
 					p == null ? "" : Java.toString(p), //
 					rec ? '*' : ' ', //
 					p == null ? 0 : p.toString().length(), //
-					p == null ? Double.NaN : i*2.0 / Math.log(p.doubleValue()));
+					p == null ? Double.NaN : i * 2.0 / Math.log(p.doubleValue()));
 		}
 		out.printf("%s%n", line);
 	}
 
 	private boolean chkTimeout = true;
+	private BigInteger lastPrime = TWO;
+	private int lastGap = 1;
 
 	private boolean countGap(BigInteger prime, int gap) {
+		lastPrime = prime;
+		lastGap = gap;
+
 		int idx = gap >> 1;
 
 		var tab = gapCounts;
@@ -236,6 +241,12 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 	protected void periodicHook() {
 		super.periodicHook();
 		chkTimeout = true;
+	}
+
+	@Override
+	protected void periodicInfo() {
+		Java.dbg("time=", Java.toWDHMS((runtimeMillis() + 500) / 1000), ", prime=", Java.toString(lastPrime), ", gap=",
+				lastGap, "             ", Java.CR);
 	}
 
 	abstract protected BigInteger nextPrimeImpl(BigInteger after);

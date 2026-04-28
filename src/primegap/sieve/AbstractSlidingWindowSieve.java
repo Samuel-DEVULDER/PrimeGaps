@@ -172,9 +172,9 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		last_tab = ~getTab(tab, last = 0);
 	}
 
-	synchronized protected void periodicHook() {
-		if (onEveryMinute_start != start) {
-			onEveryMinute_start = start;
+	synchronized protected void periodicInfo() {
+		if (periodic_start != start) {
+			periodic_start = start;
 			long time_ms = System.currentTimeMillis();
 			if (time_ms >= periodicHook_timeout) {
 				long elapsed = time_ms - periodicHook_time;
@@ -192,7 +192,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	}
 
 	private long periodicHook_time = System.currentTimeMillis(), periodicHook_timeout = periodicHook_time;
-	private BigInteger onEveryMinute_start = null;
+	private BigInteger periodic_start = null;
 
 	protected void markMultiplesOf(BigInteger P) {
 		markMultiplesOf(start, tab, P);

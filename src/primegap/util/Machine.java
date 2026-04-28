@@ -197,6 +197,7 @@ public class Machine {
 		private static final int ES_CONTINUOUS = 0x80000000;
 		private static final int ES_SYSTEM_REQUIRED = 0x00000001;
 
+		@SuppressWarnings("preview")
 		private void initWindows() throws Exception {
 			if (winHandle != null)
 				return;

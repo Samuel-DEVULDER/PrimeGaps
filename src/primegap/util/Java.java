@@ -404,7 +404,7 @@ public class Java {
 				System.err.print(s);
 				len += s.length();
 			}
-			if (!cr) {
+			if (!cr && len>0) {
 				System.err.println();
 			}
 		} catch (Throwable ignored) {

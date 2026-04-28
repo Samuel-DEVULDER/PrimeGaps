@@ -63,10 +63,8 @@ public class SieveGap extends IterativePrimeGap {
 
 	private String name = null;
 
-	@Override
-	protected void periodicHook() {
-		super.periodicHook();
-		supplier.periodicHook();
+	protected void periodicInfo() {
+		supplier.periodicInfo();
 	}
 
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
