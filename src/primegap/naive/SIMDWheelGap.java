@@ -130,8 +130,8 @@ public class SIMDWheelGap extends ParallelMillerRabinGap {
 		protected int steps_idx;
 		protected int delta;
 		protected ByteVector bVec;
-		protected long cnt;
-		protected double avg, avg2; // running average of delta
+//		protected long cnt;
+//		protected double avg, avg2; // running average of delta
 
 		// ================= CONSTRUCTOR =================
 		protected Wheel(BigInteger start) {
@@ -196,18 +196,18 @@ public class SIMDWheelGap extends ParallelMillerRabinGap {
 			while (isComposite())
 				advance();
 			P = P.add(BigInteger.valueOf(delta));
-			if (cnt % 100000 == 0) {
-				long t = System.currentTimeMillis();
-				if (t > timeout) {
-					timeout = t + 5 * 60_000;
-					System.err.println("tim=" + Java.toWDHMS((t - start) / 1_000) + " cnt=" + cnt + " avg=" + avg + " avg2="
-							+ avg2 + " P=" + P + " " + P.isProbablePrime(100));
-				}
-			}
-			avg = (avg * cnt + delta) / (cnt + 1);
-			double alpha = 1.0 / 1000000;
-			avg2 = (1 - alpha) * avg2 + alpha * delta;
-			++cnt;
+//			if (cnt % 100000 == 0) {
+//				long t = System.currentTimeMillis();
+//				if (t > timeout) {
+//					timeout = t + 5 * 60_000;
+//					System.err.println("tim=" + Java.toWDHMS((t - start) / 1_000) + " cnt=" + cnt + " avg=" + avg + " avg2="
+//							+ avg2 + " P=" + P + " " + P.isProbablePrime(100));
+//				}
+//			}
+//			avg = (avg * cnt + delta) / (cnt + 1);
+//			double alpha = 1.0 / 1000000;
+//			avg2 = (1 - alpha) * avg2 + alpha * delta;
+//			++cnt;
 			delta = 0;
 			advance(); // prepare next candidate
 			return P;
