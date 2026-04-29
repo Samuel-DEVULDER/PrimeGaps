@@ -425,8 +425,8 @@ public class Java {
 	}
 
 	/** prints time (in second) as weeks, days, hours, minutes and seconds. */
-	public static String toWDHMS(long secs) {
-		long s = secs;
+	public static String toWDHMS(Number secs) {
+		long s = secs.longValue();
 		long t = s;
 		s = t % 60;
 		t /= 60;
