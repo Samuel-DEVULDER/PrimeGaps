@@ -304,8 +304,7 @@ public class SIMDWheelGap extends ParallelMillerRabinGap {
 		if (N.compareTo(Wheel.WHEEL_THRESHOLD) <= 0)
 			return super.nextPrimeImpl(N);
 		return Stream.generate(candidates(N))//
-				.filter(this::isPrime)//
-				.dropWhile(p -> p.compareTo(N) <= 0)//
+				.dropWhile(p -> p.compareTo(N) <= 0 && !isPrime(N))//
 				.findFirst()//
 				.orElseThrow();
 	}
