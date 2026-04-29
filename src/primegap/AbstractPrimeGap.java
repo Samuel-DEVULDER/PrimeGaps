@@ -155,7 +155,7 @@ public abstract class AbstractPrimeGap {
 				
 				String blank = Java.isTTY ? "                                             " : "";
 				printf("found.%s%s%n", blank, "\b".repeat(blank.length()));
-				printf(">> %d%n + %s%n = %s%n", gap, Java.toString(P_), Java.toString(Q));
+				printf(">> %d%n + %s%n = %s%n", gap2, Java.toString(P_), Java.toString(Q));
 
 				assert isValid(P_, gap2)
 						: "P=" + P_ + " found-gap=" + gap2 + " searched-gap=" + gap + " gapPrimes=" + prime2Gap;
