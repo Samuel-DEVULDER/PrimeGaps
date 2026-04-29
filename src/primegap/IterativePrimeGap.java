@@ -170,11 +170,10 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 			return;
 		// https://pzktupel.de/RecordGaps/GAP01FO.php
 
-		BigInteger last = BigInteger.ONE;
-		for (int i = gapPrimes.length; --i >= 0 && (last = gapPrimes[i]) == null; --i) {
-		}
-
-		int countWidth = Math.max(5, Java.toString(last).length());
+		int countWidth = 5;
+		for (BigInteger b : gapPrimes)
+			if (b != null)
+				countWidth = Math.max(countWidth, Java.toString(b).length());
 
 		out.printf("%n");
 		out.printf("%-4s  %" + countWidth + "s  %6s %6s%n", "gap", "prime", "digits", "merit");
