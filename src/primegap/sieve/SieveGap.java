@@ -56,7 +56,7 @@ public class SieveGap extends IterativePrimeGap {
 	@Override
 	protected String name() {
 		if (name == null) {
-			name = super.name() + supplier.name();
+			name = "SieveGap" + supplier.name();
 		}
 		return name;
 	}
