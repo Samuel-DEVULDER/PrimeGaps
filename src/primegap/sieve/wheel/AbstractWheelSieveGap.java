@@ -254,7 +254,7 @@ abstract class AbstractWheelSieveGap extends SieveGap {
 		@Override
 		protected String name() {
 			if (name == null)
-				name = super.name() + "/WHEEL_" + MOD();
+				name = "/WHEEL_" + MOD() + super.name();
 			return name;
 		}
 
