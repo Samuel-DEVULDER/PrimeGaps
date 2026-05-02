@@ -26,7 +26,7 @@ public class SieveGap extends IterativePrimeGap {
 		try {
 			PrintStream ps = NullStream.instance;
 			System.setOut(ps);
-			System.setErr(ps);			
+			System.setErr(ps);
 			supplier.dispose();
 		} finally {
 			supplier = null;
@@ -56,7 +56,7 @@ public class SieveGap extends IterativePrimeGap {
 	@Override
 	protected String name() {
 		if (name == null) {
-			name = "SieveGap" + supplier.name();
+			name = "SieveGap" + (usesFastForward() ? "/FastFoward" : "") + supplier.name();
 		}
 		return name;
 	}
@@ -77,7 +77,8 @@ public class SieveGap extends IterativePrimeGap {
 
 	@Override
 	protected BigInteger nextPrimeImpl(BigInteger N) {
-		if(supplier==null) return null;
+		if (supplier == null)
+			return null;
 		BigInteger Q = supplier.getLastPrime();
 		while (Q == null || Q == N || Q.compareTo(N) <= 0) {
 			Q = supplier.get();
