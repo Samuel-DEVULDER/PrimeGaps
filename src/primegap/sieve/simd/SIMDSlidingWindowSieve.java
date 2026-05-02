@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.function.Consumer;
 
 import jdk.incubator.vector.LongVector;
+import jdk.incubator.vector.VectorMask;
 import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
 import primegap.sieve.SieveGap;
@@ -273,31 +274,20 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 	public BigInteger fastForward(BigInteger P, int gap, Consumer<Integer> count) {
 		if (primes.isFull() && last_tab != 0L) {
 			int last = (this.last >>> last_shift), step, stop;
+			VectorMask<Long> m;
 			LongVector v;
 
 			VectorSpecies<Long> SPECIES = LongVector.SPECIES_256; // 4 longs par vecteur
 			if (gap >= ((step = SPECIES.length()) + 1) * primesPerLong //
 					&& last < (stop = tabLen - step) //
-					&& (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L).allTrue()) {
+					&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1).not()).eq(0)).allTrue()) {
 				int n = Long.bitCount(last_tab);
 				do {
-					long t;
-					v = v.not();
-					if ((t = v.lane(3)) != 0L) {
-						n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1)) + Long.bitCount(v.lane(2))
-								+ Long.bitCount(t);
-						last += 4;
-					} else if ((t = v.lane(2)) != 0L) {
-						n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1)) + Long.bitCount(t);
-						last += 3;
-					} else if ((t = v.lane(1)) != 0L) {
-						n += Long.bitCount(v.lane(0)) + Long.bitCount(t);
-						last += 2;
-					} else {
-						n += Long.bitCount(v.lane(0));
-						last += 1;
-					}
-				} while (last < stop && (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L).allTrue());
+					last += 1+m.not().lastTrue();
+					n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1)) + Long.bitCount(v.lane(2))
+							+ Long.bitCount(v.lane(3));
+				} while (last < stop //
+						&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1).not()).eq(0)).allTrue());
 
 				count.accept(n - 1);
 
@@ -309,19 +299,13 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 			SPECIES = LongVector.SPECIES_128; // 2 longs par vecteur
 			if (gap >= ((step = SPECIES.length()) + 1) * primesPerLong //
 					&& last < (stop = tabLen - step) //
-					&& (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L).allTrue()) {
+					&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1).not()).eq(0)).allTrue()) {
 				int n = Long.bitCount(last_tab);
 				do {
-					long t;
-					v = v.not();
-					if ((t = v.lane(1)) != 0L) {
-						n += Long.bitCount(v.lane(0)) + Long.bitCount(t);
-						last += 2;
-					} else {
-						n += Long.bitCount(v.lane(0));
-						last += 1;
-					}
-				} while (last < stop && (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L).allTrue());
+					last += 1+m.not().lastTrue();
+					n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1));
+				} while (last < stop //
+						&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1).not()).eq(0)).allTrue());
 
 				count.accept(n - 1);
 
@@ -337,7 +321,7 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 				int n = Long.bitCount(last_tab);
 				do {
 					n += Long.bitCount(~a);
-					last += step;
+					++last;
 				} while (last < stop && (a = tab[last + 1]) != -1L);
 
 				count.accept(n - 1);
@@ -359,32 +343,35 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 		idxMask = LongVector.fromArray(SPECIES, tmp, 0);
 	}
 
-	private LongVector bitset(LongVector mask, int from) {
+	private LongVector bitset(LongVector mask, int from, VectorSpecies<Long> sPECIES) {
 		from &= BIT_LENGTH - 1;
-		var m1 = SPECIES.broadcast(1L << (63 & from));
-		var m2 = SPECIES.broadcast(from >>> 6).eq(idxMask);
-		return mask.lanewise(VectorOperators.OR, m1, m2);
+		return mask.lanewise(VectorOperators.OR, //
+				SPECIES.broadcast(1L << (63 & from)), //
+				SPECIES.broadcast(from >>> 6).eq(idxMask));
 	}
 
 	private void updateSeqBigStepsSIMD(long[] tab, int from, long to, long step) {
-		int i = from / BIT_LENGTH;
-		LongVector mask = LongVector.fromArray(SPECIES, tab, i * SPECIES.length());
+		var SPECIES = SIMDSlidingWindowSieve.SPECIES;
+		final int bit_shift = Long.numberOfTrailingZeros(BIT_LENGTH);
+		final int len_shift = Long.numberOfTrailingZeros(SPECIES.length());
 
-		mask = bitset(mask, from);
+		int i = from >>> bit_shift;
+				
+		LongVector mask = LongVector.fromArray(SPECIES, tab, i << len_shift);
+		mask = bitset(mask, from, SPECIES);
 
 		for (long pos = from + step; pos < to; pos += step) {
-			int nextI = (int) (pos / BIT_LENGTH);
+			int nextI = (int) (pos >>> bit_shift);
 
 			if (nextI != i) {
-				mask.intoArray(tab, i * SPECIES.length());
+				mask.intoArray(tab, i << len_shift);
 				i = nextI;
-				mask = LongVector.fromArray(SPECIES, tab, i * SPECIES.length());
+				mask = LongVector.fromArray(SPECIES, tab, i << len_shift);
 			}
 
-			mask = bitset(mask, (int) pos);
+			mask = bitset(mask, (int) pos, SPECIES);
 		}
 
-		mask.intoArray(tab, i * SPECIES.length());
+		mask.intoArray(tab, i << len_shift);
 	}
-
 };
