@@ -39,14 +39,8 @@ public class Parallel2Sieve extends SlidingWindowSieve {
 
 	BigInteger[] known;
 	int last_known = 0;
-
-	@Override
-	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes, BigInteger limit) {
-		fillTab(tab, 0);
-		if(primes.isEmpty()) return;
-		
-		assert Java.dbgTic();
-
+	
+	protected int findIndexGT(BigInteger limit) {
 		var array = known;
 		if (array == null || array[array.length - 1].compareTo(limit) < 0) {
 			known = array = primes.toArray(BigInteger[]::new);
@@ -61,14 +55,24 @@ public class Parallel2Sieve extends SlidingWindowSieve {
 			else
 				b = c;
 		}
-		last_known = b;
+		return last_known = b;
+	}
 
-		// var array = primes.stream().takeWhile(p -> p.compareTo(limit) <=
-		// 0).toArray(BigInteger[]::new);
-		var  final_array = array;
+	@Override
+	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes, BigInteger limit) {
+		fillTab(tab, 0);
+		if(primes.isEmpty()) return;
+		
+		assert Java.dbgTic();
+
+		var b = findIndexGT(limit);
+
+		//known = primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).toArray(BigInteger[]::new);
+		//var b = known.length;
+		
 		@SuppressWarnings("unused")
 		var stream = false ? IntStream.range(0, b) : Java.shuffledRange(0, b);
-		stream.parallel().forEach(i -> markMultiplesOf(start, tab, final_array[i]));
+		stream.parallel().forEach(i -> markMultiplesOf(start, tab, known[i]));
 		assert Java.dbg("all(parallel)=", Java.dbgToc(), "ms                  ");
 	}
 
