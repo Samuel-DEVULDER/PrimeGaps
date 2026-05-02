@@ -170,7 +170,7 @@ public class Java {
 			// Check if the Vector API incubator module is already loaded
 			if (!enabled) {
 				Java.dbg("Relaunching with --add-modules=jdk.incubator.vector");
-				
+
 				// Resolve the current java executable path
 				String javaExe = ProcessHandle.current().info().command().orElse("java");
 
@@ -382,6 +382,8 @@ public class Java {
 
 	static List<Long> timeStack = new ArrayList<>();
 	public static boolean isTTY = System.console() != null;
+	public static String CEOL = isTTY ? "\\033[K" : new String("");
+	private static int maxLen = 0;
 
 	public static boolean dbg(Object... args) {
 		try {
@@ -389,13 +391,14 @@ public class Java {
 			boolean cr = true;
 			for (Object o : args) {
 				cr = false;
-				if (o == CR) {
+				if (o == CEOL) {
+					o = isTTY ? " ".repeat(maxLen - len) : "";
+				} else if (o == CR) {
 					String s = isTTY ? "\b".repeat(len) : "\n";
 					len = -s.length();
 					cr = true;
 					o = s;
-				}
-				if (o instanceof Throwable thr) {
+				} else if (o instanceof Throwable thr) {
 					var bos = new ByteArrayOutputStream();
 					thr.printStackTrace(new PrintStream(bos));
 					o = bos.toString();
@@ -403,8 +406,10 @@ public class Java {
 				String s = String.valueOf(o);
 				System.err.print(s);
 				len += s.length();
+				if (len > maxLen)
+					maxLen = len;
 			}
-			if (!cr && len>0) {
+			if (!cr && len > 0) {
 				System.err.println();
 			}
 		} catch (Throwable ignored) {

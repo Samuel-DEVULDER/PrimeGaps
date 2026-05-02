@@ -115,7 +115,7 @@ public abstract class AbstractPrimeGap {
 
 	protected void periodicInfo() {
 		long secs = runtimeMillis() / 1000;
-		Java.dbg("time=", Java.toString(secs), "s, ", Java.toString(getPrimesCount() / secs), "p/s          ", Java.CR);
+		Java.dbg("time=", Java.toString(secs), "s, ", Java.toString(getPrimesCount() / secs), "p/s", Java.CEOL, Java.CR);
 	}
 
 	long startTime;
@@ -153,11 +153,12 @@ public abstract class AbstractPrimeGap {
 				BigInteger Q = nextPrimeImpl(P_);
 				int gap2 = Q.subtract(P_).intValueExact();
 				foundGap(gap2, P_, Q);
-				
-				String blank = Java.isTTY ? "                                             " : "";
-				printf("found.%s%s%n", blank, "\b".repeat(blank.length()));
-				printf(">> %d%n + %s%n = %s%n", gap2, Java.toString(P_), Java.toString(Q));
 
+				synchronized (this) {
+					String blank = Java.CEOL;
+					printf("found.%s%s%n", blank, "\b".repeat(blank.length()));
+					printf(">> %d%n + %s%n = %s%n", gap2, Java.toString(P_), Java.toString(Q));
+				}
 				assert isValid(P_, gap2)
 						: "P=" + P_ + " found-gap=" + gap2 + " searched-gap=" + gap + " gapPrimes=" + prime2Gap;
 
@@ -173,8 +174,8 @@ public abstract class AbstractPrimeGap {
 				// Compute average prime discovery rate
 				String rateStr = Java.toString((long) ((getPrimesCount() * 1e9) / total));
 
-				printf("%.3fs (tot=%s), %d bits, %d digits, " + "x%.2g prev, %s%.2f merit, ~%g, %s p/s.\n",
-						time / 1e9, Java.toWDHMS(total / 1e9), P.bitLength(), P.toString().length(), p / prev, merit_pfx, merit, p,
+				printf("%.3fs (tot=%s), %d bits, %d digits, " + "x%.2g prev, %s%.2f merit, ~%g, %s p/s.\n", time / 1e9,
+						Java.toWDHMS(total / 1e9), P.bitLength(), P.toString().length(), p / prev, merit_pfx, merit, p,
 						rateStr);
 
 				gap = gap2;
