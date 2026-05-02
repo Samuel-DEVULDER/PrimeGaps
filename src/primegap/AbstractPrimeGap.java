@@ -137,7 +137,8 @@ public abstract class AbstractPrimeGap {
 			Machine.preventSleep();
 
 			long period = Java.isTTY ? 3L : 30L;
-			scheduler.scheduleAtFixedRate(this::periodicHook, period, period, TimeUnit.SECONDS);
+			long offset = Java.isTTY ? 0L : 10L;
+			scheduler.scheduleAtFixedRate(this::periodicHook, offset, period, TimeUnit.SECONDS);
 			for (int gap = 2; running(gap); gap += 2) {
 				printf("%s: Searching gap >= %s...", name(), gap);
 
