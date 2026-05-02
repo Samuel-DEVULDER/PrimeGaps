@@ -278,18 +278,28 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 					&& (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L).allTrue()) {
 				int n = Long.bitCount(last_tab);
 				do {
+					long t;
 					v = v.not();
-					n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1)) + Long.bitCount(v.lane(2)) + Long.bitCount(v.lane(3));
-					last += step;
+					if((t=v.lane(3))!=0L) {
+						n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1)) + Long.bitCount(v.lane(2)) + Long.bitCount(t);
+						last += 4;
+					} else if((t=v.lane(2))!=0L) {
+						n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1)) + Long.bitCount(t);
+						last += 3;
+					} else if((t=v.lane(1))!=0L) {
+						n += Long.bitCount(v.lane(0)) + Long.bitCount(t);
+						last += 2;
+					} else {
+						n += Long.bitCount(v.lane(0));
+						last += 1;
+					}
 				} while (last < stop && (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L).allTrue());
 
 				count.accept(n - 1);
 
-				while (tab[last] == -1L)
-					--last;
 				this.last_tab = Long.highestOneBit(~tab[last]);
 				this.last = last << last_shift;
-				this.lastPrime = P = get();
+				return this.lastPrime = P = get();
 			}
 
 			SPECIES = LongVector.SPECIES_128; // 2 longs par vecteur
@@ -298,18 +308,22 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 					&& (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L).allTrue()) {
 				int n = Long.bitCount(last_tab);
 				do {
+					long t;
 					v = v.not();
-					n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1));
-					last += step;
+					if((t=v.lane(1))!=0L) {
+						n += Long.bitCount(v.lane(0)) + Long.bitCount(t);
+						last += 2;
+					} else {
+						n += Long.bitCount(v.lane(0));
+						last += 1;
+					}
 				} while (last < stop && (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L).allTrue());
 
 				count.accept(n - 1);
-
-				while (tab[last] == -1L)
-					--last;
+				
 				this.last_tab = Long.highestOneBit(~tab[last]);
 				this.last = last << last_shift;
-				this.lastPrime = P = get();
+				return this.lastPrime = P = get();
 			}
 
 			long a;
@@ -322,11 +336,12 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 					last += step;
 				} while (last < stop && (a = tab[last + 1]) != -1L);
 
+				count.accept(n - 1);
+
 				this.last_tab = Long.highestOneBit(~tab[last]);
 				this.last = last << last_shift;
 				this.lastPrime = P = get();
 
-				count.accept(n - 1);
 			}
 		}
 		return P;
