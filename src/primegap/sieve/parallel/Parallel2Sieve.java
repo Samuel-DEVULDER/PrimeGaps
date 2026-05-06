@@ -37,44 +37,25 @@ public class Parallel2Sieve extends SlidingWindowSieve {
 		VH.getAndBitwiseOr(tab, i, mask);
 	}
 
-	BigInteger[] known;
-	int last_known = 0;
-	
-	protected int findIndexGT(BigInteger limit) {
-		var array = known;
-		if (array == null || array[array.length - 1].compareTo(limit) < 0) {
-			known = array = primes.toArray(BigInteger[]::new);
-			assert array[array.length - 1].compareTo(limit) >= 0;
-		}
-		int a = last_known, b = known.length;
-		while (b-a>1) {
-			int c = a + (b - a) / 2;
-			int d = array[c].compareTo(limit);
-			if (d <= 0)
-				a = c;
-			else
-				b = c;
-		}
-		return last_known = b;
-	}
-
 	@Override
 	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes, BigInteger limit) {
 		fillTab(tab, 0);
-		if(primes.isEmpty()) return;
-		
+		if (primes.isEmpty())
+			return;
+
 		assert Java.dbgTic();
 
-		var b = findIndexGT(limit);
+		// known = primes.stream().takeWhile(p -> p.compareTo(limit) <=
+		// 0).toArray(BigInteger[]::new);
+		// var b = known.length;
 
-		//known = primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).toArray(BigInteger[]::new);
-		//var b = known.length;
-		
+		var col = primes.upTo(limit);
+		var array =  col.toArray(IncreasingBigIntegers.EMPTY);
+
 		@SuppressWarnings("unused")
-		var stream = false ? IntStream.range(0, b) : Java.shuffledRange(0, b);
-		stream.parallel().forEach(i -> markMultiplesOf(start, tab, known[i]));
+		var stream = false ? IntStream.range(0, col.size()) : Java.shuffledRange(0, col.size());
+		stream.parallel().forEach(i -> markMultiplesOf(start, tab, array[i]));
 		assert Java.dbg("all(parallel)=", Java.dbgToc(), "ms                  ");
 	}
 
-	
 }
