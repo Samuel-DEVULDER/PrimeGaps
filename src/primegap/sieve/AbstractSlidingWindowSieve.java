@@ -209,7 +209,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes, BigInteger limit) {
 		fillTab(tab, 0);
 		assert Java.dbgTic();
-		primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).forEach(p -> markMultiplesOf(start, tab, p));
+		primes.upTo(limit).forEach(p -> markMultiplesOf(start, tab, p));
 		assert Java.dbg("all=", Java.dbgToc(), "ms              ");
 	}
 

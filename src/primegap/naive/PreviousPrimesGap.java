@@ -1,8 +1,7 @@
 package primegap.naive;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 import primegap.util.IncreasingBigIntegers;
 import primegap.util.Java;
@@ -24,33 +23,18 @@ public class PreviousPrimesGap extends SIMDWheelGap {
 		}
 	}
 
-	List<BigInteger> testList = new ArrayList<>();
-	{
-		testList.add(TWO);
-	}
-
 	@Override
 	public boolean isPrime(BigInteger N) {
-		if (N.compareTo(primes.getLast()) <= 0) {
+		int cmp = N.compareTo(primes.getLast());
+		if (cmp == 0) {
+			return true;
+		} else if (cmp < 0) {
 			return primes.stream().anyMatch(p -> p.equals(N));
 		} else {
-			var last = testList.getLast();
-			if (last.multiply(last).compareTo(N) < 0) {
-				for (var p : primes) {
-					if (p.compareTo(last) <= 0) {
-						// skip
-					} else {
-						testList.add(p);
-						if (p.multiply(p).compareTo(N) > 0)
-							break;
-					}
-				}
-			}
-			var stream = testList.stream();
-			if (testList.size() > 2048)
-				stream = stream.parallel();
+			Collection<BigInteger> list = primes.upTo(N.sqrt());
+			var stream = list.stream();
 			var ok = !stream.anyMatch(p -> isDivisibleBy(N, p));
-			if (ok && N.compareTo(primes.getLast()) > 0)
+			if (ok)
 				primes.add(N);
 			return ok;
 		}
