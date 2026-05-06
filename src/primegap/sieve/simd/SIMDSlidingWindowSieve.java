@@ -283,7 +283,7 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 					&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1).not()).eq(0)).allTrue()) {
 				int n = Long.bitCount(last_tab);
 				do {
-					last += 1+m.not().lastTrue();
+					last += 1 + m.not().lastTrue();
 					n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1)) + Long.bitCount(v.lane(2))
 							+ Long.bitCount(v.lane(3));
 				} while (last < stop //
@@ -302,7 +302,7 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 					&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1).not()).eq(0)).allTrue()) {
 				int n = Long.bitCount(last_tab);
 				do {
-					last += 1+m.not().lastTrue();
+					last += 1 + m.not().lastTrue();
 					n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1));
 				} while (last < stop //
 						&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1).not()).eq(0)).allTrue());
@@ -350,17 +350,18 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 				SPECIES.broadcast(from >>> 6).eq(idxMask));
 	}
 
+	final int bit_shift = Long.numberOfTrailingZeros(BIT_LENGTH);
+	final int len_shift = Long.numberOfTrailingZeros(SPECIES.length());
+
 	private void updateSeqBigStepsSIMD(long[] tab, int from, long to, long step) {
 		var SPECIES = SIMDSlidingWindowSieve.SPECIES;
-		final int bit_shift = Long.numberOfTrailingZeros(BIT_LENGTH);
-		final int len_shift = Long.numberOfTrailingZeros(SPECIES.length());
 
 		int i = from >>> bit_shift;
-				
+
 		LongVector mask = LongVector.fromArray(SPECIES, tab, i << len_shift);
 		mask = bitset(mask, from, SPECIES);
 
-		for (long pos = from + step; pos < to; pos += step) {
+		for (long pos = from; (pos += step) < to;) {
 			int nextI = (int) (pos >>> bit_shift);
 
 			if (nextI != i) {

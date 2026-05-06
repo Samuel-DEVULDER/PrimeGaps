@@ -6,10 +6,11 @@ import java.util.stream.IntStream;
 /**
  * This implementation is based on the classic Sieve of Eratosthenes algorithm,
  * but it is optimized for finding large primes starting from an arbitrary
- * BigInteger position. The sieve uses a sliding window approach, where a fixed-size
- * bit array represents a range of numbers, and the algorithm marks multiples of
- * discovered primes as composite within that window. As the window slides forward,
- * new primes are discovered and used to mark their multiples in subsequent windows.
+ * BigInteger position. The sieve uses a sliding window approach, where a
+ * fixed-size bit array represents a range of numbers, and the algorithm marks
+ * multiples of discovered primes as composite within that window. As the window
+ * slides forward, new primes are discovered and used to mark their multiples in
+ * subsequent windows.
  */
 public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 	/**
@@ -108,10 +109,7 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 			long mask = 1L << (63 & from);
 
 			// Small prime: multiple odd multiples in window
-			long pos = from + step;// Use long here to avoid overflow in loop
-
-			// first occurrence appear before the first half
-			while (pos < to) {
+			for (long pos = from; (pos += step) < to;) {// Use long here to avoid overflow in loop
 				int nextI = (int) (pos >>> 6);
 
 				// Flush mask when moving to different long
@@ -121,15 +119,14 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 					mask = 0;
 				}
 
-				mask |= (1L << (63 & (int)pos));
-				pos += step;
+				mask |= (1L << (63 & (int) pos));
 			}
 
 			// Apply final mask
 			updateTab(tab, i, mask);
 		}
 	}
-	
+
 	@SuppressWarnings("unused")
 	protected void updateSeqBigSteps(long[] tab, int from, long to, long step) {
 		if (false && to > Integer.MAX_VALUE) {
