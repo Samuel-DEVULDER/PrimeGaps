@@ -40,7 +40,7 @@ class Parallel2SIMDSieve extends SIMDSlidingWindowSieve {
 		final int thr = 16;
 		if (primes.size() > thr) {
 			fillTab(tab, 0);
-			var list = primes.stream().takeWhile(p -> p.compareTo(limit) <= 0).toList();
+			var list = primes.upTo(limit).toList();
 			list.subList(0, thr).forEach(p -> markMultiplesOf(start, tab, p));
 			list.subList(thr, list.size()).parallelStream().forEach(p -> markMultiplesOf(start, tab, p));
 		} else {
