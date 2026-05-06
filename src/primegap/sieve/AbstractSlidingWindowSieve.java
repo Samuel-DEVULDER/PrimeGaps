@@ -377,8 +377,6 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 //				return this.lastPrime = P = get();
 //			}
 		
-			
-			
 			int last = (this.last >>> last_shift), step, stop;
 			final long tab[] = this.tab;
 			long a, b, c, d;
@@ -437,7 +435,6 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				do {
 					n += Long.bitCount(~a);
 					++last;
-
 				} while (last < stop && (a = tab[last + 1]) != -1L);
 				count.accept(n - 1);
 				this.last_tab = Long.highestOneBit(~tab[last]);
