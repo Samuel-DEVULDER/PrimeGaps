@@ -3,6 +3,8 @@ package primegap.sieve.simd.parallel;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import primegap.sieve.SieveGap;
 import primegap.sieve.simd.SIMDSlidingWindowSieve;
@@ -37,10 +39,14 @@ class Parallel2SIMDSieve extends SIMDSlidingWindowSieve {
 
 	@Override
 	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes, BigInteger limit) {
-		final int thr = 16;
+		final int thr = 16 * 8;
 		if (primes.size() > thr) {
 			fillTab(tab, 0);
-			var list = primes.upTo(limit).toList();
+			var col = primes.upTo(limit);
+			
+			@SuppressWarnings("unchecked")
+			List<BigInteger> list = col instanceof List tmp ? tmp : new ArrayList<>(col);
+			
 			list.subList(0, thr).forEach(p -> markMultiplesOf(start, tab, p));
 			list.subList(thr, list.size()).parallelStream().forEach(p -> markMultiplesOf(start, tab, p));
 		} else {
