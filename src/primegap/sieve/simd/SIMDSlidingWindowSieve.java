@@ -255,7 +255,27 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 		} while (pos[0] < winSize);
 	}
 
-	// Mask building
+	static final VectorMask<Long> MASK256_LANE0 = VectorMask.fromLong(LongVector.SPECIES_256, 0b0001L); // lane 0 only
+	static final VectorMask<Long> MASK256_LANE1 = VectorMask.fromLong(LongVector.SPECIES_256, 0b0010L); // lane 1 only
+	static final VectorMask<Long> MASK256_LANE2 = VectorMask.fromLong(LongVector.SPECIES_256, 0b0100L); // lane 2 only
+	static final VectorMask<Long> MASK256_LANE3 = VectorMask.fromLong(LongVector.SPECIES_256, 0b1000L); // lane 3 only
+
+	private static LongVector buildMask256(VectorSpecies<Long> SPECIES, long p0, long p1, long p2, long p3) {
+		return LongVector.zero(SPECIES)//
+				.lanewise(VectorOperators.OR, 1L << (p0 & 63), MASK256_LANE0)
+				.lanewise(VectorOperators.OR, 1L << (p1 & 63), MASK256_LANE1)
+				.lanewise(VectorOperators.OR, 1L << (p2 & 63), MASK256_LANE2)
+				.lanewise(VectorOperators.OR, 1L << (p3 & 63), MASK256_LANE3);
+	}
+
+	static final VectorMask<Long> MASK128_LANE0 = VectorMask.fromLong(LongVector.SPECIES_128, 0b0001L); // lane 0 only
+	static final VectorMask<Long> MASK128_LANE1 = VectorMask.fromLong(LongVector.SPECIES_128, 0b0010L); // lane 1 only
+
+	private static LongVector buildMask128(VectorSpecies<Long> SPECIES, long p0, long p1) {
+		return LongVector.zero(SPECIES)//
+				.lanewise(VectorOperators.OR, 1L << (p0 & 63), MASK128_LANE0)
+				.lanewise(VectorOperators.OR, 1L << (p1 & 63), MASK128_LANE1);
+	}
 
 	private static LongVector buildMask128(long[] buf, long p0, long p1) {
 		buf[0] = 1L << (int) (p0 & 63);
@@ -280,14 +300,17 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 			VectorSpecies<Long> SPECIES = LongVector.SPECIES_256; // 4 longs par vecteur
 			if (gap >= ((step = SPECIES.length()) + 1) * primesPerLong //
 					&& last < (stop = tabLen - step) //
-					&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1).not()).eq(0)).allTrue()) {
+					&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L)).allTrue()) {
 				int n = Long.bitCount(last_tab);
 				do {
+					n +=
+					//v.not().lanewise(VectorOperators.BIT_COUNT).reduceLanes(VectorOperators.ADD);
+					//256 - v.lanewise(VectorOperators.BIT_COUNT).reduceLanes(VectorOperators.ADD);
+					//256 - Long.bitCount(v.lane(0)) - Long.bitCount(v.lane(1)) - Long.bitCount(v.lane(2)) - Long.bitCount(v.lane(3));
+					Long.bitCount(~v.lane(0)) + Long.bitCount(~v.lane(1)) + Long.bitCount(~v.lane(2)) + Long.bitCount(~v.lane(3));
 					last += 1 + m.not().lastTrue();
-					n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1)) + Long.bitCount(v.lane(2))
-							+ Long.bitCount(v.lane(3));
 				} while (last < stop //
-						&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1).not()).eq(0)).allTrue());
+						&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L)).allTrue());
 
 				count.accept(n - 1);
 
@@ -299,13 +322,17 @@ public class SIMDSlidingWindowSieve extends SlidingWindowSieve {
 			SPECIES = LongVector.SPECIES_128; // 2 longs par vecteur
 			if (gap >= ((step = SPECIES.length()) + 1) * primesPerLong //
 					&& last < (stop = tabLen - step) //
-					&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1).not()).eq(0)).allTrue()) {
+					&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L)).allTrue()) {
 				int n = Long.bitCount(last_tab);
 				do {
+					n+=
+					// 128-v.lanewise(VectorOperators.BIT_COUNT).reduceLanes(VectorOperators.ADD);
+					// v.not().lanewise(VectorOperators.BIT_COUNT).reduceLanes(VectorOperators.ADD);
+					128 - Long.bitCount(v.lane(0)) - Long.bitCount(v.lane(1));
+					//Long.bitCount(~v.lane(0)) + Long.bitCount(~v.lane(1));
 					last += 1 + m.not().lastTrue();
-					n += Long.bitCount(v.lane(0)) + Long.bitCount(v.lane(1));
 				} while (last < stop //
-						&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1).not()).eq(0)).allTrue());
+						&& !(m = (v = LongVector.fromArray(SPECIES, tab, last + 1)).eq(-1L)).allTrue());
 
 				count.accept(n - 1);
 
