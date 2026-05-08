@@ -34,7 +34,8 @@ class Parallel2SIMDSieve extends SIMDSlidingWindowSieve {
 
 	@Override
 	protected void updateTab(long[] tab, int i, long mask) {
-		VH.getAndBitwiseOr(tab, i, mask);
+		if ((tab[i] & mask) != mask)
+			VH.getAndBitwiseOr(tab, i, mask);
 	}
 
 	@Override
@@ -43,10 +44,10 @@ class Parallel2SIMDSieve extends SIMDSlidingWindowSieve {
 		if (primes.size() > thr) {
 			fillTab(tab, 0);
 			var col = primes.upTo(limit);
-			
+
 			@SuppressWarnings("unchecked")
 			List<BigInteger> list = col instanceof List tmp ? tmp : new ArrayList<>(col);
-			
+
 			list.subList(0, thr).forEach(p -> markMultiplesOf(start, tab, p));
 			list.subList(thr, list.size()).parallelStream().forEach(p -> markMultiplesOf(start, tab, p));
 		} else {

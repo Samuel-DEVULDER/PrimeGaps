@@ -34,7 +34,8 @@ public class Parallel2Sieve extends SlidingWindowSieve {
 
 	@Override
 	protected void updateTab(long[] tab, int i, long mask) {
-		VH.getAndBitwiseOr(tab, i, mask);
+		if ((tab[i] & mask) != mask)
+			VH.getAndBitwiseOr(tab, i, mask);
 	}
 
 	@Override
@@ -50,7 +51,7 @@ public class Parallel2Sieve extends SlidingWindowSieve {
 		// var b = known.length;
 
 		var col = primes.upTo(limit);
-		var array =  col.toArray(IncreasingBigIntegers.EMPTY);
+		var array = col.toArray(IncreasingBigIntegers.EMPTY);
 
 		@SuppressWarnings("unused")
 		var stream = false ? IntStream.range(0, col.size()) : Java.shuffledRange(0, col.size());
