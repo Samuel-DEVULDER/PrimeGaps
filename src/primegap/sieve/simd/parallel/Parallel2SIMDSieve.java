@@ -48,10 +48,8 @@ class Parallel2SIMDSieve extends SIMDSlidingWindowSieve {
 			@SuppressWarnings("unchecked")
 			List<BigInteger> list = col instanceof List tmp ? tmp : new ArrayList<>(col);
 
-<<<<<<< Upstream, based on branch 'orig' of https://github.com/Samuel-DEVULDER/PrimeGaps.git
-=======
+
 			// sequential for low steps
->>>>>>> d9028d5 Refactor Parallel2SIMDSieve to adjust threshold for SIMD benefits and improve step handling
 			list.subList(0, thr).forEach(p -> markMultiplesOf(start, tab, p));
 
 			// parallel for big steps
