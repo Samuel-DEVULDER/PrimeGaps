@@ -40,7 +40,7 @@ class Parallel2SIMDSieve extends SIMDSlidingWindowSieve {
 
 	@Override
 	protected void doMarkAllMultiples(BigInteger start, long[] tab, IncreasingBigIntegers primes, BigInteger limit) {
-		final int thr = 16 * 8;
+		final int thr = 96; // steps>512 --> no benefit of SIMD
 		if (primes.size() > thr) {
 			fillTab(tab, 0);
 			var col = primes.upTo(limit);
@@ -48,9 +48,16 @@ class Parallel2SIMDSieve extends SIMDSlidingWindowSieve {
 			@SuppressWarnings("unchecked")
 			List<BigInteger> list = col instanceof List tmp ? tmp : new ArrayList<>(col);
 
+<<<<<<< Upstream, based on branch 'orig' of https://github.com/Samuel-DEVULDER/PrimeGaps.git
+=======
+			// sequential for low steps
+>>>>>>> d9028d5 Refactor Parallel2SIMDSieve to adjust threshold for SIMD benefits and improve step handling
 			list.subList(0, thr).forEach(p -> markMultiplesOf(start, tab, p));
+
+			// parallel for big steps
 			list.subList(thr, list.size()).parallelStream().forEach(p -> markMultiplesOf(start, tab, p));
 		} else {
+			// sequential: SIMD might help.
 			super.doMarkAllMultiples(start, tab, primes, limit);
 		}
 	}
