@@ -111,9 +111,9 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 	protected void markMultiplesOfLong(long start, long tab[], long p) {
 		long n = start % p;
 		if (n != 0)
-			n = p-n;
+			n = p - n;
 		if ((n & 1) != 0)
-			++n;
+			n += p;
 
 		if (n >= windowRange)
 			return;
