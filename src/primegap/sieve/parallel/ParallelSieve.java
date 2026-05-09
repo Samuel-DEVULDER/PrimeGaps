@@ -1,6 +1,5 @@
 package primegap.sieve.parallel;
 
-import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
 import primegap.sieve.SlidingWindowSieve;
 import primegap.util.Java;
@@ -42,17 +41,5 @@ class ParallelSieve extends SlidingWindowSieve {
 			Java.rangeWithStep(from, to, step).parallel()
 					.forEach(bitpos -> updateTab(tab, (int) (bitpos >>> 6), 1L << (63 & bitpos)));
 		}
-	}
-	
-	static public class ParallelSieveGap extends SieveGap {
-		@Override
-		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size,boolean doubleBuffer) {
-			return new ParallelSieve(this, size, doubleBuffer);
-		}
-
-		public static void main(String[] args) {
-			new ParallelSieveGap().run();
-		}
-
 	}
 }
