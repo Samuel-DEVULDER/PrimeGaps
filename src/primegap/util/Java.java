@@ -382,7 +382,7 @@ public class Java {
 
 	static List<Long> timeStack = new ArrayList<>();
 	public static boolean isTTY = System.console() != null;
-	public static String CEOL = isTTY ? "\\033[K" : new String("");
+	public static String CEOL = new String(isTTY ? "                                                " : "");
 	private static int maxLen = 0;
 
 	public static boolean dbg(Object... args) {
