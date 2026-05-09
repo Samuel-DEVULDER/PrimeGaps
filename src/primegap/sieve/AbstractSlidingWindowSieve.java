@@ -162,7 +162,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 
 		// Sieve limit: sqrt(start + windowRange)
 		var windowEnd_bigint = this.start.add(windowRange_bigint);
-		windowEndIsLong = windowEnd_bigint.bitLength() <= 62;
+		windowEndIsLong = windowEnd_bigint.add(prefetch != null ? windowRange_bigint : ZERO).bitLength() <= 62;
 		limit = windowEnd_bigint.sqrt();
 		if (primes.isFull()) {
 //			Java.dbg("start=",start," limit=", limit, " last=", primes.getLast());
@@ -380,7 +380,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 //				setStart(v(l));
 //				return this.lastPrime = P = get();
 //			}
-		
+
 			int last = (this.last >>> last_shift), step, stop;
 			final long tab[] = this.tab;
 			long a, b, c, d;
@@ -392,21 +392,22 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 				do {
 //					n += Long.bitCount(~a) + Long.bitCount(~b) + Long.bitCount(~c) + Long.bitCount(~d);
 //					last += 4;	
-					
-					if(d!=-1L) {
+
+					if (d != -1L) {
 						n += Long.bitCount(~a) + Long.bitCount(~b) + Long.bitCount(~c) + Long.bitCount(~d);
-						last += 4;	
-					} else if(c!=-1L) {
+						last += 4;
+					} else if (c != -1L) {
 						n += Long.bitCount(~a) + Long.bitCount(~b) + Long.bitCount(~c);
 						last += 3;
-					} else if(b !=-1L) {
+					} else if (b != -1L) {
 						n += Long.bitCount(~a) + Long.bitCount(~b);
 						last += 2;
 					} else {
 						n += Long.bitCount(~a);
 						last += 1;
 					}
-				} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3]) & (d = tab[last + 4])) != -1L);
+				} while (last < stop && ((a = tab[last + 1]) & (b = tab[last + 2]) & (c = tab[last + 3])
+						& (d = tab[last + 4])) != -1L);
 				count.accept(n - 1);
 				this.last_tab = Long.highestOneBit(~tab[last]);
 				this.last = last << last_shift;
@@ -418,7 +419,7 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 					&& ((a = tab[last + 1]) & (b = tab[last + 2])) != -1L) {
 				int n = Long.bitCount(last_tab);
 				do {
-					if(b !=-1L) {
+					if (b != -1L) {
 						n += Long.bitCount(~a) + Long.bitCount(~b);
 						last += 2;
 					} else {
