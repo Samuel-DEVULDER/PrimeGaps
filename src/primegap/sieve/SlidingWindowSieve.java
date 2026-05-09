@@ -73,7 +73,7 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 	 * @param p an odd prime number
 	 */
 	protected void markMultiplesOf(BigInteger start, long tab[], BigInteger p) {
-		if (windowIs62bits) {
+		if (windowEndIsLong) {
 			markMultiplesOfLong(start.longValue(), tab, p.longValue());
 		} else {
 			markMultiplesOfBigInt(start, tab, p);
