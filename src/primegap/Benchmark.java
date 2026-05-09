@@ -138,9 +138,11 @@ public class Benchmark {
 			} else {
 				var s = String.format(Locale.ENGLISH, "%,.1f", a.get().speed).replace(',', ' ');
 
-				System.out.printf(Locale.ENGLISH, "%s %s...%s %s p/s%n", //
-						v, ".".repeat(longestName - v.length()), //
-						" ".repeat(longestSpeed - s.length()), s);
+				System.out.printf(Locale.ENGLISH, "%s %s%s %s p/s%n", //
+						v, //
+						".".repeat(3 + longestName - v.length()), //
+						" ".repeat(longestSpeed - s.length()), //
+						s);
 			}
 		});
 	}
