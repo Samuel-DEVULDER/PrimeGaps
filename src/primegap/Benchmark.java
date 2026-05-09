@@ -4,6 +4,7 @@ import java.io.PrintStream;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.SequencedMap;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
@@ -18,7 +19,7 @@ import primegap.util.NullStream;
  */
 public class Benchmark {
 	final Duration RUNTIME;
-	final Duration PAUSE = Duration.ofSeconds(10);
+	final Duration PAUSE;
 
 	Benchmark() {
 		this("90");
@@ -26,6 +27,7 @@ public class Benchmark {
 
 	Benchmark(Duration duration) {
 		RUNTIME = duration.abs();
+		PAUSE = RUNTIME.dividedBy(20);
 	}
 
 	Benchmark(String duration) {
@@ -76,7 +78,7 @@ public class Benchmark {
 	}
 
 	@SafeVarargs
-	final void run(Class<? extends IterativePrimeGap>... classes) throws Exception {
+	final Collection<Algo> run(Class<? extends IterativePrimeGap>... classes) throws Exception {
 		Collection<Algo> col = new TreeSet<>();
 		int i = 0;
 		for (var cls : classes) {
@@ -115,13 +117,33 @@ public class Benchmark {
 			duration /= 1e9; // sec
 			long numPrimes = impl.getPrimesCount();
 
-			Thread.sleep(PAUSE);
 			System.out.printf(Locale.ENGLISH, "%,d primes in %.1f secs%n", numPrimes, duration);
+			Thread.sleep(PAUSE);
 			col.add(new Algo(impl.getClass().getName(), numPrimes / duration));
 			System.gc();
 		}
 
 		printResult(col);
+
+		return col;
+	}
+
+	static void printHierarchyResult(SequencedMap<Class<? extends AbstractPrimeGap>, String> hierarchy,
+			Collection<Algo> col) {
+		int longestName = hierarchy.values().stream().mapToInt(String::length).max().orElse(0);
+		int longestSpeed = String.format(Locale.ENGLISH, "%,.1f", //
+				col.stream().mapToDouble(a -> a.speed).max().orElse(0)).length();
+		hierarchy.forEach((k, v) -> {
+			var a = col.stream().filter(x -> x.name.equals(k.getName())).findFirst();
+			if (a.isEmpty()) {
+				System.out.printf(Locale.ENGLISH, "%s%n", v);
+			} else {
+				var s = String.format(Locale.ENGLISH, "%,.1f", a.get().speed).replace(',', ' ');
+
+				System.out.printf(Locale.ENGLISH, "%s %s... %s p/s%n", v,
+						".".repeat(longestName + longestSpeed - v.length() - s.length()), s);
+			}
+		});
 	}
 
 	static void printResult(Collection<Algo> col) {
@@ -136,9 +158,13 @@ public class Benchmark {
 			Machine.preventSleep();
 			Class<? extends IterativePrimeGap> root = IterativePrimeGap.class;
 			var classes = silentRun(null, () -> Java.findSubclasses(root));
-			Java.gettHierarchy(AbstractPrimeGap.class).forEach((k, v) -> System.err.println(v));
+			SequencedMap<Class<? extends AbstractPrimeGap>, String> hierarchy = Java
+					.gettHierarchy(AbstractPrimeGap.class);
+			hierarchy.forEach((k, v) -> System.err.println(v));
 //			new Benchmark().run(SIMDSieveGap.class, SieveGap.class);
-			new Benchmark(args.length == 0 ? "90" : args[0]).run(classes);
+			var col = new Benchmark(args.length == 0 ? "90" : args[0]).run(classes);
+			System.out.println();
+			printHierarchyResult(hierarchy, col);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} catch (AssertionError e) {
