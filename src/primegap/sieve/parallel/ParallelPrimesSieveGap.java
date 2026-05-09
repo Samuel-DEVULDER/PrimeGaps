@@ -5,17 +5,17 @@ import java.math.BigInteger;
 import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
 
-public class Parallel2SieveGap extends SieveGap {
+public class ParallelPrimesSieveGap extends SieveGap {
 	@Override
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doubleBuffer) {
-		return new Parallel2Sieve(this, size, doubleBuffer);
+		return new ParallelPrimesSieve(this, size, doubleBuffer);
 	}
 
 	public static void main(String[] args) {
-		new Parallel2SieveGap().run();
+		new ParallelPrimesSieveGap().run();
 	}
 	
-	static public class DoubleBuffer extends Parallel2SieveGap {
+	static public class DoubleBuffer extends ParallelPrimesSieveGap {
 		@Override
 		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 			return newSlidingWindowSieve(size, true);
@@ -26,7 +26,7 @@ public class Parallel2SieveGap extends SieveGap {
 		}
 	}
 	
-	public static class FastForward extends Parallel2SieveGap {
+	public static class FastForward extends ParallelPrimesSieveGap {
 		public FastForward() {
 			gapCounts = null;
 		}

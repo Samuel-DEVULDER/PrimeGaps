@@ -16,8 +16,8 @@ import primegap.util.Java;
  * Parallelism is only started when the primes are bigger enough so that there
  * is only one bit to update per long int.
  */
-public class Parallel2Sieve extends SlidingWindowSieve {
-	public Parallel2Sieve(SieveGap sieve, int size, boolean doubleBuffer) {
+public class ParallelPrimesSieve extends SlidingWindowSieve {
+	public ParallelPrimesSieve(SieveGap sieve, int size, boolean doubleBuffer) {
 		super(sieve, size, doubleBuffer);
 	}
 

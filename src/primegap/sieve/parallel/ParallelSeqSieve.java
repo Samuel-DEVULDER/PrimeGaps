@@ -12,8 +12,8 @@ import primegap.util.Java;
  * Java's parallel streams to efficiently update the sieve table across multiple
  * threads, improving performance for larger step sizes.
  */
-class ParallelSieve extends SlidingWindowSieve {
-	public ParallelSieve(SieveGap sieve, int size, boolean doubleBuffer) {
+class ParallelSeqSieve extends SlidingWindowSieve {
+	public ParallelSeqSieve(SieveGap sieve, int size, boolean doubleBuffer) {
 		super(sieve, size, doubleBuffer);
 	}
 

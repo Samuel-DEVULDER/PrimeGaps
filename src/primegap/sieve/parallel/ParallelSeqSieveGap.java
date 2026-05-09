@@ -13,14 +13,14 @@ import primegap.sieve.SieveGap;
  * single sliding window sieve that is not double-buffered, and it performs
  * updates in parallel when the step size is large enough.
  */
-public class ParallelSieveGap extends SieveGap {
+public class ParallelSeqSieveGap extends SieveGap {
 	@Override
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size,boolean doubleBuffer) {
-		return new ParallelSieve(this, size, doubleBuffer);
+		return new ParallelSeqSieve(this, size, doubleBuffer);
 	}
 
 	public static void main(String[] args) {
-		new ParallelSieveGap().run();
+		new ParallelSeqSieveGap().run();
 	}
 
 	/**
@@ -32,7 +32,7 @@ public class ParallelSieveGap extends SieveGap {
 	 * that is double-buffered, and it performs updates in parallel when the step
 	 * size is large enough.
 	 */
-	static public class DoubleBuffer extends ParallelSieveGap {
+	static public class DoubleBuffer extends ParallelSeqSieveGap {
 		@Override
 		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 			return newSlidingWindowSieve(size, true);
@@ -43,7 +43,7 @@ public class ParallelSieveGap extends SieveGap {
 		}
 	}
 	
-	public static class FastForward extends ParallelSieveGap {
+	public static class FastForward extends ParallelSeqSieveGap {
 		public FastForward() {
 			gapCounts = null;
 		}
