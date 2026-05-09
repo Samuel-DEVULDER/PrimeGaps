@@ -261,18 +261,31 @@ abstract class AbstractWheelSieveGap extends SieveGap {
 		private String name;
 
 		protected void markMultiplesOf(BigInteger start, long tab[], BigInteger p) {
-			// Find offset to first multiple of p >= start
-			BigInteger n = start.remainder(p);
-			if (n.signum() > 0)
-				n = p.subtract(n);
-			// n = 0..p-1
+			long num;
+			long pLong;
 
-			if (n.compareTo(windowRange_bigint) >= 0)
-				return;
+			if (windowEndIsLong) {
+				// Find offset to first multiple of p >= start
+				pLong = p.longValue();
+				num = start.longValue() % pLong;
+				if (num != 0)
+					num = pLong - num;
+				if (num >= windowRange)
+					return;
+			} else {
+				// Find offset to first multiple of p >= start
+				BigInteger n = start.remainder(p);
+				if (n.signum() > 0)
+					n = p.subtract(n);
+				// n = 0..p-1
 
-			// Convert to bit position
-			long num = n.longValue();
-			long pLong = p.longValue();
+				if (n.compareTo(windowRange_bigint) >= 0)
+					return;
+
+				// Convert to bit position
+				num = n.longValue();
+				pLong = p.longValue();
+			}
 
 			final int MOD = MOD();
 
