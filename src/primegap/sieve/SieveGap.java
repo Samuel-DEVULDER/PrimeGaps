@@ -223,4 +223,9 @@ public class SieveGap extends IterativePrimeGap {
 			}
 		}
 	}
+	
+	protected GapInfo newGapInfo(BigInteger prime, int gap) {
+		return new GapInfo(prime, gap, gapCounts!=null || !supplier.primes.isFull());
+	}
+
 }

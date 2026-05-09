@@ -115,7 +115,7 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 
 	public long[] gapCounts;
 
-	record GapInfo(BigInteger prime, int gap, boolean certain) {
+	public record GapInfo(BigInteger prime, int gap, boolean certain) {
 	}
 
 	public GapInfo[] gapPrimes;
@@ -190,8 +190,8 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 		}
 		for (int i = 1; i <= max; i++) {
 			BigInteger p = gapPrimes[i] == null ? null : gapPrimes[i].prime;
+			boolean unsure = gapPrimes[i] == null ? false : !gapPrimes[i].certain;
 			boolean rec = false;
-			boolean unsure = false;
 			if (p != null) {
 				rec = p.compareTo(prev) < 0;
 				prev = p;
