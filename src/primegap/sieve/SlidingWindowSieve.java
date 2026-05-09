@@ -120,8 +120,6 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 
 		int bitPos = ((int) n >>> 1);
 
-		// Check if p is small enough to have multiple occurrences
-		// that is p < windowRange/2 = windowSize
 		if (p >= windowSize) {
 			updateTab(tab, bitPos >>> 6, 1L << (bitPos & 63));
 		} else {
