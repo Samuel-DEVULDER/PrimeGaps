@@ -73,6 +73,14 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 	 * @param p an odd prime number
 	 */
 	protected void markMultiplesOf(BigInteger start, long tab[], BigInteger p) {
+		if (windowIs62bits) {
+			markMultiplesOfLong(start.longValue(), tab, p.longValue());
+		} else {
+			markMultiplesOfBigInt(start, tab, p);
+		}
+	}
+
+	protected void markMultiplesOfBigInt(BigInteger start, long tab[], BigInteger p) {
 		// Find offset to first multiple of p >= start
 		BigInteger n = start.remainder(p);
 		if (n.signum() > 0)
@@ -97,6 +105,27 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 			updateTab(tab, bitPos >>> 6, 1L << (bitPos & 63));
 		} else {
 			updateSeq(tab, bitPos, windowSize, p.longValue());
+		}
+	}
+
+	protected void markMultiplesOfLong(long start, long tab[], long p) {
+		long n = start % p;
+		if (n != 0)
+			n = p-n;
+		if ((n & 1) != 0)
+			++n;
+
+		if (n >= windowRange)
+			return;
+
+		int bitPos = ((int) n >>> 1);
+
+		// Check if p is small enough to have multiple occurrences
+		// that is p < windowRange/2 = windowSize
+		if (p >= windowSize) {
+			updateTab(tab, bitPos >>> 6, 1L << (bitPos & 63));
+		} else {
+			updateSeq(tab, bitPos, windowSize, p);
 		}
 	}
 

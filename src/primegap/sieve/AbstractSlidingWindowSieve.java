@@ -100,6 +100,8 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 	/** do we need to continue marking next primes */
 	protected boolean doMarking = true;
 
+	protected boolean windowIs62bits;
+
 	protected AbstractSlidingWindowSieve(SieveGap sieve, int size, long range, boolean doubleBuffer) {
 		this.sieve = sieve;
 
@@ -159,7 +161,9 @@ public abstract class AbstractSlidingWindowSieve implements Supplier<BigInteger>
 		// }
 
 		// Sieve limit: sqrt(start + windowRange)
-		limit = start.add(windowRange_bigint).sqrt();
+		var windowEnd_bigint = this.start.add(windowRange_bigint);
+		windowIs62bits = windowEnd_bigint.bitLength() <= 62;
+		limit = windowEnd_bigint.sqrt();
 		if (primes.isFull()) {
 //			Java.dbg("start=",start," limit=", limit, " last=", primes.getLast());
 			if (primes.getLast().compareTo(limit) < 0)
