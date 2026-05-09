@@ -116,14 +116,12 @@ public class Benchmark {
 
 			duration /= 1e9; // sec
 			long numPrimes = impl.getPrimesCount();
+			col.add(new Algo(impl.getClass().getName(), numPrimes / duration));
 
 			System.out.printf(Locale.ENGLISH, "%,d primes in %.1f secs%n", numPrimes, duration);
-			Thread.sleep(PAUSE);
-			col.add(new Algo(impl.getClass().getName(), numPrimes / duration));
 			System.gc();
+			Thread.sleep(PAUSE);
 		}
-
-		printResult(col);
 
 		return col;
 	}
@@ -140,8 +138,9 @@ public class Benchmark {
 			} else {
 				var s = String.format(Locale.ENGLISH, "%,.1f", a.get().speed).replace(',', ' ');
 
-				System.out.printf(Locale.ENGLISH, "%s %s... %s p/s%n", v,
-						".".repeat(longestName + longestSpeed - v.length() - s.length()), s);
+				System.out.printf(Locale.ENGLISH, "%s %s...%s %s p/s%n", //
+						v, ".".repeat(longestName - v.length()), //
+						" ".repeat(longestSpeed - s.length()), s);
 			}
 		});
 	}
@@ -165,6 +164,8 @@ public class Benchmark {
 			var col = new Benchmark(args.length == 0 ? "90" : args[0]).run(classes);
 			System.out.println();
 			printHierarchyResult(hierarchy, col);
+			System.out.println();
+			printResult(col);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} catch (AssertionError e) {
