@@ -199,7 +199,7 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 
 			out.printf("%-4d  %" + countWidth + "s%c %6d %6.2f%n", i * 2, //
 					p == null ? "" : Java.toString(p), //
-					rec ? '*' : unsure ? '?' : ' ', //
+					rec ? '*' : unsure ? '~' : ' ', //
 					p == null ? 0 : p.toString().length(), //
 					p == null ? Double.NaN : i * 2.0 / Math.log(p.doubleValue()));
 		}
