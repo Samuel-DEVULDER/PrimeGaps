@@ -9,6 +9,7 @@ import java.util.TreeSet;
 import java.util.function.Supplier;
 
 import primegap.sieve.SieveGap;
+import primegap.sieve.wheel.AbstractWheelSieveGap;
 import primegap.util.Java;
 import primegap.util.Machine;
 import primegap.util.NullStream;
@@ -81,8 +82,13 @@ public class Benchmark {
 	@SafeVarargs
 	final Collection<Algo> run(Class<? extends IterativePrimeGap>... classes) throws Exception {
 		Collection<Algo> col = new TreeSet<>();
-		int i = 0;
+		int i = 0, num = classes.length;
 		for (var cls : classes) {
+			if (!accepts(cls)) {
+				--num;
+				continue;
+			}
+
 			final var cst = cls.getConstructor();
 			IterativePrimeGap impl = silentRun(null, () -> {
 				try {
@@ -92,7 +98,7 @@ public class Benchmark {
 				}
 			});
 			impl.doStat = false;
-			System.out.printf("%d/%d Testing %s (%s)...", ++i, classes.length, Java.getSimpleName(cls), impl.name());
+			System.out.printf("%d/%d Testing %s (%s)...", ++i, num, Java.getSimpleName(cls), impl.name());
 
 			Thread stopWatch = new Thread() {
 				public void run() {
@@ -155,6 +161,10 @@ public class Benchmark {
 		}
 	}
 
+	protected boolean accepts(Class<?> cls) {
+		return SieveGap.class.isAssignableFrom(cls) && !AbstractWheelSieveGap.class.isAssignableFrom(cls);
+	}
+
 	public static void main(String[] args) {
 		try {
 			Machine.preventSleep();
@@ -169,8 +179,8 @@ public class Benchmark {
 			printHierarchyResult(hierarchy, col);
 			System.out.println();
 			printResult(col);
-			System.out.println("SieveGap.defaultWindowSize="+SieveGap.defaultWindowSize);
-			System.out.println("Date="+java.time.LocalDate.now());
+			System.out.println("SieveGap.defaultWindowSize=" + SieveGap.defaultWindowSize);
+			System.out.println("Date=" + java.time.LocalDate.now());
 		} catch (Exception e) {
 			e.printStackTrace();
 		} catch (AssertionError e) {
