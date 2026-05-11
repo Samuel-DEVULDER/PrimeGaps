@@ -8,6 +8,7 @@ import java.util.SequencedMap;
 import java.util.TreeSet;
 import java.util.function.Supplier;
 
+import primegap.sieve.SieveGap;
 import primegap.util.Java;
 import primegap.util.Machine;
 import primegap.util.NullStream;
@@ -168,6 +169,8 @@ public class Benchmark {
 			printHierarchyResult(hierarchy, col);
 			System.out.println();
 			printResult(col);
+			System.out.println("SieveGap.defaultWindowSize="+SieveGap.defaultWindowSize);
+			System.out.println("Date="+java.time.LocalDate.now());
 		} catch (Exception e) {
 			e.printStackTrace();
 		} catch (AssertionError e) {
