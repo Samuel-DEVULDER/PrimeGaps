@@ -20,7 +20,7 @@ import primegap.sieve.SieveGap;
  * methods for mapping between bit positions and candidate numbers based on the
  * wheel's properties.
  */
-abstract class AbstractWheelSieveGap extends SieveGap {
+public abstract class AbstractWheelSieveGap extends SieveGap {
 
 	// =========================================================================
 	// Wheel record

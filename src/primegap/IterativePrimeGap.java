@@ -234,7 +234,8 @@ public abstract class IterativePrimeGap extends AbstractPrimeGap {
 		}
 		if (chkTimeout) {
 			chkTimeout = false;
-			System.err.flush();
+			if(!isStopping())
+				System.err.flush();
 			return isStopping();
 		} else {
 			return false;

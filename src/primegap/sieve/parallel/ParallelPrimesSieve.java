@@ -56,7 +56,7 @@ public class ParallelPrimesSieve extends SlidingWindowSieve {
 		@SuppressWarnings("unused")
 		var stream = false ? IntStream.range(0, col.size()) : Java.shuffledRange(0, col.size());
 		stream.parallel().forEach(i -> markMultiplesOf(start, tab, array[i]));
-		assert Java.dbg("all(parallel)=", Java.dbgToc(), "ms                  ");
+		assert Java.dbg("all(parallel, ",col.size(),")=", Java.dbgToc(), "ms                  ");
 	}
 
 }
