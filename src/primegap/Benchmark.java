@@ -2,6 +2,7 @@ package primegap;
 
 import java.io.PrintStream;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.SequencedMap;
@@ -81,14 +82,10 @@ public class Benchmark {
 
 	@SafeVarargs
 	final Collection<Algo> run(Class<? extends IterativePrimeGap>... classes) throws Exception {
+		var filtered = Arrays.asList(classes).stream().filter(this::accepts).toList();
 		Collection<Algo> col = new TreeSet<>();
-		int i = 0, num = classes.length;
-		for (var cls : classes) {
-			if (!accepts(cls)) {
-				--num;
-				continue;
-			}
-
+		int i = 0;
+		for (var cls : filtered) {
 			final var cst = cls.getConstructor();
 			IterativePrimeGap impl = silentRun(null, () -> {
 				try {
@@ -98,7 +95,7 @@ public class Benchmark {
 				}
 			});
 			impl.doStat = false;
-			System.out.printf("%d/%d Testing %s (%s)...", ++i, num, Java.getSimpleName(cls), impl.name());
+			System.out.printf("%d/%d Testing %s (%s)...", ++i, filtered.size(), Java.getSimpleName(cls), impl.name());
 
 			Thread stopWatch = new Thread() {
 				public void run() {
