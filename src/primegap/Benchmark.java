@@ -10,6 +10,7 @@ import java.util.TreeSet;
 import java.util.function.Supplier;
 
 import primegap.sieve.SieveGap;
+import primegap.sieve.parallel.ParallelSeqSieveGap;
 import primegap.sieve.wheel.AbstractWheelSieveGap;
 import primegap.util.Java;
 import primegap.util.Machine;
@@ -159,7 +160,7 @@ public class Benchmark {
 	}
 
 	protected boolean accepts(Class<?> cls) {
-		return SieveGap.class.isAssignableFrom(cls) && !AbstractWheelSieveGap.class.isAssignableFrom(cls);
+		return SieveGap.class.isAssignableFrom(cls) && !AbstractWheelSieveGap.class.isAssignableFrom(cls) && !ParallelSeqSieveGap.class.isAssignableFrom(cls);
 	}
 
 	public static void main(String[] args) {
