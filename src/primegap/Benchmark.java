@@ -160,7 +160,8 @@ public class Benchmark {
 	}
 
 	protected boolean accepts(Class<?> cls) {
-		return SieveGap.class.isAssignableFrom(cls) && !AbstractWheelSieveGap.class.isAssignableFrom(cls) && !ParallelSeqSieveGap.class.isAssignableFrom(cls);
+		return SieveGap.class.isAssignableFrom(cls) && !AbstractWheelSieveGap.class.isAssignableFrom(cls)
+				&& !ParallelSeqSieveGap.class.isAssignableFrom(cls);
 	}
 
 	public static void main(String[] args) {
@@ -172,12 +173,14 @@ public class Benchmark {
 					.gettHierarchy(AbstractPrimeGap.class);
 			hierarchy.forEach((k, v) -> System.err.println(v));
 //			new Benchmark().run(SIMDSieveGap.class, SieveGap.class);
-			var col = new Benchmark(args.length == 0 ? "90" : args[0]).run(classes);
+			var bench = new Benchmark(args.length == 0 ? "90" : args[0]);
+			var col = bench.run(classes);
 			System.out.println();
 			printHierarchyResult(hierarchy, col);
 			printResult(col);
 			System.out.println();
 			System.out.println("Date=" + java.time.LocalDate.now() + " " + java.time.LocalTime.now());
+			System.out.println("Durtion=" + bench.RUNTIME);
 			System.out.println("SieveGap.defaultWindowSize=" + SieveGap.defaultWindowSize);
 		} catch (Exception e) {
 			e.printStackTrace();
