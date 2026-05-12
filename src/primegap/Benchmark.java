@@ -174,10 +174,10 @@ public class Benchmark {
 			var col = new Benchmark(args.length == 0 ? "90" : args[0]).run(classes);
 			System.out.println();
 			printHierarchyResult(hierarchy, col);
-			System.out.println();
 			printResult(col);
+			System.out.println();
+			System.out.println("Date=" + java.time.LocalDate.now() + " " + java.time.LocalTime.now());
 			System.out.println("SieveGap.defaultWindowSize=" + SieveGap.defaultWindowSize);
-			System.out.println("Date=" + java.time.LocalDate.now());
 		} catch (Exception e) {
 			e.printStackTrace();
 		} catch (AssertionError e) {
