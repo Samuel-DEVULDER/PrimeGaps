@@ -50,7 +50,7 @@ public class SieveGap extends IterativePrimeGap {
 	// 1<<18 -> 6,028,986.7
 	// 1<<17 -> 5,560,017.5
 
-	public static int defaultWindowSize = (int)(Machine.getL2CacheSize()/Long.SIZE);
+	public static int defaultWindowSize = (int)(Machine.getL2CacheSize()/Long.BYTES);
 	protected AbstractSlidingWindowSieve supplier = newSlidingWindowSieve(defaultWindowSize);
 
 	@Override
