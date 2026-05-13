@@ -1,6 +1,8 @@
 package primegap.util;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
@@ -10,11 +12,11 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.LongSupplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A utility class to gather and print machine information, including CPU model
@@ -167,49 +169,6 @@ public class Machine {
 		out.printf("%n=> Optimal sieve size : %d KB%n%n", optimal / 1024);
 		return optimal;
 	}
-	
-	public static long getL2CacheSize() {
-	    String os = System.getProperty("os.name").toLowerCase();
-	    
-	    if (os.contains("linux")) {
-	        // /sys/devices/system/cpu/cpu0/cache/index2/size
-	        try {
-	            String s = Files.readString(Path.of(
-	                "/sys/devices/system/cpu/cpu0/cache/index2/size")).trim();
-	            // Format : "512K" ou "2048K" ou "2M"
-	            
-	            // Formats possibles : "512K", "2048K", "2M", "30720K"
-	            s = s.trim().toUpperCase();
-	            if (s.endsWith("K")) return Long.parseLong(s.replace("K",""))<<10;
-	            if (s.endsWith("M")) return Long.parseLong(s.replace("M",""))<<20;
-	            if (s.endsWith("G")) return Long.parseLong(s.replace("M",""))<<30;
-	            return Long.parseLong(s);
-	        } catch (IOException e) {}	        
-	    } else if (os.contains("win")) {
-	        // WMIC : wmic cpu get L2CacheSize
-	        try {
-	            @SuppressWarnings("deprecation")
-				Process p = Runtime.getRuntime().exec(
-	                "wmic cpu get L2CacheSize /value");
-	            String out = new String(p.getInputStream().readAllBytes());
-	            // Format : "L2CacheSize=512\r\n"
-	            String val = out.replaceAll(".*L2CacheSize=(\\d+).*", "$1").trim();
-	            return Long.parseLong(val) * 1024L; // WMIC retourne des KB
-	        } catch (Exception e) {}
-	        
-	    } else if (os.contains("mac")) {
-	        // sysctl hw.l2cachesize
-	        try {
-	            @SuppressWarnings("deprecation")
-				Process p = Runtime.getRuntime().exec(
-	                "sysctl hw.l2cachesize");
-	            String out = new String(p.getInputStream().readAllBytes());
-	            return Long.parseLong(out.split(":")[1].trim());
-	        } catch (Exception e) {}
-	    }
-	    
-	    return 512 * 1024L; // fallback
-	}
 
 	public static long getCpuTimeNano() {
 		return timer.getAsLong();
@@ -309,4 +268,201 @@ public class Machine {
 		awake.allowSleep();
 	}
 
+	/**
+	 * Detects the L2 cache size PER PHYSICAL CORE, in a cross-platform manner.
+	 *
+	 * Problem: on Windows, WMIC/PowerShell returns the *total* L2 (sum of all
+	 * cores), whereas on Linux/macOS, APIs usually return the per-core value. => We
+	 * always normalize to "per physical core".
+	 *
+	 * IMPORTANT: never use Runtime.getRuntime().availableProcessors() as a
+	 * substitute for physical core count — it returns logical threads (e.g. 28 on a
+	 * 20-core i7-13850HX with Hyper-Threading), which would produce a wrong
+	 * per-core value.
+	 */
+	public static class Cache {
+
+		// Per-core floor/ceiling (realistic values 2005-2026)
+		private static final long L2_PER_CORE_MIN_BYTES = 128L * 1024; // 128 KB
+		private static final long L2_PER_CORE_MAX_BYTES = 4L * 1024 * 1024; // 4 MB
+
+		// -------------------------------------------------------------------------
+		// Main API
+		// -------------------------------------------------------------------------
+
+		/**
+		 * Returns the L2 cache size per physical core, in bytes. Uses the first
+		 * strategy that succeeds, in order: 1. Linux :
+		 * /sys/devices/system/cpu/cpu0/cache/ 2. macOS : sysctl hw.l2cachesize 3.
+		 * Windows: PowerShell Get-CimInstance Win32_Processor (preferred) 4. Windows:
+		 * wmic cpu get L2CacheSize,NumberOfCores (fallback) 5. Default: 512 KB
+		 *
+		 * The fallback NEVER uses availableProcessors() as a core count substitute,
+		 * because that returns logical threads, not physical cores.
+		 */
+		public static int detectL2CachePerCoreBytes() {
+			String os = System.getProperty("os.name", "").toLowerCase();
+			try {
+				if (os.contains("linux"))
+					return clamp(linuxL2PerCore());
+				if (os.contains("mac"))
+					return clamp(macL2PerCore());
+				if (os.contains("win"))
+					return clamp(windowsL2PerCore());
+			} catch (Exception ignored) {
+			}
+			return 512 * 1024; // ultimate default
+		}
+
+		/**
+		 * Recommended sieve window size (number of longs). ws = L2PerCore / Long.BYTES
+		 */
+		public static long recommendedWindowSize() {
+			return detectL2CachePerCoreBytes() / Long.BYTES;
+		}
+
+		// -------------------------------------------------------------------------
+		// Linux: /sys/devices/system/cpu/cpu0/cache/index*/
+		// -------------------------------------------------------------------------
+		private static long linuxL2PerCore() throws Exception {
+			// Look for level 2 among the cpu0 cache entries
+			for (int idx = 0; idx <= 4; idx++) {
+				String levelFile = "/sys/devices/system/cpu/cpu0/cache/index" + idx + "/level";
+				String sizeFile = "/sys/devices/system/cpu/cpu0/cache/index" + idx + "/size";
+				String level = readFile(levelFile).trim();
+				if ("2".equals(level)) {
+					String sizeStr = readFile(sizeFile).trim(); // e.g. "512K" or "2048K"
+					return parseSizeKB(sizeStr) * 1024L;
+				}
+			}
+			throw new Exception("L2 cache not found in /sys");
+		}
+
+		// -------------------------------------------------------------------------
+		// macOS: sysctl -n hw.l2cachesize (returns directly per core, in bytes)
+		// -------------------------------------------------------------------------
+		private static long macL2PerCore() throws Exception {
+			String out = runCommand("sysctl", "-n", "hw.l2cachesize");
+			return Long.parseLong(out.trim());
+		}
+
+		// -------------------------------------------------------------------------
+		// Windows: PowerShell (preferred) then WMIC (fallback)
+		//
+		// Both commands return NumberOfCores = physical cores only (e.g. 20 on an
+		// i7-13850HX: 14 P-cores + 6 E-cores), NOT logical threads (28 with HT).
+		// We must use that value — never availableProcessors() — to divide L2 total.
+		// -------------------------------------------------------------------------
+		private static long windowsL2PerCore() throws Exception {
+			// WMIC is absent on recent Windows 11 builds => try PowerShell first
+			try {
+				return windowsViaPowerShell();
+			} catch (Exception e) {
+				return windowsViaWmic();
+			}
+		}
+
+		private static long windowsViaPowerShell() throws Exception {
+			// PowerShell: Get-CimInstance Win32_Processor
+			// L2CacheSize = total KB across all physical cores
+			// NumberOfCores = physical core count (P-cores + E-cores, no HT)
+			String script = "$c=Get-CimInstance Win32_Processor;"
+					+ "Write-Output ($c.L2CacheSize.ToString() + ' ' + $c.NumberOfCores.ToString())";
+			String out = runCommand("powershell", "-NoProfile", "-Command", script).trim();
+			String[] parts = out.split("\\s+");
+			if (parts.length < 2)
+				throw new Exception("Unexpected PowerShell output: " + out);
+			long l2KB = Long.parseLong(parts[0].trim());
+			long cores = Long.parseLong(parts[1].trim());
+			if (cores <= 0)
+				throw new Exception("Invalid physical core count: " + cores);
+			return (l2KB * 1024L) / cores; // per physical core
+		}
+
+		private static long windowsViaWmic() throws Exception {
+			// wmic cpu get L2CacheSize,NumberOfCores /value
+			// L2CacheSize = total KB, NumberOfCores = physical cores (same as PowerShell)
+			String out = runCommand("wmic", "cpu", "get", "L2CacheSize,NumberOfCores", "/value");
+			long l2KB = parseWmicLong(out, "L2CacheSize");
+			long cores = parseWmicLong(out, "NumberOfCores");
+			if (cores <= 0)
+				throw new Exception("Invalid physical core count from WMIC: " + cores);
+			// Do NOT fall back to availableProcessors() here: it returns logical threads,
+			// not physical cores, and would silently produce a wrong per-core value.
+			return (l2KB * 1024L) / cores; // per physical core
+		}
+
+		// -------------------------------------------------------------------------
+		// Fallback JVM: sun.cpu.l2.cache.size system property
+		// (set by some embedded/mobile JVMs; absent on desktop HotSpot)
+		// -------------------------------------------------------------------------
+		private static long jvmL2PerCore() throws Exception {
+			// Some JVMs (J9, Zing, embedded) expose the L2 cache size via this property.
+			// It is NOT present on standard HotSpot desktop/server builds.
+			String prop = System.getProperty("sun.cpu.l2.cache.size");
+			if (prop != null && !prop.isBlank()) {
+				return Long.parseLong(prop.trim()); // value is already per-core, in bytes
+			}
+			// com.sun.management.OperatingSystemMXBean only exposes RAM sizes, not cache.
+			// There is no standard JVM API for L2 cache size — give up and use the default.
+			throw new Exception("No JVM L2 cache size property available (sun.cpu.l2.cache.size)");
+		}
+
+		// -------------------------------------------------------------------------
+		// Utilities
+		// -------------------------------------------------------------------------
+
+		private static int clamp(long value) {
+			return (int)Math.max(L2_PER_CORE_MIN_BYTES, Math.min(L2_PER_CORE_MAX_BYTES, value));
+		}
+
+		private static String readFile(String path) throws Exception {
+			return new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(path)));
+		}
+
+		private static String runCommand(String... cmd) throws Exception {
+			ProcessBuilder pb = new ProcessBuilder(cmd);
+			pb.redirectErrorStream(true);
+			Process p = pb.start();
+			StringBuilder sb = new StringBuilder();
+			try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+				String line;
+				while ((line = r.readLine()) != null)
+					sb.append(line).append('\n');
+			}
+			p.waitFor();
+			return sb.toString();
+		}
+
+		/** Parse "512K" or "2048K" into KB */
+		private static long parseSizeKB(String s) {
+			s = s.toUpperCase().trim();
+			if (s.endsWith("K"))
+				return Long.parseLong(s.replace("K", "").trim());
+			if (s.endsWith("M"))
+				return Long.parseLong(s.replace("M", "").trim()) * 1024L;
+			return Long.parseLong(s); // assumed to already be in KB
+		}
+
+		/** Extract a long value from a WMIC output of the form "Key=Value\r\n" */
+		private static long parseWmicLong(String output, String key) throws Exception {
+			Pattern p = Pattern.compile(key + "=(\\d+)", Pattern.CASE_INSENSITIVE);
+			Matcher m = p.matcher(output);
+			if (m.find())
+				return Long.parseLong(m.group(1));
+			throw new Exception("Key not found in WMIC output: " + key);
+		}
+
+		// -------------------------------------------------------------------------
+		// Quick test entry point
+		// -------------------------------------------------------------------------
+		public static void main(String[] args) {
+			long l2 = detectL2CachePerCoreBytes();
+			long ws = recommendedWindowSize();
+			System.out.printf("OS               : %s%n", System.getProperty("os.name"));
+			System.out.printf("Logical CPUs     : %d%n", Runtime.getRuntime().availableProcessors());
+			System.out.printf("L2 per phys.core : %,d bytes  (%,d KB)%n", l2, l2 / 1024);
+			System.out.printf("Window size      : %,d longs%n", ws);
+		}
+	}
 }
