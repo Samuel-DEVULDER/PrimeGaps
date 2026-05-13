@@ -10,6 +10,8 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.LongSupplier;
@@ -164,6 +166,49 @@ public class Machine {
 
 		out.printf("%n=> Optimal sieve size : %d KB%n%n", optimal / 1024);
 		return optimal;
+	}
+	
+	public static long getL2CacheSize() {
+	    String os = System.getProperty("os.name").toLowerCase();
+	    
+	    if (os.contains("linux")) {
+	        // /sys/devices/system/cpu/cpu0/cache/index2/size
+	        try {
+	            String s = Files.readString(Path.of(
+	                "/sys/devices/system/cpu/cpu0/cache/index2/size")).trim();
+	            // Format : "512K" ou "2048K" ou "2M"
+	            
+	            // Formats possibles : "512K", "2048K", "2M", "30720K"
+	            s = s.trim().toUpperCase();
+	            if (s.endsWith("K")) return Long.parseLong(s.replace("K",""))<<10;
+	            if (s.endsWith("M")) return Long.parseLong(s.replace("M",""))<<20;
+	            if (s.endsWith("G")) return Long.parseLong(s.replace("M",""))<<30;
+	            return Long.parseLong(s);
+	        } catch (IOException e) {}	        
+	    } else if (os.contains("win")) {
+	        // WMIC : wmic cpu get L2CacheSize
+	        try {
+	            @SuppressWarnings("deprecation")
+				Process p = Runtime.getRuntime().exec(
+	                "wmic cpu get L2CacheSize /value");
+	            String out = new String(p.getInputStream().readAllBytes());
+	            // Format : "L2CacheSize=512\r\n"
+	            String val = out.replaceAll(".*L2CacheSize=(\\d+).*", "$1").trim();
+	            return Long.parseLong(val) * 1024L; // WMIC retourne des KB
+	        } catch (Exception e) {}
+	        
+	    } else if (os.contains("mac")) {
+	        // sysctl hw.l2cachesize
+	        try {
+	            @SuppressWarnings("deprecation")
+				Process p = Runtime.getRuntime().exec(
+	                "sysctl hw.l2cachesize");
+	            String out = new String(p.getInputStream().readAllBytes());
+	            return Long.parseLong(out.split(":")[1].trim());
+	        } catch (Exception e) {}
+	    }
+	    
+	    return 512 * 1024L; // fallback
 	}
 
 	public static long getCpuTimeNano() {

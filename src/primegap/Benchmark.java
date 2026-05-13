@@ -172,15 +172,18 @@ public class Benchmark {
 			SequencedMap<Class<? extends AbstractPrimeGap>, String> hierarchy = Java
 					.gettHierarchy(AbstractPrimeGap.class);
 			hierarchy.forEach((k, v) -> System.err.println(v));
+			System.out.println();
+			
 //			new Benchmark().run(SIMDSieveGap.class, SieveGap.class);
 			var bench = new Benchmark(args.length == 0 ? "90" : args[0]);
 			var col = bench.run(classes);
 			System.out.println();
+			
 			printHierarchyResult(hierarchy, col);
 			printResult(col);
 			System.out.println();
+			System.out.println("Duration=" + bench.RUNTIME.toSeconds() + "s");
 			System.out.println("Date=" + java.time.LocalDate.now() + " " + java.time.LocalTime.now());
-			System.out.println("Durtion=" + bench.RUNTIME);
 			System.out.println("SieveGap.defaultWindowSize=" + SieveGap.defaultWindowSize);
 		} catch (Exception e) {
 			e.printStackTrace();
