@@ -2,7 +2,6 @@ package primegap;
 
 import java.io.PrintStream;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
 import java.util.SequencedMap;
@@ -11,6 +10,7 @@ import java.util.function.Supplier;
 
 import primegap.sieve.SieveGap;
 import primegap.sieve.parallel.ParallelSeqSieveGap;
+import primegap.sieve.simd.SIMDSieveGap;
 import primegap.sieve.wheel.AbstractWheelSieveGap;
 import primegap.util.Java;
 import primegap.util.Machine;
@@ -119,23 +119,32 @@ public class Benchmark {
 		return new Result(impl, (System.nanoTime() - start) / 1e9);
 	}
 
-	final Collection<Algo> run(PrintStream out, SequencedMap<Class<? extends AbstractPrimeGap>, String> hierarchy)
+	Collection<Algo> run(PrintStream out, SequencedMap<Class<? extends AbstractPrimeGap>, String> hierarchy)
 			throws Exception {
 		int longestName = hierarchy.values().stream().mapToInt(String::length).max().orElse(0);
 		Collection<Algo> col = new TreeSet<>();
 		int i = 0;
-		out.printf("Total = %d WS=%d%n", hierarchy.size(),SieveGap.defaultWindowSize);
+		out.printf("Total = %d / Accepted  = %d / Duration = %ds / WS = %d%n", hierarchy.size(),
+				hierarchy.keySet().stream().filter(this::accepts).count(), RUNTIME.toSeconds(),
+				SieveGap.defaultWindowSize);
+		double best_speed = 0;
 		for (var me : hierarchy.entrySet()) {
 			Class<? extends AbstractPrimeGap> cls = me.getKey();
-			out.printf("%2d %s", ++i, me.getValue());
+			out.printf("%2d %s", ++i, me.getValue().replace('+', '`'));
 			if (IterativePrimeGap.class.isAssignableFrom(cls) && accepts(cls)) {
 				out.printf(" %s ", ".".repeat(3 + longestName - me.getValue().length()));
 				out.flush();
 				@SuppressWarnings("unchecked")
 				Result res = benchmark((Class<IterativePrimeGap>) cls, RUNTIME);
 
-				System.out.printf("%s : %s primes in %.1f secs%n", res.impl.name(),
-						Java.toString(res.impl.getPrimesCount()), res.seconds);
+				String stars = "";
+				double speed = res.speed();
+				if (speed > best_speed) {
+					best_speed = speed;
+					stars = " ***";
+				}
+				System.out.printf("%s : %s (%.1fs)%s%n", res.impl.name(), Java.toString(res.impl.getPrimesCount()),
+						res.seconds, stars);
 
 				col.add(new Algo(cls.getName(), res.speed()));
 
@@ -172,14 +181,38 @@ public class Benchmark {
 
 	static void printResult(Collection<Algo> col) {
 		Machine.printMachineInfo(System.out);
+		double avg = 0;
 		for (Algo alg : col) {
 			System.out.printf(Locale.ENGLISH, "%-80s %,.1f p/s%n", alg.name, alg.speed);
+			avg += alg.speed;
 		}
+		System.out.printf(Locale.ENGLISH, "avg = %,.1f p/s%n", avg / col.size());
 	}
 
 	protected boolean accepts(Class<?> cls) {
 		return SieveGap.class.isAssignableFrom(cls) && !AbstractWheelSieveGap.class.isAssignableFrom(cls)
-				&& !ParallelSeqSieveGap.class.isAssignableFrom(cls);
+				&& !ParallelSeqSieveGap.class.isAssignableFrom(cls) && !SIMDSieveGap.class.isAssignableFrom(cls);
+	}
+
+	protected static void findBestWindowSize(String DURATION, Class<? extends SieveGap> cls) {
+		int bestSize = 32768;
+		double bestSpeed = -1;
+		SieveGap.defaultWindowSize = bestSize;
+		do {
+			System.out.printf(Locale.ENGLISH, "WS = %d ... ", SieveGap.defaultWindowSize);
+			var bench = new Benchmark(DURATION);
+			double speed = bench.benchmark(cls, bench.RUNTIME).speed();
+			System.out.printf(Locale.ENGLISH, "%,.1f p/s%n", speed);
+			if (speed > bestSpeed) {
+				bestSpeed = speed;
+				bestSize = SieveGap.defaultWindowSize;
+			} else if (speed <= bestSpeed * 0.90) {
+				break;
+			}
+			SieveGap.defaultWindowSize *= 2;
+		} while (true);
+		System.out.printf(Locale.ENGLISH, "%s : Best WS = %d : %,.1f p/s%n", cls.getName(), bestSize, bestSpeed);
+		SieveGap.defaultWindowSize = bestSize;
 	}
 
 	public static void main(String[] args) {
@@ -188,13 +221,19 @@ public class Benchmark {
 			silentRun(null, () -> Java.findSubclasses(root));
 
 			Machine.preventSleep();
+
+			String duration = args.length > 0 ? args[0] : "90";
+			findBestWindowSize(duration, primegap.sieve.SieveGap.FastForward.DoubleBuffer.class);
+
 			SequencedMap<Class<? extends AbstractPrimeGap>, String> hierarchy = Java
 					.gettHierarchy(AbstractPrimeGap.class);
 			hierarchy.forEach((k, v) -> System.err.println(v));
 			System.out.println();
+			
+			// SieveGap.defaultWindowSize = 32768;
 
 //			new Benchmark().run(SIMDSieveGap.class, SieveGap.class);
-			var bench = new Benchmark(args.length == 0 ? "90" : args[0]);
+			var bench = new Benchmark(duration);
 			var col = bench.run(System.out, hierarchy);
 			System.out.println();
 
