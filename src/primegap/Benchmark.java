@@ -81,51 +81,69 @@ public class Benchmark {
 		});
 	}
 
-	@SafeVarargs
-	final Collection<Algo> run(Class<? extends IterativePrimeGap>... classes) throws Exception {
-		var filtered = Arrays.asList(classes).stream().filter(this::accepts).toList();
+	record Result(IterativePrimeGap impl, double seconds) {
+		double speed() {
+			return impl.getPrimesCount() / seconds;
+		}
+	}
+
+	Result benchmark(Class<? extends IterativePrimeGap> cls, Duration RUNTIME) {
+		IterativePrimeGap impl = silentRun(null, () -> {
+			try {
+				final var cst = cls.getConstructor();
+				return cst.newInstance();
+			} catch (Exception ex) {
+				throw new RuntimeException(ex);
+			}
+		});
+		impl.doStat = false;
+		Thread stopWatch = new Thread() {
+			public void run() {
+				try {
+					Thread.sleep(RUNTIME);
+					impl.stop();
+				} catch (InterruptedException e) {
+				}
+			};
+		};
+		stopWatch.setDaemon(true);
+		stopWatch.start();
+		long start = System.nanoTime();
+		try {
+			silentRun(impl);
+		} catch (TimeoutException ignored) {
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}
+		return new Result(impl, (System.nanoTime() - start) / 1e9);
+	}
+
+	final Collection<Algo> run(PrintStream out, SequencedMap<Class<? extends AbstractPrimeGap>, String> hierarchy)
+			throws Exception {
+		int longestName = hierarchy.values().stream().mapToInt(String::length).max().orElse(0);
 		Collection<Algo> col = new TreeSet<>();
 		int i = 0;
-		for (var cls : filtered) {
-			final var cst = cls.getConstructor();
-			IterativePrimeGap impl = silentRun(null, () -> {
-				try {
-					return cst.newInstance();
-				} catch (Exception ex) {
-					throw new RuntimeException(ex);
-				}
-			});
-			impl.doStat = false;
-			System.out.printf("%d/%d Testing %s (%s)...", ++i, filtered.size(), Java.getSimpleName(cls), impl.name());
+		out.printf("Total = %d WS=%d%n", hierarchy.size(),SieveGap.defaultWindowSize);
+		for (var me : hierarchy.entrySet()) {
+			Class<? extends AbstractPrimeGap> cls = me.getKey();
+			out.printf("%2d %s", ++i, me.getValue());
+			if (IterativePrimeGap.class.isAssignableFrom(cls) && accepts(cls)) {
+				out.printf(" %s ", ".".repeat(3 + longestName - me.getValue().length()));
+				out.flush();
+				@SuppressWarnings("unchecked")
+				Result res = benchmark((Class<IterativePrimeGap>) cls, RUNTIME);
 
-			Thread stopWatch = new Thread() {
-				public void run() {
-					try {
-						Thread.sleep(RUNTIME);
-						impl.stop();
-					} catch (InterruptedException e) {
-					}
-				};
-			};
-			stopWatch.setDaemon(true);
-			stopWatch.start();
-			long start = System.nanoTime();
-			try {
-				silentRun(impl);
-			} catch (TimeoutException ignored) {
-			} catch (Exception ex) {
-				ex.printStackTrace();
-				break;
+				System.out.printf("%s : %s primes in %.1f secs%n", res.impl.name(),
+						Java.toString(res.impl.getPrimesCount()), res.seconds);
+
+				col.add(new Algo(cls.getName(), res.speed()));
+
+				System.gc();
+				Thread.sleep(PAUSE);
+			} else {
+				out.println();
 			}
-			double duration = System.nanoTime() - start;
-
-			duration /= 1e9; // sec
-			long numPrimes = impl.getPrimesCount();
-			col.add(new Algo(impl.getClass().getName(), numPrimes / duration));
-
-			System.out.printf(Locale.ENGLISH, "%,d primes in %.1f secs%n", numPrimes, duration);
-			System.gc();
-			Thread.sleep(PAUSE);
 		}
 
 		return col;
@@ -166,19 +184,20 @@ public class Benchmark {
 
 	public static void main(String[] args) {
 		try {
-			Machine.preventSleep();
 			Class<? extends IterativePrimeGap> root = IterativePrimeGap.class;
-			var classes = silentRun(null, () -> Java.findSubclasses(root));
+			silentRun(null, () -> Java.findSubclasses(root));
+
+			Machine.preventSleep();
 			SequencedMap<Class<? extends AbstractPrimeGap>, String> hierarchy = Java
 					.gettHierarchy(AbstractPrimeGap.class);
 			hierarchy.forEach((k, v) -> System.err.println(v));
 			System.out.println();
-			
+
 //			new Benchmark().run(SIMDSieveGap.class, SieveGap.class);
 			var bench = new Benchmark(args.length == 0 ? "90" : args[0]);
-			var col = bench.run(classes);
+			var col = bench.run(System.out, hierarchy);
 			System.out.println();
-			
+
 			printHierarchyResult(hierarchy, col);
 			printResult(col);
 			System.out.println();
