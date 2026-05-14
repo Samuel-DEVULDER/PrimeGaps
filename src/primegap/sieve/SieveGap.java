@@ -56,7 +56,7 @@ public class SieveGap extends IterativePrimeGap {
 	@Override
 	protected String name() {
 		if (name == null) {
-			name = "SieveGap" + (usesFastForward() ? "/FastFoward" : "") + supplier.name();
+			name = "SieveGap"  + supplier.name() + (usesFastForward() ? "/FastFoward" : "");
 		}
 		return name;
 	}
