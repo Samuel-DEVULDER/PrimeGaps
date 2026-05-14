@@ -26,19 +26,19 @@ public class SIMDSieveGap extends SieveGap {
 		new SIMDSieveGap().run();
 	}
 	
-	static public class DoubleBuffer extends SIMDSieveGap {
+	static public class DB extends SIMDSieveGap {
 		@Override
 		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 			return newSlidingWindowSieve(size, true);
 		}
 
 		public static void main(String[] args) {
-			new DoubleBuffer().run();
+			new DB().run();
 		}
 	}
 	
-	public static class FastForward extends SIMDSieveGap {
-		public FastForward() {
+	public static class FF extends SIMDSieveGap {
+		public FF() {
 			gapCounts = null;
 		}
 
@@ -48,17 +48,17 @@ public class SIMDSieveGap extends SieveGap {
 		}
 
 		public static void main(String[] args) {
-			new FastForward().run();
+			new FF().run();
 		}
 		
-		static public class DoubleBuffer extends FastForward {
+		static public class DB extends FF {
 			@Override
 			protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 				return newSlidingWindowSieve(size, true);
 			}
 
 			public static void main(String[] args) {
-				new DoubleBuffer().run();
+				new DB().run();
 			}
 		}
 	}

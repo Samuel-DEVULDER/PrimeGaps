@@ -9,8 +9,6 @@ import java.util.TreeSet;
 import java.util.function.Supplier;
 
 import primegap.sieve.SieveGap;
-import primegap.sieve.parallel.ParallelSeqSieveGap;
-import primegap.sieve.simd.SIMDSieveGap;
 import primegap.sieve.wheel.AbstractWheelSieveGap;
 import primegap.util.Java;
 import primegap.util.Machine;
@@ -191,7 +189,8 @@ public class Benchmark {
 
 	protected boolean accepts(Class<?> cls) {
 		return SieveGap.class.isAssignableFrom(cls) && !AbstractWheelSieveGap.class.isAssignableFrom(cls)
-				&& !ParallelSeqSieveGap.class.isAssignableFrom(cls) && !SIMDSieveGap.class.isAssignableFrom(cls);
+				//&& !ParallelSeqSieveGap.class.isAssignableFrom(cls) && !SIMDSieveGap.class.isAssignableFrom(cls);
+				;
 	}
 
 	protected static void findBestWindowSize(String DURATION, Class<? extends SieveGap> cls) {
@@ -223,7 +222,7 @@ public class Benchmark {
 			Machine.preventSleep();
 
 			String duration = args.length > 0 ? args[0] : "90";
-			findBestWindowSize(duration, primegap.sieve.SieveGap.FastForward.DoubleBuffer.class);
+			findBestWindowSize(duration, primegap.sieve.SieveGap.FF.DB.class);
 
 			SequencedMap<Class<? extends AbstractPrimeGap>, String> hierarchy = Java
 					.gettHierarchy(AbstractPrimeGap.class);

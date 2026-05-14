@@ -187,19 +187,19 @@ public class SieveGap extends IterativePrimeGap {
 	 * This is actually the algorithm that performs best in practice, even compared
 	 * to the more complex ones.
 	 */
-	public static class DoubleBuffer extends SieveGap {
+	public static class DB extends SieveGap {
 		@Override
 		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 			return newSlidingWindowSieve(size, true);
 		}
 
 		public static void main(String[] args) {
-			new DoubleBuffer().run();
+			new DB().run();
 		}
 	}
 
-	public static class FastForward extends SieveGap {
-		public FastForward() {
+	public static class FF extends SieveGap {
+		public FF() {
 			gapCounts = null;
 		}
 
@@ -209,17 +209,17 @@ public class SieveGap extends IterativePrimeGap {
 		}
 
 		public static void main(String[] args) {
-			new FastForward().run();
+			new FF().run();
 		}
 
-		static public class DoubleBuffer extends FastForward {
+		static public class DB extends FF {
 			@Override
 			protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 				return newSlidingWindowSieve(size, true);
 			}
 
 			public static void main(String[] args) {
-				new DoubleBuffer().run();
+				new DB().run();
 			}
 		}
 	}

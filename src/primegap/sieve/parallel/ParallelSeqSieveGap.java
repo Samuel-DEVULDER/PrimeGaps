@@ -32,19 +32,19 @@ public class ParallelSeqSieveGap extends SieveGap {
 	 * that is double-buffered, and it performs updates in parallel when the step
 	 * size is large enough.
 	 */
-	static public class DoubleBuffer extends ParallelSeqSieveGap {
+	static public class DB extends ParallelSeqSieveGap {
 		@Override
 		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 			return newSlidingWindowSieve(size, true);
 		}
 
 		public static void main(String[] args) {
-			new DoubleBuffer().run();
+			new DB().run();
 		}
 	}
 	
-	public static class FastForward extends ParallelSeqSieveGap {
-		public FastForward() {
+	public static class FF extends ParallelSeqSieveGap {
+		public FF() {
 			gapCounts = null;
 		}
 
@@ -54,17 +54,17 @@ public class ParallelSeqSieveGap extends SieveGap {
 		}
 
 		public static void main(String[] args) {
-			new FastForward().run();
+			new FF().run();
 		}
 		
-		static public class DoubleBuffer extends FastForward {
+		static public class DB extends FF {
 			@Override
 			protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 				return newSlidingWindowSieve(size, true);
 			}
 
 			public static void main(String[] args) {
-				new DoubleBuffer().run();
+				new DB().run();
 			}
 		}
 	}

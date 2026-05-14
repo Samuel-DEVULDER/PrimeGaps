@@ -54,19 +54,19 @@ public class ParallelPrimesWheelSieveGap extends AbstractWheelSieveGap {
 		new ParallelPrimesWheelSieveGap().run();
 	}
 
-	static public class DoubleBuffer extends ParallelPrimesWheelSieveGap {
+	static public class DB extends ParallelPrimesWheelSieveGap {
 		@Override
 		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 			return newSlidingWindowSieve(size, true);
 		}
 
 		public static void main(String[] args) {
-			new DoubleBuffer().run();
+			new DB().run();
 		}
 	}
 
-	public static class FastForward extends ParallelPrimesWheelSieveGap {
-		public FastForward() {
+	public static class FF extends ParallelPrimesWheelSieveGap {
+		public FF() {
 			gapCounts = null;
 		}
 
@@ -76,17 +76,17 @@ public class ParallelPrimesWheelSieveGap extends AbstractWheelSieveGap {
 		}
 
 		public static void main(String[] args) {
-			new FastForward().run();
+			new FF().run();
 		}
 
-		static public class DoubleBuffer extends FastForward {
+		static public class DB extends FF {
 			@Override
 			protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 				return newSlidingWindowSieve(size, true);
 			}
 
 			public static void main(String[] args) {
-				new DoubleBuffer().run();
+				new DB().run();
 			}
 		}
 	}
