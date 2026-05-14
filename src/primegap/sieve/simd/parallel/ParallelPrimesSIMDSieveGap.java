@@ -6,19 +6,19 @@ import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
 import primegap.util.Java;
 
-public class Parallel2SIMDSieveGap extends SieveGap {
+public class ParallelPrimesSIMDSieveGap extends SieveGap {
 	static boolean enabled = Java.SIMD.enable();
 	
 	@Override
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doubleBuffer) {
-		return new Parallel2SIMDSieve(this, size, doubleBuffer);
+		return new ParallelPrimesSIMDSieve(this, size, doubleBuffer);
 	}
 
 	public static void main(String[] args) {
-		new Parallel2SIMDSieveGap().run();
+		new ParallelPrimesSIMDSieveGap().run();
 	}
 	
-	static public class DoubleBuffer extends Parallel2SIMDSieveGap {
+	static public class DoubleBuffer extends ParallelPrimesSIMDSieveGap {
 		@Override
 		protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
 			return newSlidingWindowSieve(size, true);
@@ -29,7 +29,7 @@ public class Parallel2SIMDSieveGap extends SieveGap {
 		}
 	}
 	
-	public static class FastForward extends Parallel2SIMDSieveGap {
+	public static class FastForward extends ParallelPrimesSIMDSieveGap {
 		public FastForward() {
 			gapCounts = null;
 		}
