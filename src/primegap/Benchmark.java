@@ -189,13 +189,16 @@ public class Benchmark {
 
 	protected boolean accepts(Class<?> cls) {
 		return SieveGap.class.isAssignableFrom(cls) && !AbstractWheelSieveGap.class.isAssignableFrom(cls)
-				//&& !ParallelSeqSieveGap.class.isAssignableFrom(cls) && !SIMDSieveGap.class.isAssignableFrom(cls);
-				;
+		// && !ParallelSeqSieveGap.class.isAssignableFrom(cls) &&
+		// !SIMDSieveGap.class.isAssignableFrom(cls);
+		;
 	}
 
 	protected static void findBestWindowSize(String DURATION, Class<? extends SieveGap> cls) {
 		int bestSize = 32768;
 		double bestSpeed = -1;
+		long duration = new Benchmark(DURATION).RUNTIME.toSeconds();
+		System.out.printf("Finding best window size for %s with duration = %ds%n", cls.getName(), duration);
 		SieveGap.defaultWindowSize = bestSize;
 		do {
 			System.out.printf(Locale.ENGLISH, "WS = %d ... ", SieveGap.defaultWindowSize);
@@ -210,7 +213,8 @@ public class Benchmark {
 			}
 			SieveGap.defaultWindowSize *= 2;
 		} while (true);
-		System.out.printf(Locale.ENGLISH, "%s : Best WS = %d : %,.1f p/s%n", cls.getName(), bestSize, bestSpeed);
+		System.out.printf(Locale.ENGLISH, "%s : Best WS = %d, %,.1f p/s (%ds)%n", cls.getName(), bestSize, bestSpeed,
+				duration);
 		SieveGap.defaultWindowSize = bestSize;
 	}
 
@@ -228,7 +232,7 @@ public class Benchmark {
 					.gettHierarchy(AbstractPrimeGap.class);
 			hierarchy.forEach((k, v) -> System.err.println(v));
 			System.out.println();
-			
+
 			// SieveGap.defaultWindowSize = 32768;
 
 //			new Benchmark().run(SIMDSieveGap.class, SieveGap.class);
