@@ -211,9 +211,9 @@ public class Benchmark {
 			bad = 0;
 			System.out.printf(Locale.ENGLISH, "WS = %d", SieveGap.defaultWindowSize);
 			for (Class<? extends SieveGap> cls : classes) {
-				System.out.printf(Locale.ENGLISH, " ...");
+				System.out.printf(Locale.ENGLISH, " ... %s = ", cls.getName());
 				double speed = bench.benchmark(cls, bench.RUNTIME).speed();
-				System.out.printf(Locale.ENGLISH, " %,.1f p/s (%s)", speed, cls.getName());
+				System.out.printf(Locale.ENGLISH, " %,.1f p/s", speed);
 				if (speed > bestSpeed) {
 					bestSpeed = speed;
 					bestSize = SieveGap.defaultWindowSize;
@@ -228,7 +228,7 @@ public class Benchmark {
 		;
 		SieveGap.defaultWindowSize = bestSize;
 
-		System.out.printf(Locale.ENGLISH, "Best = %s, WS = %d, SPEED = %,.1f p/s (%ds)%n%n", //
+		System.out.printf(Locale.ENGLISH, "Best = %s, WS = %d, SPEED = %,.1f p/s (%ds)%n", //
 				bestCls.getName(), bestSize, bestSpeed, bench.RUNTIME.toSeconds());
 
 		return bestCls;
@@ -249,8 +249,8 @@ public class Benchmark {
 
 			String duration = args.length > 0 ? args[0] : "90";
 			findBestWindowSize(duration, //
-					primegap.sieve.SieveGap.FF.DB.class, //
-					primegap.sieve.parallel.ParallelPrimesSieveGap.FF.DB.class);
+					primegap.sieve.SieveGap.FF.class, //
+					primegap.sieve.parallel.ParallelPrimesSieveGap.FF.class);
 			System.out.println();
 			
 			// SieveGap.defaultWindowSize = 32768;
