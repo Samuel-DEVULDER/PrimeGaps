@@ -211,9 +211,9 @@ public class Benchmark {
 			bad = 0;
 			System.out.printf(Locale.ENGLISH, "WS = %d", SieveGap.defaultWindowSize);
 			for (Class<? extends SieveGap> cls : classes) {
-				System.out.printf(Locale.ENGLISH, " ... %s = ", cls.getName());
+				System.out.printf(Locale.ENGLISH, " ... %s ", cls.getName());
 				double speed = bench.benchmark(cls, bench.RUNTIME).speed();
-				System.out.printf(Locale.ENGLISH, " %,.1f p/s", speed);
+				System.out.printf(Locale.ENGLISH, "= %,.1f p/s", speed);
 				if (speed > bestSpeed) {
 					bestSpeed = speed;
 					bestSize = SieveGap.defaultWindowSize;
