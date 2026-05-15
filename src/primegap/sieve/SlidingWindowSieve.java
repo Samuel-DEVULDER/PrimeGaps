@@ -156,15 +156,15 @@ public class SlidingWindowSieve extends AbstractSlidingWindowSieve {
 
 	@SuppressWarnings("unused")
 	protected void updateSeqBigSteps(long[] tab, int from, long to, long step) {
-		if (false && to > Integer.MAX_VALUE) {
+		if (windowRange >= 0x2000000 && to + step >= Integer.MAX_VALUE) { // Avoid overflow in loop
 			for (long pos = from; pos < to; pos += step) {
 				updateTab(tab, (int) (pos >>> 6), 1L << (63 & pos));
 			}
 		} else {
-			int i_to = (int) to, i_step = (int) step;
-			for (int pos = from; pos < i_to; pos += i_step) {
+			int i_to = (int) to, i_step = (int) step, pos = from;
+			do {
 				updateTab(tab, pos >>> 6, 1L << (pos & 63));
-			}
+			} while ((pos += i_step) < i_to);
 		}
 	}
 }
