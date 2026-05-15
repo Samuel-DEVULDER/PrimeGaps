@@ -194,29 +194,44 @@ public class Benchmark {
 		;
 	}
 
-	protected static void findBestWindowSize(String DURATION, Class<? extends SieveGap> cls) {
-		int bestSize = 16384;
+	@SafeVarargs
+	protected static Class<? extends SieveGap> findBestWindowSize(String DURATION,
+			Class<? extends SieveGap>... classes) {
 		double bestSpeed = -1;
-		long duration = new Benchmark(DURATION).RUNTIME.toSeconds();
+		int bestSize = 16384; // default value, should be a good starting point
+		Class<? extends SieveGap> bestCls = null;
+
+		var bench = new Benchmark(DURATION);
+
 		Machine.printMachineInfo(System.out);
-		System.out.printf("Finding best window size for %s with duration = %ds%n", cls.getName(), duration);
+		System.out.printf("Finding best window size with duration = %ds%n", bench.RUNTIME.toSeconds());
 		SieveGap.defaultWindowSize = bestSize;
-		do {
-			System.out.printf(Locale.ENGLISH, "WS = %d ... ", SieveGap.defaultWindowSize);
-			var bench = new Benchmark(DURATION);
-			double speed = bench.benchmark(cls, bench.RUNTIME).speed();
-			System.out.printf(Locale.ENGLISH, "%,.1f p/s%n", speed);
-			if (speed > bestSpeed) {
-				bestSpeed = speed;
-				bestSize = SieveGap.defaultWindowSize;
-			} else if (speed <= bestSpeed * 0.90) {
-				break;
+
+		for (int bad = 0; bad != classes.length;) {
+			bad = 0;
+			System.out.printf(Locale.ENGLISH, "WS = %d", SieveGap.defaultWindowSize);
+			for (Class<? extends SieveGap> cls : classes) {
+				System.out.printf(Locale.ENGLISH, " ...");
+				double speed = bench.benchmark(cls, bench.RUNTIME).speed();
+				System.out.printf(Locale.ENGLISH, " %,.1f p/s (%s)", speed, cls.getName());
+				if (speed > bestSpeed) {
+					bestSpeed = speed;
+					bestSize = SieveGap.defaultWindowSize;
+					bestCls = cls;
+				} else if (speed <= bestSpeed * 0.90) {
+					++bad;
+				}
 			}
+			System.out.println();
 			SieveGap.defaultWindowSize *= 2;
-		} while (true);
-		System.out.printf(Locale.ENGLISH, "%s : Best WS = %d, %,.1f p/s (%ds)%n", cls.getName(), bestSize, bestSpeed,
-				duration);
+		}
+		;
 		SieveGap.defaultWindowSize = bestSize;
+
+		System.out.printf(Locale.ENGLISH, "Best = %s, WS = %d, SPEED = %,.1f p/s (%ds)%n%n", //
+				bestCls.getName(), bestSize, bestSpeed, bench.RUNTIME.toSeconds());
+
+		return bestCls;
 	}
 
 	public static void main(String[] args) {
@@ -226,14 +241,18 @@ public class Benchmark {
 
 			Machine.preventSleep();
 
-			String duration = args.length > 0 ? args[0] : "90";
-			findBestWindowSize(duration, primegap.sieve.SieveGap.FF.DB.class);
-
 			SequencedMap<Class<? extends AbstractPrimeGap>, String> hierarchy = Java
 					.gettHierarchy(AbstractPrimeGap.class);
 			hierarchy.forEach((k, v) -> System.err.println(v));
-			System.out.println();
+			System.err.println();
+			System.err.flush();
 
+			String duration = args.length > 0 ? args[0] : "90";
+			findBestWindowSize(duration, //
+					primegap.sieve.SieveGap.FF.DB.class, //
+					primegap.sieve.parallel.ParallelPrimesSieveGap.FF.DB.class);
+			System.out.println();
+			
 			// SieveGap.defaultWindowSize = 32768;
 
 //			new Benchmark().run(SIMDSieveGap.class, SieveGap.class);
