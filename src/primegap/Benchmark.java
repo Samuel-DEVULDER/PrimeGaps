@@ -195,7 +195,7 @@ public class Benchmark {
 	}
 
 	protected static void findBestWindowSize(String DURATION, Class<? extends SieveGap> cls) {
-		int bestSize = 32768;
+		int bestSize = 16384;
 		double bestSpeed = -1;
 		long duration = new Benchmark(DURATION).RUNTIME.toSeconds();
 		System.out.printf("Finding best window size for %s with duration = %ds%n", cls.getName(), duration);
