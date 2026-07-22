@@ -205,7 +205,7 @@ public class Benchmark {
 
 		Machine.printMachineInfo(System.out);
 		System.out.printf("Finding best window size with duration = %ds%n", bench.RUNTIME.toSeconds());
-		double sz = bestSize, k = Math.pow(2, 1.0 / 3); // 3 steps per doubling
+		double sz = bestSize*4, k = Math.pow(2, 1.0 / 3); // 3 steps per doubling
 
 		for (int bad = 0; bad != classes.length;) {
 			SieveGap.defaultWindowSize = (int) Math.rint(sz);
@@ -214,14 +214,14 @@ public class Benchmark {
 			System.out.printf(Locale.ENGLISH, "WS = %d (%dkb)", SieveGap.defaultWindowSize,
 					SieveGap.defaultWindowSize / (1024 / Long.BYTES));
 			for (Class<? extends SieveGap> cls : classes) {
-				System.out.printf(Locale.ENGLISH, " ... %s ", cls.getName());
+				System.out.printf(Locale.ENGLISH, " ... %s ", cls.getName().replaceFirst("^.*\\.",""));
 				double speed = bench.benchmark(cls, bench.RUNTIME).speed();
 				System.out.printf(Locale.ENGLISH, "= %,.1f p/s", speed);
 				if (speed > bestSpeed) {
 					bestSpeed = speed;
 					bestSize = SieveGap.defaultWindowSize;
 					bestCls = cls;
-				} else if (speed <= bestSpeed * 0.90) {
+				} else if (speed <= bestSpeed * 0.80) {
 					++bad;
 				}
 			}
