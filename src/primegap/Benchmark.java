@@ -1,6 +1,7 @@
 package primegap;
 
 import java.io.PrintStream;
+import java.lang.reflect.Modifier;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Locale;
@@ -188,7 +189,7 @@ public class Benchmark {
 	}
 
 	protected boolean accepts(Class<?> cls) {
-		return SieveGap.class.isAssignableFrom(cls) && !AbstractWheelSieveGap.class.isAssignableFrom(cls)
+		return !Modifier.isAbstract(cls.getModifiers()) && SieveGap.class.isAssignableFrom(cls) && !AbstractWheelSieveGap.class.isAssignableFrom(cls)
 		// && !ParallelSeqSieveGap.class.isAssignableFrom(cls) &&
 		// !SIMDSieveGap.class.isAssignableFrom(cls);
 		;
@@ -252,10 +253,10 @@ public class Benchmark {
 			System.err.flush();
 
 			String duration = args.length > 0 ? args[0] : "90";
-			findBestWindowSize(duration, //
-					primegap.sieve.SieveGap.FF.class, //
-					primegap.sieve.parallel.ParallelPrimesSieveGap.FF.class);
-			System.out.println();
+			//findBestWindowSize(duration, //
+			//		primegap.sieve.SieveGap.FF.class, //
+			//		primegap.sieve.parallel.ParallelPrimesSieveGap.FF.class);
+			//System.out.println();
 
 			// SieveGap.defaultWindowSize = 32768;
 

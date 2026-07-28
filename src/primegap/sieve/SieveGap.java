@@ -22,7 +22,7 @@ import primegap.util.NullStream;
  * and print statistics about the gaps when the program is stopped.
  */
 public class SieveGap extends IterativePrimeGap {
-	protected SieveGap() {
+	public SieveGap() {
 		this(WindowSize.computeWs(Machine.cache.info()).seqWS());
 	}
 	
