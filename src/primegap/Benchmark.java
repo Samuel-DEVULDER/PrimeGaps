@@ -202,10 +202,12 @@ public class Benchmark {
 		Class<? extends SieveGap> bestCls = null;
 
 		var bench = new Benchmark(DURATION);
+		
+		bestSize = (30000*(1024/Long.BYTES))/64; // 30MB
 
 		Machine.printMachineInfo(System.out);
 		System.out.printf("Finding best window size with duration = %ds%n", bench.RUNTIME.toSeconds());
-		double sz = bestSize*4, k = Math.pow(2, 1.0 / 3); // 3 steps per doubling
+		double sz = bestSize, k = Math.pow(2, 1.0 / 5); // 3 steps per doubling
 
 		for (int bad = 0; bad != classes.length;) {
 			SieveGap.defaultWindowSize = (int) Math.rint(sz);

@@ -13,7 +13,7 @@ import primegap.sieve.SieveGap;
  * single sliding window sieve that is not double-buffered, and it performs
  * updates in parallel when the step size is large enough.
  */
-public class ParallelSeqSieveGap extends SieveGap {
+public class ParallelSeqSieveGap extends SieveGap.Parallel {
 	@Override
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size,boolean doubleBuffer) {
 		return new ParallelSeqSieve(this, size, doubleBuffer);

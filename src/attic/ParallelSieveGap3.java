@@ -8,7 +8,7 @@ import primegap.sieve.SlidingWindowSieve;
 import primegap.util.Java;
 import primegap.util.Machine;
 
-public class ParallelSieveGap3 extends SieveGap {
+public class ParallelSieveGap3 extends SieveGap.Parallel {
 	class ParallelWindowedSieve extends SlidingWindowSieve {
 		static final VarHandle VH = MethodHandles.arrayElementVarHandle(long[].class);
 		volatile boolean concurrent;

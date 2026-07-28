@@ -1,6 +1,7 @@
 package primegap.util;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -12,6 +13,9 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.LongSupplier;
@@ -465,4 +469,419 @@ public class Machine {
 			System.out.printf("Window size      : %,d longs%n", ws);
 		}
 	}
+
+	/**
+	 * Detects CPU cache topology (L2, L3, CPU count) and computes optimal window
+	 * size (WS) for a segmented prime sieve based on empirical benchmarking rules.
+	 *
+	 * <p>Empirical rules derived from benchmark data across multiple machines:
+	 * <ul>
+	 *   <li>Sequential: WS = (L2 / 8) / cpuCount</li>
+	 *   <li>Parallel:   WS = LLC / 8  where LLC = max(L2, L3)</li>
+	 *   <li>Mode:       Parallel if cpuCount > 4, else Sequential</li>
+	 * </ul>
+	 *
+	 * <p>The detection works on Windows, Linux, and macOS. If all OS-level
+	 * detection methods fail, a pure-Java empirical fallback is used.
+	 *
+	 * <p>Usage:
+	 * <pre>{@code
+	 *   CacheDetector detector = new CacheDetector();
+	 *   CacheInfo info = detector.detect();
+	 *   WindowSize ws = detector.computeWs(info);
+	 *   System.out.println("Best WS: " + ws.bestWs());
+	 * }</pre>
+	 */
+	public static final class CacheDetector {
+
+	    // --------------------------------------------------------------
+	    // Fallback calibration constants
+	    // --------------------------------------------------------------
+
+	    private static final int WARMUP_ITERATIONS = 100_000;
+	    private static final int BENCHMARK_ITERATIONS = 50_000;
+	    private static final int STRIDE = 4096;
+
+	    // --------------------------------------------------------------
+	    // Records (immutable data carriers)
+	    // --------------------------------------------------------------
+
+	    /**
+	     * Immutable cache topology information.
+	     *
+	     * @param l2Bytes  total L2 cache size in bytes
+	     * @param l3Bytes  total L3 cache size in bytes (0 if absent)
+	     * @param cpuCount number of logical processors
+	     */
+	    public record CacheInfo(long l2Bytes, long l3Bytes, int cpuCount) {
+
+	        /**
+	         * Returns the Last Level Cache (LLC) size in bytes.
+	         * If no L3 is present, L2 is the LLC.
+	         */
+	        public long llcBytes() {
+	            return Math.max(l2Bytes, l3Bytes);
+	        }
+
+	        /**
+	         * Returns the name of the cache level acting as LLC.
+	         */
+	        public String llcSource() {
+	            return (l3Bytes >= l2Bytes && l3Bytes > 0) ? "L3" : "L2";
+	        }
+	    }
+
+
+	    // --------------------------------------------------------------
+	    // Instance state
+	    // --------------------------------------------------------------
+
+	    private CacheInfo cached;
+
+	    // --------------------------------------------------------------
+	    // Public API
+	    // --------------------------------------------------------------
+
+	    /**
+	     * Detects cache topology using OS-level methods, falling back to
+	     * pure-Java empirical detection if needed.
+	     *
+	     * <p>Results are cached internally; subsequent calls return the same
+	     * {@link CacheInfo} without re-running detection.
+	     *
+	     * @return detected cache topology
+	     */
+	    public CacheInfo info() {
+	        if (cached != null) {
+	            return cached;
+	        }
+
+	        int cpuCount = Runtime.getRuntime().availableProcessors();
+	        long l2 = 0;
+	        long l3 = 0;
+
+	        // OS-specific detection
+	        String os = System.getProperty("os.name", "").toLowerCase();
+	        if (os.contains("win")) {
+	            long[] caches = detectWindows();
+	            l2 = caches[0];
+	            l3 = caches[1];
+	        } else if (os.contains("mac") || os.contains("darwin")) {
+	            long[] caches = detectMacOS();
+	            l2 = caches[0];
+	            l3 = caches[1];
+	        } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+	            long[] caches = detectLinux();
+	            l2 = caches[0];
+	            l3 = caches[1];
+	        }
+
+	        // Pure-Java empirical fallback if all OS methods failed
+	        if (l2 == 0 && l3 == 0) {
+	            System.out.println("[WARN] OS detection failed — switching to empirical fallback");
+	            long[] fallback = heuristicFallback();
+	            l2 = fallback[0];
+	            l3 = fallback[1];
+	        }
+
+	        cached = new CacheInfo(l2, l3, cpuCount);
+	        return cached;
+	    }
+
+	    // --------------------------------------------------------------
+	    // Empirical fallback (pure Java, no external commands)
+	    // --------------------------------------------------------------
+	    
+	    private long[] heuristicFallback() {
+	        int cpuCount = Runtime.getRuntime().availableProcessors();
+	        long totalRam = getPhysicalRam();
+	        String arch = System.getProperty("os.arch", "").toLowerCase();
+
+	        long l2PerCore, l3PerCore;
+
+	        if (arch.contains("aarch64") || arch.contains("arm")) {
+	            // Apple Silicon or ARM: large L2 per cluster, small/no L3
+	            l2PerCore = 1024 * 1024;      // 1 MB
+	            l3PerCore = 0;
+	        } else if (cpuCount > 16) {
+	            // High-core-count Xeon/EPYC: 512KB L2, 1MB L3 per core
+	            l2PerCore = 512 * 1024;
+	            l3PerCore = 1024 * 1024;
+	        } else if (cpuCount > 4) {
+	            // Desktop/workstation: 256KB L2, 2MB L3 per core
+	            l2PerCore = 256 * 1024;
+	            l3PerCore = 2 * 1024 * 1024;
+	        } else {
+	            // Mobile/low-end: 256KB L2, 1MB L3 per core
+	            l2PerCore = 256 * 1024;
+	            l3PerCore = 1024 * 1024;
+	        }
+
+	        // Adjust upward if plenty of RAM (correlates with newer platforms)
+	        if (totalRam > 32L * 1024 * 1024 * 1024) {
+	            l2PerCore = Math.max(l2PerCore, 512 * 1024);
+	            l3PerCore = Math.max(l3PerCore, 2 * 1024 * 1024);
+	        }
+
+	        long l2 = l2PerCore * cpuCount;
+	        long l3 = l3PerCore * cpuCount;
+
+	        // Sanity-check minimums
+	        if (l2 < 256L * 1024 * Math.max(1, cpuCount)) l2 = 256L * 1024 * cpuCount;
+	        if (l3 > 0 && l3 < 512L * 1024 * Math.max(1, cpuCount)) l3 = 512L * 1024 * cpuCount;
+
+	        return new long[] {l2, l3};
+	    }
+	    
+	    private long getPhysicalRam() {
+	        // Strategy 1: com.sun.management extension (HotSpot, OpenJDK, GraalVM)
+	        try {
+	            java.lang.management.OperatingSystemMXBean osBean =
+	                    ManagementFactory.getOperatingSystemMXBean();
+	            if (osBean instanceof com.sun.management.OperatingSystemMXBean sunBean) {
+	                try {
+	                    return sunBean.getTotalMemorySize();   // Java 14+
+	                } catch (NoSuchMethodError e) {
+	                    return sunBean.getTotalPhysicalMemorySize(); // Java 8-13
+	                }
+	            }
+	        } catch (Exception e) {
+	            // com.sun.management not available (e.g., IBM J9, native-image)
+	        }
+
+	        // Strategy 2: /proc/meminfo on Linux
+	        try {
+	            String meminfo = Files.readString(Path.of("/proc/meminfo"));
+	            Matcher m = Pattern.compile("MemTotal:\\s*(\\d+)\\s*kB").matcher(meminfo);
+	            if (m.find()) {
+	                return Long.parseLong(m.group(1)) * 1024;
+	            }
+	        } catch (Exception e) {
+	            // /proc/meminfo not available
+	        }
+
+	        // Strategy 3: Runtime.maxMemory() as last-resort proxy
+	        return Runtime.getRuntime().maxMemory();
+	    }
+
+	    // --------------------------------------------------------------
+	    // OS-specific detection methods
+	    // --------------------------------------------------------------
+
+	    /**
+	     * Detects L2 and L3 on Windows via WMIC or PowerShell fallback.
+	     */
+	    private long[] detectWindows() {
+	        long l2 = 0;
+	        long l3 = 0;
+
+	        // Primary: WMIC (present on Windows 10/11)
+	        String wmic = exec("wmic", "cpu", "get", "L2CacheSize,L3CacheSize", "/format:value");
+	        if (wmic != null) {
+	            Matcher m = Pattern.compile("L2CacheSize=(\\d+)").matcher(wmic);
+	            if (m.find()) l2 = Long.parseLong(m.group(1)) * 1024;
+	            m = Pattern.compile("L3CacheSize=(\\d+)").matcher(wmic);
+	            if (m.find()) l3 = Long.parseLong(m.group(1)) * 1024;
+	        }
+
+	        // Fallback: PowerShell (for newer Windows where WMIC is removed)
+	        if (l2 == 0 && l3 == 0) {
+	            String ps = exec("powershell", "-NoProfile", "-Command",
+	                    "Get-CimInstance Win32_Processor | Select-Object L2CacheSize,L3CacheSize | Format-List");
+	            if (ps != null) {
+	                Matcher m = Pattern.compile("L2CacheSize\\s*:\\s*(\\d+)").matcher(ps);
+	                if (m.find()) l2 = Long.parseLong(m.group(1)) * 1024;
+	                m = Pattern.compile("L3CacheSize\\s*:\\s*(\\d+)").matcher(ps);
+	                if (m.find()) l3 = Long.parseLong(m.group(1)) * 1024;
+	            }
+	        }
+
+	        return new long[]{l2, l3};
+	    }
+
+	    /**
+	     * Detects L2 and L3 on Linux via sysfs or lscpu fallback.
+	     */
+	    private long[] detectLinux() {
+	        long l2 = 0;
+	        long l3 = 0;
+
+	        // Primary: sysfs cache topology
+	        Path cacheDir = Paths.get("/sys/devices/system/cpu/cpu0/cache");
+	        if (Files.isDirectory(cacheDir)) {
+	            File[] indices = cacheDir.toFile().listFiles((d, name) -> name.startsWith("index"));
+	            if (indices != null) {
+	                for (File idx : indices) {
+	                    try {
+	                        String levelStr = readFirstLine(Paths.get(idx.getPath(), "level"));
+	                        String sizeStr = readFirstLine(Paths.get(idx.getPath(), "size"));
+	                        if (levelStr == null || sizeStr == null) {
+	                            continue;
+	                        }
+	                        int level = Integer.parseInt(levelStr.trim());
+	                        long bytes = parseSizeStr(sizeStr.trim());
+	                        if (level == 2 && bytes > l2) {
+	                            l2 = bytes;
+	                        }
+	                        if (level == 3 && bytes > l3) {
+	                            l3 = bytes;
+	                        }
+	                    } catch (Exception ignored) {
+	                    }
+	                }
+	            }
+	        }
+
+	        // Fallback: lscpu
+	        if (l2 == 0 || l3 == 0) {
+	            String lscpu = exec("lscpu");
+	            if (lscpu != null) {
+	                Matcher m = Pattern.compile("L2 cache:\\s*(\\d+)\\s*(\\S?)",
+	                        Pattern.CASE_INSENSITIVE).matcher(lscpu);
+	                if (m.find()) {
+	                    l2 = (l2 == 0) ? toBytes(Long.parseLong(m.group(1)), m.group(2)) : l2;
+	                }
+	                m = Pattern.compile("L3 cache:\\s*(\\d+)\\s*(\\S?)",
+	                        Pattern.CASE_INSENSITIVE).matcher(lscpu);
+	                if (m.find()) {
+	                    l3 = (l3 == 0) ? toBytes(Long.parseLong(m.group(1)), m.group(2)) : l3;
+	                }
+	            }
+	        }
+
+	        return new long[]{l2, l3};
+	    }
+
+	    /**
+	     * Detects L2 and L3 on macOS via sysctl.
+	     */
+	    private long[] detectMacOS() {
+	        long l2 = 0;
+	        long l3 = 0;
+
+	        // Primary: sysctl cache size keys
+	        String sysctl = exec("sysctl", "hw.l2cachesize", "hw.l3cachesize");
+	        if (sysctl == null) {
+	            sysctl = exec("sysctl", "-a");
+	        }
+	        if (sysctl != null) {
+	            Matcher m = Pattern.compile("hw\\.l2cachesize\\s*[:=]\\s*(\\d+)").matcher(sysctl);
+	            if (m.find()) l2 = Long.parseLong(m.group(1));
+	            m = Pattern.compile("hw\\.l3cachesize\\s*[:=]\\s*(\\d+)").matcher(sysctl);
+	            if (m.find()) l3 = Long.parseLong(m.group(1));
+	        }
+
+	        // Apple Silicon fallback: no traditional L3, use per-cluster L2
+	        if (l2 == 0 && l3 == 0) {
+	            String alt = exec("sysctl", "hw.perflevel0.l2cachesize", "hw.perflevel1.l2cachesize");
+	            if (alt != null) {
+	                Matcher m = Pattern.compile("hw\\.perflevel0\\.l2cachesize\\s*[:=]\\s*(\\d+)").matcher(alt);
+	                if (m.find()) l2 = Long.parseLong(m.group(1));
+	            }
+	        }
+
+	        return new long[]{l2, l3};
+	    }
+
+	    // --------------------------------------------------------------
+	    // Utility methods
+	    // --------------------------------------------------------------
+
+	    /**
+	     * Executes an external command and returns its stdout.
+	     *
+	     * @param cmd command and arguments
+	     * @return command output or null if execution failed
+	     */
+	    private String exec(String... cmd) {
+	        try {
+	            ProcessBuilder pb = new ProcessBuilder(cmd);
+	            pb.redirectErrorStream(true);
+	            Process p = pb.start();
+	            String out = new String(p.getInputStream().readAllBytes());
+	            p.waitFor();
+	            return out;
+	        } catch (Exception e) {
+	            return null;
+	        }
+	    }
+
+	    /**
+	     * Reads the first line of a file.
+	     */
+	    private String readFirstLine(Path path) {
+	        try (BufferedReader r = Files.newBufferedReader(path)) {
+	            return r.readLine();
+	        } catch (Exception e) {
+	            return null;
+	        }
+	    }
+
+	    /**
+	     * Parses sysfs cache size strings like "256K", "30720K", "4M".
+	     * Sizes without a unit are treated as kilobytes.
+	     */
+	    private long parseSizeStr(String s) {
+	        s = s.trim().toUpperCase();
+	        try {
+	            if (s.endsWith("K")) {
+	                return Long.parseLong(s.substring(0, s.length() - 1)) * 1024;
+	            }
+	            if (s.endsWith("M")) {
+	                return Long.parseLong(s.substring(0, s.length() - 1)) * 1024 * 1024;
+	            }
+	            if (s.endsWith("G")) {
+	                return Long.parseLong(s.substring(0, s.length() - 1)) * 1024 * 1024 * 1024;
+	            }
+	            return Long.parseLong(s) * 1024;
+	        } catch (NumberFormatException e) {
+	            return 0;
+	        }
+	    }
+
+	    /**
+	     * Converts a value with optional unit (K, M, G) to bytes.
+	     */
+	    private long toBytes(long val, String unit) {
+	        if (unit == null || unit.isEmpty()) {
+	            return val * 1024;
+	        }
+	        return switch (unit.toUpperCase()) {
+	            case "K" -> val * 1024;
+	            case "M" -> val * 1024 * 1024;
+	            case "G" -> val * 1024 * 1024 * 1024;
+	            default -> val;
+	        };
+	    }
+
+	    /**
+	     * Returns a human-readable string for a byte count.
+	     */
+	    public static String human(long bytes) {
+	        if (bytes == 0) {
+	            return "0 KB";
+	        }
+	        if (bytes % (1024 * 1024) == 0) {
+	            return (bytes / (1024 * 1024)) + " MB";
+	        }
+	        return (bytes / 1024) + " KB";
+	    }
+
+	    // --------------------------------------------------------------
+	    // Demo main
+	    // --------------------------------------------------------------
+
+	    public static void main(String[] args) {
+	        System.out.println("=== CacheDetector ===\n");
+
+	        CacheDetector detector = new CacheDetector();
+	        CacheInfo info = detector.info();
+
+	        System.out.println("CPUs  : " + info.cpuCount());
+	        System.out.println("L2    : " + human(info.l2Bytes()) + "  (" + info.l2Bytes() + " bytes)");
+	        System.out.println("L3    : " + human(info.l3Bytes()) + "  (" + info.l3Bytes() + " bytes)");
+	        System.out.println("LLC   : " + human(info.llcBytes()) + "  (" + info.llcSource() + ")\n");
+	    }
+	}
+	public static final CacheDetector cache = new CacheDetector(); 
 }

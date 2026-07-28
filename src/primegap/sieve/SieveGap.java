@@ -8,6 +8,7 @@ import java.util.List;
 
 import primegap.IterativePrimeGap;
 import primegap.util.Machine;
+import primegap.util.Machine.CacheDetector.CacheInfo;
 import primegap.util.NullStream;
 
 /**
@@ -21,6 +22,20 @@ import primegap.util.NullStream;
  * and print statistics about the gaps when the program is stopped.
  */
 public class SieveGap extends IterativePrimeGap {
+	protected SieveGap() {
+		this(WindowSize.computeWs(Machine.cache.info()).seqWS());
+	}
+	
+	public static abstract class Parallel extends SieveGap {
+		protected Parallel() {
+			super(WindowSize.computeWs(Machine.cache.info()).parWS());
+		}		
+	}
+
+	protected SieveGap(int windowSize) {
+		supplier = newSlidingWindowSieve(defaultWindowSize>0 ? defaultWindowSize : windowSize);
+	}
+	
 	@Override
 	protected void stopping(Info info) {
 		PrintStream out = System.out, err = System.err;
@@ -50,8 +65,8 @@ public class SieveGap extends IterativePrimeGap {
 	// 1<<18 -> 6,028,986.7
 	// 1<<17 -> 5,560,017.5
 
-	public static int defaultWindowSize = Machine.Cache.detectL2CachePerCoreBytes()/Long.BYTES;
-	protected AbstractSlidingWindowSieve supplier = newSlidingWindowSieve(defaultWindowSize);
+	public static int defaultWindowSize = -1;
+	protected AbstractSlidingWindowSieve supplier;
 
 	@Override
 	protected String name() {
@@ -67,12 +82,12 @@ public class SieveGap extends IterativePrimeGap {
 		supplier.periodicInfo();
 	}
 
-	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size) {
-		return newSlidingWindowSieve(size, false);
+	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int windowSize) {
+		return newSlidingWindowSieve(windowSize, false);
 	}
 
-	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doublBuffer) {
-		return new SlidingWindowSieve(this, size, doublBuffer);
+	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int windowSize, boolean doublBuffer) {
+		return new SlidingWindowSieve(this, windowSize, doublBuffer);
 	}
 
 	@Override
@@ -228,4 +243,57 @@ public class SieveGap extends IterativePrimeGap {
 		return new GapInfo(prime, gap, gapCounts!=null || !supplier.primes.isFull());
 	}
 
+
+    /**
+     * Immutable computed window sizes.
+     *
+     * @param seqWS    optimal window size for sequential execution
+     * @param parWS    optimal window size for parallel execution
+     * @param bestMode "Sequential" or "Parallel"
+     * @param bestWs   the window size to use (seqWs or parWs)
+     */
+    public record WindowSize(int seqWS, int parWS, Mode bestMode, int bestWs) {
+    	enum Mode { SEQUENTIAL, PARALLEL }
+    	
+    	static int size = Long.BYTES;
+
+        /**
+         * Returns the human-readable size of the sequential window.
+         */
+        public String seqSize() {
+            return human(seqWS * size);
+        }
+
+        /**
+         * Returns the human-readable size of the parallel window.
+         */
+        public String parSize() {
+            return human(parWS * size);
+        }
+
+        /**
+         * Returns the human-readable size of the best window.
+         */
+        public String bestSize() {
+            return human(bestWs * size);
+        }
+
+    	String human(long l) {
+    		return Machine.CacheDetector.human(l);
+    	}
+
+	    /**
+	     * Computes optimal window sizes from the given cache information.
+	     *
+	     * @param info cache topology previously obtained from {@link #info()}
+	     * @return computed window sizes and recommended execution mode
+	     */
+	    public static WindowSize computeWs(CacheInfo info) {
+	        int seq = (int)(info.l2Bytes() / (size * info.cpuCount()));
+	        int par = (int)(info.llcBytes() / size);
+	        Mode bestMode = info.cpuCount() > 4 ? Mode.PARALLEL : Mode.SEQUENTIAL;
+	        int bestWs = info.cpuCount() > 4 ? par : seq;
+	        return new WindowSize(seq, par, bestMode, bestWs);
+	    }
+    }
 }

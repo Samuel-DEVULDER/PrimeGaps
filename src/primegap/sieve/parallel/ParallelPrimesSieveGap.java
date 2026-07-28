@@ -5,7 +5,7 @@ import java.math.BigInteger;
 import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
 
-public class ParallelPrimesSieveGap extends SieveGap {
+public class ParallelPrimesSieveGap extends SieveGap.Parallel {
 	@Override
 	protected AbstractSlidingWindowSieve newSlidingWindowSieve(int size, boolean doubleBuffer) {
 		return new ParallelPrimesSieve(this, size, doubleBuffer);

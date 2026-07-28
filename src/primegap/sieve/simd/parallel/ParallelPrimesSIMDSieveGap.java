@@ -6,7 +6,7 @@ import primegap.sieve.AbstractSlidingWindowSieve;
 import primegap.sieve.SieveGap;
 import primegap.util.Java;
 
-public class ParallelPrimesSIMDSieveGap extends SieveGap {
+public class ParallelPrimesSIMDSieveGap extends SieveGap.Parallel {
 	static boolean enabled = Java.SIMD.enable();
 	
 	@Override
