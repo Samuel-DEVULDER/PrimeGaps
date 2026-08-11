@@ -78,9 +78,9 @@ echo [Mode] HotSpot C2 standard
 set JIT=-XX:+EnableVectorSupport -XX:+OptimizeFill -XX:+DoEscapeAnalysis -XX:+EliminateLocks -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:CompileThreshold=1000
 
 :select_class
-set CLASS=primegap.sieve.SieveGap$FastForward
-if %CPU_COUNT% GEQ 4  set CLASS=primegap.sieve.SieveGap$FastForward$DoubleBuffer
-if %CPU_COUNT% GEQ 8  set CLASS=primegap.sieve.parallel.Parallel2SieveGap$FastForward$DoubleBuffer
+set CLASS=primegap.sieve.SieveGap$FF
+if %CPU_COUNT% GEQ 4  set CLASS=primegap.sieve.SieveGap$FF$DB
+if %CPU_COUNT% GEQ 8  set CLASS=primegap.sieve.parallel.ParallelPrimesSieveGap$FF$DB
 
 echo [Classe] %CLASS%
 
