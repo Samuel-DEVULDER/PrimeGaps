@@ -182,6 +182,7 @@ DoubleBufferSieveGap/DoubleBufferWindowedSieve               8,434,487.1 p/s
 ```
 
 ## Longest run
+Nicely's result [from 1998](https://pzktupel.de/RecordGaps/GAP01FO.php) obtained in 1w 5d 12h 43m 23s. 
 ```=== Detection JVM ===
 Vendor  : unknown
 Version : 0
@@ -495,7 +496,11 @@ SieveGap/DoubleBuffer/ParallelPrimes/FastFoward: Searching gap >= 808...found.
  + 218 209 405 436 543
  = 218 209 405 437 449
 39211.015s (tot=2d 1h 31m 52s), 48 bits, 15 digits, x1.3 prev, +27.44 merit, ~2.18209e+14, 38 262 388 p/s.
-SieveGap/DoubleBuffer/ParallelPrimes/FastFoward: Searching gap >= 90 1w 4d 18h 8m 23s, 1 155 754 560 061 443, ~33.7, 33 813 477/s
+SieveGap/DoubleBuffer/ParallelPrimes/FastFoward: Searching gap >= 906 found.
+>> 916
+ + 1 189 459 969 825 483
+ = 1 189 459 969 826 399
+904291.081s (tot=1w 5d 12h 43m 23s), 51 bits, 16 digits, x5.5 prev, 26.39 merit, ~1.18946e+15, 32 621 231 p/s.
 ```
 
 # Records
