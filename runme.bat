@@ -15,7 +15,7 @@ if errorlevel 1 (
 )
 
 set TMPFILE=%TEMP%\jvmdetect_%RANDOM%.txt
-java -XshowSettings:property -version 2>"%TMPFILE%"
+java -XshowSettings:properties -version 2>"%TMPFILE%"
 
 set JAVA_VENDOR=unknown
 for /f "tokens=1,* delims==" %%a in ('findstr /i "java.vendor " "%TMPFILE%"') do (
