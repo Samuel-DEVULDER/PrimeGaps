@@ -180,7 +180,324 @@ ParallelSieveGap/ParallelWindowedSieve                       4,737,084.8 p/s
 SieveGap/SlidingWindowSieve                                  6,029,318.2 p/s
 DoubleBufferSieveGap/DoubleBufferWindowedSieve               8,434,487.1 p/s
 ```
+## Lowend machine
+Thomas R. Nicely's 1996 result in ~15 days.
+```
+=== Detection JVM ===
+Vendor  : Microsoft-13877124
+Version : 25
+CPUs    : 4
 
+[Mode] HotSpot C2 standard
+[Classe] primegap.sieve.SieveGap$FF$DB
+=====================================================
+
+java -XX:+UnlockExperimentalVMOptions --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -XX:+EnableVectorSupport -XX:+OptimizeFill -XX:+DoEscapeAnalysis -XX:+EliminateLocks -XX:ReservedCodeCacheSize=256m -XX:+TieredCompilation -XX:CompileThreshold=1000 -XX:+UseZGC -XX:+ZGenerational -XX:+AlwaysPreTouch -Xms256m -cp "C:\Users\Samuel\git\PrimeGaps\bin" primegap.sieve.SieveGap$FF$DB
+
+OpenJDK 64-Bit Server VM warning: Ignoring option ZGenerational; support was removed in 24.0
+WARNING: Using incubator modules: jdk.incubator.vector
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 2... 0s, 3, ~Infinity, 0/s, 0,0%found.←[K
+>> 2
+ + 3
+ = 5
+0.027s (tot=0s), 2 bits, 1 digits, x3.0 prev, +1.82 merit, ~3.00000, 73 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 4...found.←[K
+>> 4
+ + 7
+ = 11
+0.005s (tot=0s), 3 bits, 1 digits, x2.3 prev, +2.06 merit, ~7.00000, 121 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 6...found.←[K
+>> 6
+ + 23
+ = 29
+0.008s (tot=0s), 5 bits, 2 digits, x3.3 prev, 1.91 merit, ~23.0000, 222 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 8...found.←[K
+>> 8
+ + 89
+ = 97
+0.019s (tot=0s), 7 bits, 2 digits, x3.9 prev, 1.78 merit, ~89.0000, 406 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 10...found.←[K
+>> 14
+ + 113
+ = 127
+0.001s (tot=0s), 7 bits, 3 digits, x1.3 prev, +2.96 merit, ~113.000, 495 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 16...found.←[K
+>> 18
+ + 523
+ = 541
+0.012s (tot=0s), 10 bits, 3 digits, x4.6 prev, 2.88 merit, ~523.000, 1 369 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 20...found.←[K
+>> 20
+ + 887
+ = 907
+0.007s (tot=0s), 10 bits, 3 digits, x1.7 prev, 2.95 merit, ~887.000, 1 937 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 22...found.←[K
+>> 22
+ + 1 129
+ = 1 151
+0.002s (tot=0s), 11 bits, 4 digits, x1.3 prev, +3.13 merit, ~1129.00, 2 323 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 24...found.←[K
+>> 34
+ + 1 327
+ = 1 361
+0.002s (tot=0s), 11 bits, 4 digits, x1.2 prev, +4.73 merit, ~1327.00, 2 619 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 36...found.←[K
+>> 36
+ + 9 551
+ = 9 587
+0.014s (tot=0s), 14 bits, 4 digits, x7.2 prev, 3.93 merit, ~9551.00, 12 262 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 38...found.←[K
+>> 44
+ + 15 683
+ = 15 727
+0.001s (tot=0s), 14 bits, 5 digits, x1.6 prev, 4.55 merit, ~15683.0, 18 730 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 46...found.←[K
+>> 52
+ + 19 609
+ = 19 661
+0.001s (tot=0s), 15 bits, 5 digits, x1.3 prev, +5.26 merit, ~19609.0, 22 566 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 54...found.←[K
+>> 72
+ + 31 397
+ = 31 469
+0.002s (tot=0s), 15 bits, 5 digits, x1.6 prev, +6.95 merit, ~31397.0, 33 770 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 74...found.←[K
+>> 86
+ + 155 921
+ = 156 007
+0.015s (tot=0s), 18 bits, 6 digits, x5.0 prev, +7.19 merit, ~155921, 124 709 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 88...found.←[K
+>> 96
+ + 360 653
+ = 360 749
+0.018s (tot=0s), 19 bits, 6 digits, x2.3 prev, +7.50 merit, ~360653, 231 116 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 98...found.←[K
+>> 112
+ + 370 261
+ = 370 373
+0.000s (tot=0s), 19 bits, 6 digits, x1.0 prev, +8.74 merit, ~370261, 236 130 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 114...found.←[K
+>> 114
+ + 492 113
+ = 492 227
+0.003s (tot=0s), 19 bits, 6 digits, x1.3 prev, 8.70 merit, ~492113, 300 265 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 116...found.←[K
+>> 118
+ + 1 349 533
+ = 1 349 651
+0.020s (tot=0s), 21 bits, 7 digits, x2.7 prev, 8.36 merit, ~1.34953e+06, 661 053 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 120...found.←[K
+>> 132
+ + 1 357 201
+ = 1 357 333
+0.000s (tot=0s), 21 bits, 7 digits, x1.0 prev, +9.35 merit, ~1.35720e+06, 662 821 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 134...found.←[K
+>> 148
+ + 2 010 733
+ = 2 010 881
+0.018s (tot=0s), 21 bits, 7 digits, x1.5 prev, +10.20 merit, ~2.01073e+06, 854 018 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 150...found.←[K
+>> 154
+ + 4 652 353
+ = 4 652 507
+0.049s (tot=0s), 23 bits, 7 digits, x2.3 prev, 10.03 merit, ~4.65235e+06, 1 453 890 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 156...found.←[K
+>> 180
+ + 17 051 707
+ = 17 051 887
+0.455s (tot=0s), 25 bits, 8 digits, x3.7 prev, +10.81 merit, ~1.70517e+07, 1 611 387 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 182...found.←[K
+>> 210
+ + 20 831 323
+ = 20 831 533
+0.091s (tot=0s), 25 bits, 8 digits, x1.2 prev, +12.46 merit, ~2.08313e+07, 1 713 342 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 212...found.←[K
+>> 220
+ + 47 326 693
+ = 47 326 913
+0.487s (tot=1s), 26 bits, 8 digits, x2.3 prev, 12.45 merit, ~4.73267e+07, 2 266 845 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 222...found.←[K
+>> 222
+ + 122 164 747
+ = 122 164 969
+1.144s (tot=2s), 27 bits, 9 digits, x2.6 prev, 11.92 merit, ~1.22165e+08, 2 897 379 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 224...found.←[K217 731, ~17.8, 2 581 640/s, 7,5%
+>> 234
+ + 189 695 659
+ = 189 695 893
+0.957s (tot=3s), 28 bits, 9 digits, x1.6 prev, 12.28 merit, ~1.89696e+08, 3 138 133 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 236...found.←[K
+>> 248
+ + 191 912 783
+ = 191 913 031
+0.026s (tot=3s), 28 bits, 9 digits, x1.0 prev, +13.00 merit, ~1.91913e+08, 3 148 473 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 250...found.←[K544 323, ~18.6, 2 902 109/s, 16,2%
+>> 250
+ + 387 096 133
+ = 387 096 383
+2.922s (tot=6s), 29 bits, 9 digits, x2.0 prev, 12.64 merit, ~3.87096e+08, 3 280 062 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 252...found.←[K
+>> 282
+ + 436 273 009
+ = 436 273 291
+0.630s (tot=6s), 29 bits, 9 digits, x1.1 prev, +14.18 merit, ~4.36273e+08, 3 339 574 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 284...found.←[K75 068 419, ~19.9, 3 520 563/s, 57,3%
+>> 288
+ + 1 294 268 491
+ = 1 294 268 779
+10.907s (tot=17s), 31 bits, 10 digits, x3.0 prev, 13.73 merit, ~1.29427e+09, 3 640 449 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 290...found.←[K
+>> 292
+ + 1 453 168 141
+ = 1 453 168 433
+1.984s (tot=19s), 31 bits, 10 digits, x1.1 prev, 13.84 merit, ~1.45317e+09, 3 657 122 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 294...found.←[K30 043 139, ~20.4, 3 670 971/s, 89,2%
+>> 320
+ + 2 300 942 549
+ = 2 300 942 869
+9.590s (tot=29s), 32 bits, 10 digits, x1.6 prev, +14.84 merit, ~2.30094e+09, 3 815 155 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 322...found.←[K70 893 827, ~20.9, 4 577 578/s
+>> 336
+ + 3 842 610 773
+ = 3 842 611 109
+5.660s (tot=35s), 32 bits, 10 digits, x1.7 prev, +15.22 merit, ~3.84261e+09, 5 212 151 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 338...found.←[K76 200 195, ~21.1, 5 211 501/s
+>> 354
+ + 4 302 407 359
+ = 4 302 407 713
+1.650s (tot=36s), 33 bits, 10 digits, x1.1 prev, +15.96 merit, ~4.30241e+09, 5 543 680 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 356...found.←[K0 217 324 547, ~22.0, 7 705 920/s
+>> 382
+ + 10 726 904 659
+ = 10 726 905 041
+24.786s (tot=1m 1s), 34 bits, 11 digits, x2.5 prev, +16.54 merit, ~1.07269e+10, 7 908 749 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 384...found.←[K20 367 540 227, ~22.7, 9 042 137/s
+>> 384
+ + 20 678 048 297
+ = 20 678 048 681
+38.235s (tot=1m 39s), 35 bits, 11 digits, x1.9 prev, 16.17 merit, ~2.06780e+10, 9 129 971 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 386...found.←[K21 927 821 315, ~22.8, 9 146 481/s
+>> 394
+ + 22 367 084 959
+ = 22 367 085 353
+6.655s (tot=1m 46s), 35 bits, 11 digits, x1.1 prev, 16.53 merit, ~2.23671e+10, 9 226 136 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 396...found.←[K24 964 497 411, ~22.9, 9 298 295/s
+>> 456
+ + 25 056 082 087
+ = 25 056 082 543
+10.488s (tot=1m 56s), 35 bits, 11 digits, x1.1 prev, +19.04 merit, ~2.50561e+10, 9 361 304 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 458...found.←[K2 547 019 779, ~23.4, 9 749 891/s
+>> 464
+ + 42 652 618 343
+ = 42 652 618 807
+69.064s (tot=3m 5s), 36 bits, 11 digits, x1.7 prev, 18.96 merit, ~4.26526e+10, 9 789 409 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 466...found.←[K127 792 054 275, ~24.5, 9 806 592/s
+>> 468
+ + 127 976 334 671
+ = 127 976 335 139
+345.262s (tot=8m 51s), 37 bits, 12 digits, x3.0 prev, 18.30 merit, ~1.27976e+11, 9 820 730 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 470...found.←[K 181 563 031 555, ~24.9, 9 687 572/s
+>> 474
+ + 182 226 896 239
+ = 182 226 896 713
+223.987s (tot=12m 35s), 38 bits, 12 digits, x1.4 prev, 18.28 merit, ~1.82227e+11, 9 696 427 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 476...found.←[K 241 105 371 139, ~25.2, 9 587 761/s
+>> 486
+ + 241 160 624 143
+ = 241 160 624 629
+243.544s (tot=16m 38s), 38 bits, 12 digits, x1.3 prev, 18.54 merit, ~2.41161e+11, 9 594 959 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 488...found.←[K 297 376 153 603, ~25.4, 9 502 468/s
+>> 490
+ + 297 501 075 799
+ = 297 501 076 289
+234.260s (tot=20m 33s), 39 bits, 12 digits, x1.2 prev, 18.55 merit, ~2.97501e+11, 9 508 240 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 492...found.←[K 303 147 515 907, ~25.4, 9 494 492/s
+>> 500
+ + 303 371 455 241
+ = 303 371 455 741
+24.453s (tot=20m 57s), 39 bits, 12 digits, x1.0 prev, 18.91 merit, ~3.03371e+11, 9 499 986 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 502...found.←[K304 556 802 051, ~25.4, 9 491 922/s
+>> 514
+ + 304 599 508 537
+ = 304 599 509 051
+5.169s (tot=21m 2s), 39 bits, 12 digits, x1.0 prev, +19.44 merit, ~3.04600e+11, 9 497 881 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 516...found.←[K 416 108 511 235, ~25.7, 9 396 575/s
+>> 516
+ + 416 608 695 821
+ = 416 608 696 337
+460.856s (tot=28m 43s), 39 bits, 12 digits, x1.4 prev, 19.29 merit, ~4.16609e+11, 9 400 770 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 518...found.←[K 461 289 553 923, ~25.8, 9 363 813/s
+>> 532
+ + 461 690 510 011
+ = 461 690 510 543
+185.631s (tot=31m 49s), 39 bits, 12 digits, x1.1 prev, +19.81 merit, ~4.61691e+11, 9 367 565 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 534...found.←[K 614 029 328 387, ~26.1, 9 257 008/s
+>> 534
+ + 614 487 453 523
+ = 614 487 454 057
+633.222s (tot=42m 22s), 40 bits, 12 digits, x1.3 prev, 19.67 merit, ~6.14487e+11, 9 259 692 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 536...found.←[K738 348 498 947, ~26.3, 9 169 404/s
+>> 540
+ + 738 832 927 927
+ = 738 832 928 467
+522.113s (tot=51m 4s), 40 bits, 12 digits, x1.2 prev, 19.76 merit, ~7.38833e+11, 9 171 702 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 542...found.←[K7s, 1 345 666 940 931, ~26.9, 8 831 015/s
+>> 582
+ + 1 346 294 310 749
+ = 1 346 294 311 331
+2604.697s (tot=1h 34m 29s), 41 bits, 13 digits, x1.8 prev, +20.84 merit, ~1.34629e+12, 8 832 032 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 584...found.←[Ks, 1 408 598 278 147, ~26.9, 8 799 701/s
+>> 588
+ + 1 408 695 493 609
+ = 1 408 695 494 197
+273.716s (tot=1h 39m 2s), 41 bits, 13 digits, x1.0 prev, +21.02 merit, ~1.40870e+12, 8 800 906 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 590...found.←[K2s, 1 967 615 115 267, ~27.3, 8 639 300/s
+>> 602
+ + 1 968 188 556 461
+ = 1 968 188 557 063
+2410.990s (tot=2h 19m 13s), 41 bits, 13 digits, x1.4 prev, +21.27 merit, ~1.96819e+12, 8 640 076 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 604...found.←[Ks, 2 614 913 662 979, ~27.6, 8 565 918/s
+>> 652
+ + 2 614 941 710 599
+ = 2 614 941 711 251
+2724.718s (tot=3h 4m 38s), 42 bits, 13 digits, x1.3 prev, +22.80 merit, ~2.61494e+12, 8 566 570 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 654...found.←[K0s, 7 176 621 916 163, ~28.6, 8 154 590/s
+>> 674
+ + 7 177 162 611 713
+ = 7 177 162 612 387
+19733.346s (tot=8h 33m 31s), 43 bits, 13 digits, x2.7 prev, 22.77 merit, ~7.17716e+12, 8 154 765 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 676...found.←[Ks, 13 828 737 728 515, ~29.2, 7 708 951/s
+>> 716
+ + 13 829 048 559 701
+ = 13 829 048 560 417
+30577.935s (tot=17h 3m 9s), 44 bits, 14 digits, x1.9 prev, +23.66 merit, ~1.38290e+13, 7 709 045 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 718... 1d 0h←[Km 3s, 19 581 326 327 811, ~29.6, 7 427 017/s   found.
+>> 766
+ + 19 581 334 192 423
+ = 19 581 334 193 189
+27772.790s (tot=1d 0h 46m 2s), 45 bits, 14 digits, x1.4 prev, +25.03 merit, ~1.95813e+13, 7 427 091 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 768...found.←[K8m 42s, 42 841 694 797 827, ~30.4, 6 704 460/s
+>> 778
+ + 42 842 283 925 351
+ = 42 842 283 926 129
+121362.025s (tot=2d 10h 28m 44s), 46 bits, 14 digits, x2.2 prev, 24.79 merit, ~4.28423e+13, 6 704 474 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 780...found.←[Km 24s, 90 873 857 572 867, ~31.1, 6 004 913/s
+>> 804
+ + 90 874 329 411 493
+ = 90 874 329 412 297
+275981.564s (tot=5d 15h 8m 26s), 47 bits, 14 digits, x2.1 prev, 25.02 merit, ~9.08743e+13, 6 004 920 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 806...found.←[Kh 29m 3s, 171 231 202 508 803, ~31.7, 5 400 449/s
+>> 806
+ + 171 231 342 420 521
+ = 171 231 342 421 327
+512437.249s (tot=1w 4d 13h 29m 3s), 48 bits, 15 digits, x1.9 prev, 24.59 merit, ~1.71231e+14, 5 400 453 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 808...found.←[K 48m 6s, 218 209 252 802 563, ~32.0, 5 152 717/s
+>> 906
+ + 218 209 405 436 543
+ = 218 209 405 437 449
+325143.105s (tot=2w 1d 7h 48m 6s), 48 bits, 15 digits, x1.3 prev, +27.44 merit, ~2.18209e+14, 5 152 720 p/s.
+SieveGap/DoubleBuffer/FastFoward: Searching gap >= 908... 2w 3d 3h 37m 51s, 240 167 138 885 635, ~32.1, 5 052 207/s
+```
 ## Longest run
 Nicely's result [from 1998](https://pzktupel.de/RecordGaps/GAP01FO.php) obtained in 1w 5d 12h 43m 23s. 
 ```=== Detection JVM ===
