@@ -30,8 +30,11 @@ for /f "tokens=1,* delims==" %%a in ('findstr "java.specification.version" "%TMP
 
 del "%TMPFILE%" 2>nul
 
-set CPU_COUNT=1
-for /f "tokens=2 delims==" %%c in ('wmic cpu get NumberOfLogicalProcessors /value 2^>nul ^| findstr "="') do set CPU_COUNT=%%c
+set CPU_COUNT=%NUMBER_OF_PROCESSORS%
+if not defined CPU_COUNT (
+    for /f %%c in ('powershell -NoProfile -Command "[Environment]::ProcessorCount" 2^>nul') do set CPU_COUNT=%%c
+)
+if not defined CPU_COUNT set CPU_COUNT=1
 for /f "tokens=* delims= " %%c in ("!CPU_COUNT!") do set CPU_COUNT=%%c
 
 echo.
